@@ -13,11 +13,6 @@ const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-
-  ssl: false,
-
-  // 🔥 IMPORTANT: force string safety
-  password: String(process.env.DB_PASSWORD),
 });
 pool.connect()
   .then(() => console.log("PostgreSQL Connected"))
