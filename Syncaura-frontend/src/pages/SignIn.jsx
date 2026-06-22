@@ -122,7 +122,7 @@ const SignIn = () => {
       {/* RIGHT SIDE */}
       <div className="w-full flex flex-col items-center max-w-md space-y-5">
 
-        <div className="w-[380px] space-y-6 mt-4">
+        <form onSubmit={handleSubmit(onSubmit, onError)} className="w-[380px] space-y-6 mt-4">
 
           <h1 className="text-2xl font-semibold text-center text-gray-800 dark:text-white">
             Welcome Back
@@ -132,53 +132,68 @@ const SignIn = () => {
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">📧</span>
             <input
-  type="email"
-  placeholder="Email Address"
-  className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-700 placeholder-gray-400 focus:outline-none"
-/>
+              type="email"
+              placeholder="Email Address"
+              {...register("email", { required: "Email is required" })}
+              className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-700 placeholder-gray-400 focus:outline-none"
+            />
           </div>
 
           {/* PASSWORD */}
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔒</span>
             <input
-  type="password"
-  placeholder="Password"
-  className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-/>
+              type="password"
+              placeholder="Password"
+              {...register("password", { required: "Password is required" })}
+              className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           <p className="text-sm text-right text-blue-500 cursor-pointer">
             Forgot Password?
           </p>
 
-          <button className="w-full bg-blue-600 text-white py-3 rounded-md shadow-md">
-            Sign In
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 text-white py-3 rounded-md shadow-md flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader className="animate-spin" size={20} />
+                <span>Signing In...</span>
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
+        </form>
 
-          <div className="flex items-center my-6">
-  <div className="flex-grow h-px bg-gray-300"></div>
-  <span className="mx-4 text-sm text-gray-400">Or continue with</span>
-  <div className="flex-grow h-px bg-gray-300"></div>
-</div>
-
-<div className="flex justify-center gap-4 mb-4">
-  <button className="border p-2 rounded-md hover:shadow">
-    <FcGoogle size={20} />
-  </button>
-  <button className="border p-2 rounded-md hover:shadow">
-    <FaGithub size={20} />
-  </button>
-  <button className="border p-2 rounded-md hover:shadow">
-    <FaFacebook size={20} className="text-blue-600" />
-  </button>
-</div>
-
-          <p className="text-center text-sm text-gray-500">
-            Don’t have an account? <span className="text-blue-500">Sign Up</span>
-          </p>
-
+        <div className="flex items-center my-6">
+          <div className="flex-grow h-px bg-gray-300"></div>
+          <span className="mx-4 text-sm text-gray-400">Or continue with</span>
+          <div className="flex-grow h-px bg-gray-300"></div>
         </div>
+
+        <div className="flex justify-center gap-4 mb-4">
+          <button className="border p-2 rounded-md hover:shadow">
+            <FcGoogle size={20} />
+          </button>
+          <button className="border p-2 rounded-md hover:shadow">
+            <FaGithub size={20} />
+          </button>
+          <button className="border p-2 rounded-md hover:shadow">
+            <FaFacebook size={20} className="text-blue-600" />
+          </button>
+        </div>
+
+        <p className="text-center text-sm text-gray-500">
+          Don’t have an account?{" "}
+          <Link to="/sign-up" className="text-blue-500">
+            Sign Up
+          </Link>
+        </p>
       </div>
 
     </div>
