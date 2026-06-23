@@ -49,11 +49,11 @@ export const register = async (req, res, next) => {
     const refreshToken = generateRefreshToken(user, rid);
 
     // 🔥 SMTP ALERT TRIGGER
-    await sendEmail(
-      email,
-      "Welcome to Syncaura 🎉",
-      `<h2>Welcome ${name}</h2>`
-    );
+    // await sendEmail(
+    //   email,
+    //   "Welcome to Syncaura 🎉",
+    //   `<h2>Welcome ${name}</h2>`
+    // );
 
     res.status(201).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
@@ -217,8 +217,8 @@ export const forgotPassword = async (req, res, next) => {
       'UPDATE users SET reset_token_hash = $1, reset_token_expires_at = $2 WHERE id = $3',
       [tokenHash, expiresAt, user.id]
     );
-
-    await sendResetEmail({ to: user.email, name: user.name, token });
+    console.log("Reset Token:", token);
+    //await sendResetEmail({ to: user.email, name: user.name, token });
 
     res.json({ message: 'If that email exists, a reset link has been sent' });
   } catch (err) { next(err); }
