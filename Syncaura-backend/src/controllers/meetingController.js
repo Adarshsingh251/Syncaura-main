@@ -7,8 +7,19 @@ export const createMeeting = async (req, res) => {
     const { title, description, startTime, endTime, participants } = req.body;
 
     if (!title || !startTime || !endTime) {
-      return res.status(400).json({ message: "Required fields missing" });
-    }
+  return res.status(400).json({ message: "Required fields missing" });
+}
+
+const start = new Date(startTime);
+const end = new Date(endTime);
+
+if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+  return res.status(400).json({ message: "Invalid date format for startTime or endTime" });
+}
+
+if (end <= start) {
+  return res.status(400).json({ message: "endTime must be after startTime" });
+}
 
     let calendarEvent = null;
 
@@ -65,7 +76,17 @@ export const createMeeting = async (req, res) => {
 export const getMeetings = async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM meetings ORDER BY start_time DESC");
-    res.json(result.rows);
+    const meetings = result.rows;
+
+    for (const meeting of meetings) {
+      const participantsResult = await pool.query(
+        "SELECT email FROM meeting_participants WHERE meeting_id = $1",
+        [meeting.id]
+      );
+      meeting.participants = participantsResult.rows.map(r => r.email);
+    }
+
+    res.json(meetings);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
