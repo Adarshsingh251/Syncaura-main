@@ -3,7 +3,10 @@ import pool from "../config/db.js";
 export const addAttachment = async (req, res) => {
   try {
     const { meetingId, fileName, fileUrl } = req.body;
-
+    // validating
+  if (!meetingId || !fileName || !fileUrl) {
+    return res.status(400).json({ message: "meetingId, fileName, and fileUrl are required" });
+  }
     // Check if meeting exists
     const meetingCheck = await pool.query("SELECT id FROM meetings WHERE id = $1", [meetingId]);
     if (meetingCheck.rowCount === 0) {
