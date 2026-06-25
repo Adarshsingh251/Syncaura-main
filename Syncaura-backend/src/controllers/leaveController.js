@@ -2,14 +2,6 @@ import pool from '../config/db.js';
 
 export const applyLeave = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-
-    if (req.user.role !== 'user') {
-      return res.status(403).json({ message: "Only users can apply leave" });
-    }
-
     const { fromDate, toDate, reason } = req.body;
 
     if (!fromDate || !toDate || !reason) {
@@ -60,10 +52,6 @@ export const applyLeave = async (req, res) => {
 
 export const getMyLeaves = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-
     const userId = req.user.id;
     const result = await pool.query("SELECT * FROM leaves WHERE user_id = $1", [userId]);
 
@@ -76,14 +64,6 @@ export const getMyLeaves = async (req, res) => {
 
 export const getAllLeaves = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-
-    if (!['admin', 'coadmin', 'co-admin'].includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
     const result = await pool.query("SELECT l.*, u.name as user_name FROM leaves l JOIN users u ON l.user_id = u.id ORDER BY l.created_at DESC");
 
     res.status(200).json({ leaves: result.rows });
@@ -95,14 +75,6 @@ export const getAllLeaves = async (req, res) => {
 
 export const approveLeave = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-
-    if (!['admin', 'coadmin', 'co-admin'].includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
     const result = await pool.query(
       "UPDATE leaves SET status = 'approved', reviewed_by = $1, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
       [req.user.id, req.params.id]
@@ -121,14 +93,6 @@ export const approveLeave = async (req, res) => {
 
 export const rejectLeave = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-
-    if (!['admin', 'coadmin', 'co-admin'].includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
     const result = await pool.query(
       "UPDATE leaves SET status = 'rejected', reviewed_by = $1, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND status = 'pending' RETURNING *",
       [req.user.id, req.params.id]
