@@ -34,3 +34,11 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           timeout 15s npm start
+          EXIT_CODE=$?
+
+          if [ $EXIT_CODE -eq 124 ]; then
+            echo "Application started successfully."
+            exit 0
+          fi
+
+          exit $EXIT_CODE
