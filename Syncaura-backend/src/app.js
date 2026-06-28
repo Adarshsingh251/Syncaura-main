@@ -70,7 +70,7 @@ app.use("/api/notes", noteRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api", calendarTestRoute);
 app.use("/auth", googleAuthRoutes);
-app.use("/api/messages", messageRoutes);
+
 
 app.use("/api/github", githubRoutes);
 

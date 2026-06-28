@@ -1,7 +1,8 @@
 import pool from "../config/db.js";
+import {errorMiddleware} from "../middlewares/errorHandler.js";
 
 // Send Message
-export const sendMessage = async (req, res) => {
+export const sendMessage = async (req, res ,next) => {
   try {
     const userId = req.user.id;
     const { channelId, text } = req.body;
@@ -30,13 +31,12 @@ export const sendMessage = async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    next(error)
   }
 };
 
 // Fetch Messages
-export const getMessages = async (req, res) => {
+export const getMessages = async (req, res ,next) => {
   try {
     const userId = req.user.id;
     const { channelId } = req.params;
@@ -60,12 +60,11 @@ export const getMessages = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    next(error)
   }
 };
 
-export const sendMediaMessage = async (req, res) => {
+export const sendMediaMessage = async (req, res ,next) => {
   try {
     const { channelId } = req.body;
     const senderId = req.user.id;
@@ -89,7 +88,7 @@ export const sendMediaMessage = async (req, res) => {
     );
 
     res.status(201).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    next(error)
   }
 };
