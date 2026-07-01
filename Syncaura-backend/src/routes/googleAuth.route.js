@@ -13,20 +13,69 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 // Step 1: Generate Google auth URL
-router.get("/google", auth, (req, res) => {
-  const SCOPES = ["https://www.googleapis.com/auth/calendar"];
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ message: "JWT missing in Authorization header" });
-  }
-  const url = oauth2Client.generateAuthUrl({
-    access_type: "offline",
-    scope: SCOPES,
-    prompt: "consent",
-    state: token,
-  });
+router.get("/google/callback", async (req, res) => {
+  try {
+    const { code, state } = req.query;
 
-  res.json({ url });
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        message: "Authorization code missing",
+      });
+    }
+
+    if (!state) {
+      return res.status(400).json({
+        success: false,
+        message: "State token missing",
+      });
+    }
+
+    let decoded;
+
+    try {
+      decoded = jwt.verify(state, process.env.JWT_ACCESS_SECRET);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+    }
+
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+
+    await pool.query(
+      `UPDATE users SET 
+        google_access_token = $1, 
+        google_refresh_token = $2, 
+        google_scope = $3, 
+        google_token_type = $4, 
+        google_expiry_date = $5,
+        updated_at = CURRENT_TIMESTAMP 
+      WHERE id = $6`,
+      [
+        tokens.access_token,
+        tokens.refresh_token,
+        tokens.scope,
+        tokens.token_type,
+        tokens.expiry_date,
+        decoded.sub || decoded.id,
+      ]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Google connected successfully",
+    });
+  } catch (error) {
+    console.error("OAuth callback error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Google OAuth failed",
+    });
+  }
 });
 
 // Step 2: Callback after Google OAuth approval
