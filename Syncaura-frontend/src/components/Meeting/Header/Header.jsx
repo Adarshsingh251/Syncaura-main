@@ -1,3 +1,4 @@
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import ToggleSwitch from "../../dashboard/Header/ToggleSwitch";
 import { useSelector } from "react-redux";
@@ -21,6 +22,12 @@ const Header = ({ setOpen }) => {
       <div className="w-full flex items-center justify-between px-3 sm:px-4 lg:px-6">
         {/* LEFT SECTION */}
         <div className="flex items-center gap-3 sm:gap-5">
+          <button
+             onClick={() => setOpen(true)}
+             className="lg:hidden text-black dark:text-white"
+          >
+            <Menu size={24} />
+          </button>
           {/* Profile Section */}
           <div className="flex gap-2 items-center">
             {/* Avatar */}

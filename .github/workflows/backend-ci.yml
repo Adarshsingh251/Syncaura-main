@@ -1,0 +1,46 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'Syncaura-backend/**'
+
+  pull_request:
+    paths:
+      - 'Syncaura-backend/**'
+
+jobs:
+  verify-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Syncaura-backend
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Syncaura-backend/package-lock.json
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: verify application
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set +e
+          
+          timeout 15s npm start
+          EXIT_CODE=$?
+          
+          if [ $EXIT_CODE -eq 124 ]; then
+            echo "Application started successfully."
+            exit 0
+          fi
+          
+          exit $EXIT_CODE

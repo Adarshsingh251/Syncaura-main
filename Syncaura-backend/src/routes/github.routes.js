@@ -1,36 +1,23 @@
 import express from "express";
-import { getIssues, getPullRequests, getRepoInfo } from "../services/githubAPI.js";
+import {
+  exchangeToken,
+  getRepoDetails,
+  getRepoPRs,
+  getRepoIssues
+} from "../controllers/githubController.js";
 
 const router = express.Router();
 
-router.get("/repo", async (req, res) => {
-  const { owner, repo } = req.query;
-  const data = await getRepoInfo(owner, repo);
-  res.json(data);
-});
+// Exchange OAuth authorization code for access token
+router.post("/token", exchangeToken);
 
-router.get("/prs", async (req, res) => {
-  try {
-    const { owner, repo } = req.query;
+// Get GitHub repository info (description, branches, etc)
+router.get("/repo", getRepoDetails);
 
-    const data = await getPullRequests(owner, repo);
+// Get GitHub repository pull requests
+router.get("/prs", getRepoPRs);
 
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching PRs" });
-  }
-});
-
-router.get("/issues", async (req, res) => {
-  try {
-    const { owner, repo } = req.query;
-
-    const data = await getIssues(owner, repo);
-
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching issues" });
-  }
-});
+// Get GitHub repository issues
+router.get("/issues", getRepoIssues);
 
 export default router;

@@ -70,7 +70,7 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+src/validators/.env
 .env.test
 .env.production
 
@@ -124,3 +124,4 @@ token.json
 
 src/services/keys/*.json
 
+.DS_Store

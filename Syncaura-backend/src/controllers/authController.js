@@ -49,6 +49,7 @@ export const register = async (req, res, next) => {
     const refreshToken = generateRefreshToken(user, rid);
 
     // 🔥 SMTP ALERT TRIGGER
+
     try {
       await sendEmail(
         email,
@@ -56,8 +57,9 @@ export const register = async (req, res, next) => {
         `<h2>Welcome ${name}</h2>`
       );
     } catch (err) {
-      next(err);
+      console.error("Welcome email failed:", err);
     }
+
 
     res.status(201).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
@@ -211,8 +213,6 @@ export const forgotPassword = async (req, res, next) => {
       [tokenHash, expiresAt, user.id]
     );
 
-    await sendResetEmail({ to: user.email, name: user.name, token });
-    // console.log("token",token)
 
     res.json({ message: 'If that email exists, a reset link has been sent' });
   } catch (err) { next(err); }
