@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { validate as isUUID } from "uuid";
 
 /**
  * CREATE PROJECT
@@ -39,6 +40,12 @@ export const getAllProjects = async (req, res) => {
  */
 export const getProjectById = async (req, res) => {
   try {
+
+    if (!isUUID(req.params.id)) {
+  return res.status(400).json({
+    message: "Invalid project ID"
+  });
+}
     const result = await pool.query(
       "SELECT * FROM projects WHERE id = $1",
       [req.params.id]
@@ -58,6 +65,13 @@ export const getProjectById = async (req, res) => {
  */
 export const updateProject = async (req, res) => {
   try {
+
+    if (!isUUID(req.params.id)) {
+      return res.status(400).json({
+        message: "Invalid project ID"
+      });
+    }
+
     const { name, description, status } = req.body;
     let updateFields = [];
     let values = [];
@@ -102,6 +116,12 @@ export const updateProject = async (req, res) => {
  */
 export const deleteProject = async (req, res) => {
   try {
+
+    if (!isUUID(req.params.id)) {
+      return res.status(400).json({
+        message: "Invalid project ID"
+      });
+    }
     const result = await pool.query(
       "DELETE FROM projects WHERE id = $1 RETURNING *",
       [req.params.id]
