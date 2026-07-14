@@ -335,6 +335,7 @@ npm run run
 ### Dashboard Routes (`/api/dashboard`)
 - `GET /api/dashboard/stats` - Get dashboard statistics
 - `GET /api/dashboard/user-stats` - Get user-specific statistics
+- `GET /api/dashboard/project-health/:projectId` - Get a project's weighted health score (admin/co-admin)
 
 ### Report Routes (`/api/reports`)
 - `GET /api/reports` - Generate reports

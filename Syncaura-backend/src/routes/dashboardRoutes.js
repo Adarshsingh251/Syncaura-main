@@ -7,7 +7,8 @@ import {
   completionRate,
   burndownData,
   workload,
-  myWorkload
+  myWorkload,
+  projectHealth
 } from '../controllers/dashboardController.js';
 
 const router = express.Router();
@@ -34,6 +35,13 @@ router.get(
   auth,
   permit(ROLES.ADMIN, ROLES.CO_ADMIN),
   workload
+);
+
+router.get(
+  '/project-health/:projectId',
+  auth,
+  permit(ROLES.ADMIN, ROLES.CO_ADMIN),
+  projectHealth
 );
 
 /**
