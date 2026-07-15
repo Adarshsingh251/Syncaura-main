@@ -2,13 +2,14 @@ import { google } from "googleapis";
 import { getCalendarClient } from "../utils/googleAuth.js";
 
 export const createCalendarEvent = async ({
+  tokens,
   title,
   description,
   startTime,
   endTime,
 }) => {
 
-  const calendar = getCalendarClient();
+  const calendar = getCalendarClient(tokens);
 
   const event = await calendar.events.insert({
     calendarId: "primary",
@@ -35,14 +36,15 @@ export const createCalendarEvent = async ({
 export const updateCalendarEvent = async (
   eventId,
   {
-    title,
-    description,
-    startTime,
-    endTime,
+     tokens,
+  title,
+  description,
+  startTime,
+  endTime,
   }
 ) => {
 
-  const auth = getCalendarClient();
+  const auth = getCalendarClient(tokens);
 
   const calendar = google.calendar({
     version: "v3",
@@ -67,18 +69,9 @@ export const updateCalendarEvent = async (
   return event.data;
 };
 
-export const deleteCalendarEvent = async (eventId) => {
+export const deleteCalendarEvent = async (eventId, tokens) => {
 
-  const auth = getCalendarClient();
+  const calendar = getCalendarClient(tokens);
 
-  const calendar = google.calendar({
-    version: "v3",
-    auth,
-  });
-
-  await calendar.events.delete({
-    calendarId: "primary",
-    eventId,
-  });
-
-};
+  
+}
