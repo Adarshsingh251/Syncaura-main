@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { validate as isUUID } from "uuid";
 
 /**
  * CREATE TASK
@@ -47,10 +48,82 @@ export const createTask = async (req, res) => {
  */
 export const getAllTasks = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM tasks ORDER BY created_at DESC");
-    res.json(result.rows);
+    const {
+      projectId,
+      assignedTo,
+      priority,
+      status,
+      deadline,
+      search
+    } = req.query;
+
+    // Validate Project ID
+    if (projectId && !isUUID(projectId)) {
+      return res.status(400).json({
+        message: "Invalid project ID",
+      });
+    }
+
+    let query = "SELECT * FROM tasks";
+    const conditions = [];
+    const values = [];
+
+    // Project Filter
+    if (projectId) {
+      values.push(projectId);
+      conditions.push(`project_id = $${values.length}`);
+    }
+
+    // Assignee Filter
+    if (assignedTo) {
+      values.push(assignedTo);
+      conditions.push(`assigned_to = $${values.length}`);
+    }
+
+    // Priority Filter
+    if (priority) {
+      values.push(priority);
+      conditions.push(`priority = $${values.length}`);
+    }
+
+    // Status Filter
+    if (status) {
+      values.push(status);
+      conditions.push(`status = $${values.length}`);
+    }
+
+    // Due Date Filter
+    if (deadline) {
+      values.push(deadline);
+      conditions.push(`DATE(deadline) = DATE($${values.length})`);
+    }
+
+    // Search by title or description
+    if (search) {
+      values.push(`%${search}%`);
+      conditions.push(
+        `(title ILIKE $${values.length} OR description ILIKE $${values.length})`
+      );
+    }
+
+    // Add WHERE clause
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ");
+    }
+
+    // Sort latest first
+    query += " ORDER BY created_at DESC";
+
+    const result = await pool.query(query, values);
+
+    return res.status(200).json(result.rows);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Get Tasks Error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch tasks",
+    });
   }
 };
 
