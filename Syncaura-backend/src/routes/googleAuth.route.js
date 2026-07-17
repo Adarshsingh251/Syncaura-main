@@ -12,6 +12,42 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI
 );
 
+// console.log("GOOGLE_CLIENT_ID =", process.env.GOOGLE_CLIENT_ID);
+
+// console.log("GOOGLE_CLIENT_SECRET =", process.env.GOOGLE_CLIENT_SECRET);
+
+// console.log("GOOGLE_REDIRECT_URI =http://localhost:5000/auth/google/callback", process.env.GOOGLE_REDIRECT_URI);
+
+router.get("/google", auth, async (req, res) => {
+  try {
+    const state = jwt.sign(
+      { id: req.user.id },
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: "10m" }
+    );
+
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      prompt: "consent",
+      scope: [
+        "https://www.googleapis.com/auth/calendar",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
+      ],
+      state,
+    });
+
+    return res.redirect(authUrl);
+  } catch (error) {
+    console.error("Google OAuth Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to start Google OAuth",
+    });
+  }
+});
+
 // Step 1: Generate Google auth URL
 router.get("/google/callback", async (req, res) => {
   try {
@@ -79,44 +115,44 @@ router.get("/google/callback", async (req, res) => {
 });
 
 // Step 2: Callback after Google OAuth approval
-router.get("/google/callback", async (req, res) => {
-  try {
-    const { code, state } = req.query;
-    if (!code || !state) return res.status(400).json({ message: "Authorization code missing" });
+// router.get("/google/callback", async (req, res) => {
+//   try {
+//     const { code, state } = req.query;
+//     if (!code || !state) return res.status(400).json({ message: "Authorization code missing" });
 
-    const decoded = jwt.verify(state, process.env.JWT_ACCESS_SECRET);
+//     const decoded = jwt.verify(state, process.env.JWT_ACCESS_SECRET);
 
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
+//     const { tokens } = await oauth2Client.getToken(code);
+//     oauth2Client.setCredentials(tokens);
 
-    // Update user with tokens
-    await pool.query(
-      `UPDATE users SET 
-        google_access_token = $1, 
-        google_refresh_token = $2, 
-        google_scope = $3, 
-        google_token_type = $4, 
-        google_expiry_date = $5,
-        updated_at = CURRENT_TIMESTAMP 
-      WHERE id = $6`,
-      [
-        tokens.access_token,
-        tokens.refresh_token,
-        tokens.scope,
-        tokens.token_type,
-        tokens.expiry_date,
-        decoded.sub || decoded.id
-      ]
-    );
+//     // Update user with tokens
+//     await pool.query(
+//       `UPDATE users SET 
+//         google_access_token = $1, 
+//         google_refresh_token = $2, 
+//         google_scope = $3, 
+//         google_token_type = $4, 
+//         google_expiry_date = $5,
+//         updated_at = CURRENT_TIMESTAMP 
+//       WHERE id = $6`,
+//       [
+//         tokens.access_token,
+//         tokens.refresh_token,
+//         tokens.scope,
+//         tokens.token_type,
+//         tokens.expiry_date,
+//         decoded.sub || decoded.id
+//       ]
+//     );
 
-    res.status(200).json({
-      success: true,
-      message: "Google connected successfully",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Google OAuth failed" });
-  }
-});
+//     res.status(200).json({
+//       success: true,
+//       message: "Google connected successfully",
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Google OAuth failed" });
+//   }
+// });
 
 export default router;

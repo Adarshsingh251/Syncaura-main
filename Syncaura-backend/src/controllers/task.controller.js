@@ -1,4 +1,6 @@
+import { logTaskActivity } from "../utils/taskActivityLogger.js";
 import pool from "../config/db.js";
+import { validate as isUUID } from "uuid";
 
 /**
  * CREATE TASK
@@ -35,7 +37,13 @@ export const createTask = async (req, res) => {
       }
       task.dependencies = dependencies;
     }
-
+await logTaskActivity({
+  taskId: task.id,
+  action: "TASK_CREATED",
+  changedBy: req.user?.id,
+  oldValue: null,
+  newValue: { title: task.title, status: task.status, priority: task.priority, assignedTo: task.assigned_to }
+});
     res.status(201).json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -47,10 +55,82 @@ export const createTask = async (req, res) => {
  */
 export const getAllTasks = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM tasks ORDER BY created_at DESC");
-    res.json(result.rows);
+    const {
+      projectId,
+      assignedTo,
+      priority,
+      status,
+      deadline,
+      search
+    } = req.query;
+
+    // Validate Project ID
+    if (projectId && !isUUID(projectId)) {
+      return res.status(400).json({
+        message: "Invalid project ID",
+      });
+    }
+
+    let query = "SELECT * FROM tasks";
+    const conditions = [];
+    const values = [];
+
+    // Project Filter
+    if (projectId) {
+      values.push(projectId);
+      conditions.push(`project_id = $${values.length}`);
+    }
+
+    // Assignee Filter
+    if (assignedTo) {
+      values.push(assignedTo);
+      conditions.push(`assigned_to = $${values.length}`);
+    }
+
+    // Priority Filter
+    if (priority) {
+      values.push(priority);
+      conditions.push(`priority = $${values.length}`);
+    }
+
+    // Status Filter
+    if (status) {
+      values.push(status);
+      conditions.push(`status = $${values.length}`);
+    }
+
+    // Due Date Filter
+    if (deadline) {
+      values.push(deadline);
+      conditions.push(`DATE(deadline) = DATE($${values.length})`);
+    }
+
+    // Search by title or description
+    if (search) {
+      values.push(`%${search}%`);
+      conditions.push(
+        `(title ILIKE $${values.length} OR description ILIKE $${values.length})`
+      );
+    }
+
+    // Add WHERE clause
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ");
+    }
+
+    // Sort latest first
+    query += " ORDER BY created_at DESC";
+
+    const result = await pool.query(query, values);
+
+    return res.status(200).json(result.rows);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Get Tasks Error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch tasks",
+    });
   }
 };
 
@@ -119,6 +199,13 @@ export const updateTask = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Task not found" });
     }
+    await logTaskActivity({
+  taskId: id,
+  action: "TASK_UPDATED",
+  changedBy: req.user?.id,
+  oldValue: { title, description, priority, status },
+  newValue: result.rows[0]
+});
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -137,6 +224,13 @@ export const deleteTask = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Task not found" });
     }
+    await logTaskActivity({
+  taskId: id,
+  action: "TASK_DELETED",
+  changedBy: req.user?.id,
+  oldValue: result.rows[0],
+  newValue: null
+});
 
     res.json({ message: "Task deleted" });
   } catch (error) {
@@ -176,6 +270,13 @@ export const updateTaskStatus = async (req, res) => {
       "UPDATE tasks SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
       [status, taskId]
     );
+    await logTaskActivity({
+  taskId: taskId,
+  action: "STATUS_CHANGED",
+  changedBy: req.user?.id,
+  oldValue: { status: task.status },
+  newValue: { status: status }
+});
 
     res.json({
       message: "Task status updated successfully",
@@ -281,6 +382,43 @@ export const startTask = async (req, res) => {
     }
 
     res.json(updateResult.rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+/**
+ * GET TASK ACTIVITY LOG
+ */
+export const getTaskActivity = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const taskCheck = await pool.query("SELECT id FROM tasks WHERE id = $1", [id]);
+    if (taskCheck.rowCount === 0) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const result = await pool.query(
+      `SELECT 
+        tal.id,
+        tal.action,
+        tal.old_value,
+        tal.new_value,
+        tal.created_at,
+        u.name as changed_by_name,
+        u.email as changed_by_email
+       FROM task_activity_log tal
+       LEFT JOIN users u ON tal.changed_by = u.id
+       WHERE tal.task_id = $1
+       ORDER BY tal.created_at DESC`,
+      [id]
+    );
+
+    res.json({
+      taskId: id,
+      totalActivities: result.rowCount,
+      activities: result.rows
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
