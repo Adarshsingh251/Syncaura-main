@@ -12,6 +12,9 @@ import {
   startTask,
 } from "../controllers/task.controller.js";
 import {auth} from "../middlewares/auth.js";
+import { permit } from "../middlewares/role.js";
+import ROLES from "../config/roles.js";
+
 const router = express.Router();
 
 
@@ -21,11 +24,11 @@ router.get("/reminders/upcoming", getUpcomingReminders);
 router.patch("/:id/status", auth, updateTaskStatus);
 router.patch("/:id/start", startTask);
 router.post("/:taskId/subtasks", auth, addSubtask);
-router.post("/", createTask); // Create Task
+router.post("/", auth, permit(ROLES.ADMIN, ROLES.CO_ADMIN, 'coadmin'), createTask); // Create Task
 router.get("/", getAllTasks); // Get All Tasks
 router.get("/:id", getTaskById); // Get Single Task
-router.put("/:id", updateTask); // Update Task
-router.delete("/:id", deleteTask); // Delete Task
+router.put("/:id", auth, permit(ROLES.ADMIN, ROLES.CO_ADMIN, 'coadmin'), updateTask); // Update Task
+router.delete("/:id", auth, permit(ROLES.ADMIN, ROLES.CO_ADMIN, 'coadmin'), deleteTask); // Delete Task
 
 
 export default router;
