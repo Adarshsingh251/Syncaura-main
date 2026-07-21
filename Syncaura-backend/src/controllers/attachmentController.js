@@ -1,13 +1,18 @@
 import pool from "../config/db.js";
 
-export const addAttachment = async (req, res) => {
+export const addAttachment = async (req, res, next) => {
   try {
     const { meetingId, fileName, fileUrl } = req.body;
-
+    // validating
+  if (!meetingId || !fileName || !fileUrl) {
+    return res.status(400).json({ message: "meetingId, fileName, and fileUrl are required" });
+  }
     // Check if meeting exists
     const meetingCheck = await pool.query("SELECT id FROM meetings WHERE id = $1", [meetingId]);
     if (meetingCheck.rowCount === 0) {
-      return res.status(404).json({ message: "Meeting not found" });
+      const error = new Error("Meeting not found");
+      error.status = 404;
+      return next(error);
     }
 
     const result = await pool.query(
@@ -18,11 +23,11 @@ export const addAttachment = async (req, res) => {
     res.status(201).json(result.rows[0]);
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error)
   }
 };
 
-export const getAttachmentsByMeeting = async (req, res) => {
+export const getAttachmentsByMeeting = async (req, res, next) => {
   try {
     const { meetingId } = req.params;
 
@@ -33,7 +38,7 @@ export const getAttachmentsByMeeting = async (req, res) => {
     res.json(result.rows);
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error)
   }
 };
 

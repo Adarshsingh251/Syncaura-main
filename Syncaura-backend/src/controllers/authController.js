@@ -4,7 +4,7 @@ import { validationResult } from 'express-validator';
 import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import { generateAccessToken, generateRefreshToken, assignRefreshId } from '../utils/generateTokens.js';
-import { sendEmail, sendResetEmail } from '../utils/email.js';
+import { sendEmail, sendResetEmail, sendPasswordOtpEmail, sendPasswordChangedEmail } from '../utils/email.js';
 import { generateOtp } from '../utils/otp.js';
 import ROLES from "../config/roles.js";
 
@@ -49,11 +49,17 @@ export const register = async (req, res, next) => {
     const refreshToken = generateRefreshToken(user, rid);
 
     // 🔥 SMTP ALERT TRIGGER
-    await sendEmail(
-      email,
-      "Welcome to Syncaura 🎉",
-      `<h2>Welcome ${name}</h2>`
-    );
+
+    try {
+      await sendEmail(
+        email,
+        "Welcome to Syncaura 🎉",
+        `<h2>Welcome ${name}</h2>`
+      );
+    } catch (err) {
+      console.error("Welcome email failed:", err);
+    }
+
 
     res.status(201).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
@@ -71,6 +77,7 @@ export const login = async (req, res, next) => {
     if (userRes.rowCount === 0) return res.status(401).json({ message: 'Invalid credentials' });
 
     const user = userRes.rows[0];
+  
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -110,28 +117,6 @@ export const refresh = async (req, res, next) => {
   }
 };
 
-export const changePassword = async (req, res, next) => {
-  try {
-    handleValidation(req);
-    const userId = req.user?.id;
-    const { currentPassword, newPassword } = req.body;
-
-    const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
-    const user = userRes.rows[0];
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    const ok = await bcrypt.compare(currentPassword, user.password_hash);
-    if (!ok) return res.status(400).json({ message: 'Current password is incorrect' });
-
-    const passwordHash = await hashPassword(newPassword);
-    await pool.query(
-      'UPDATE users SET password_hash = $1, refresh_token_id = NULL WHERE id = $2',
-      [passwordHash, userId]
-    );
-
-    res.json({ message: 'Password changed successfully' });
-  } catch (err) { next(err); }
-};
 
 export const requestPasswordOtp = async (req, res, next) => {
   try {
@@ -151,11 +136,16 @@ export const requestPasswordOtp = async (req, res, next) => {
     console.log(`Generated OTP for ${user.email}: ${otp}`);
     res.json({ message: 'OTP generated (printed in server console)' });
 
-    // 🔥 SMTP ALERT
     // Assume sendPasswordOtpEmail exists globally or in email.js, though not imported originally.
     // If it fails, next(err) handles it.
-    if (typeof sendPasswordOtpEmail !== 'undefined') {
-      await sendPasswordOtpEmail({ to: user.email, name: user.name, otp });
+    try {
+      await sendPasswordOtpEmail({
+        to: user.email,
+        name: user.name,
+        otp
+      });
+    } catch (err) {
+      console.error("OTP email failed:", err.message);
     }
   } catch (err) { next(err); }
 };
@@ -178,14 +168,19 @@ export const changePasswordWithOtp = async (req, res, next) => {
     }
 
     const passwordHash = await hashPassword(newPassword);
-    
+
     await pool.query(
       'UPDATE users SET password_hash = $1, otp_code = NULL, otp_expires_at = NULL, refresh_token_id = NULL WHERE id = $2',
       [passwordHash, userId]
     );
 
-    if (typeof sendPasswordChangedEmail !== 'undefined') {
-      await sendPasswordChangedEmail({ to: user.email, name: user.name });
+    try {
+      await sendPasswordChangedEmail({
+        to: user.email,
+        name: user.name
+      });
+    } catch (err) {
+      console.error("Password changed email failed:", err.message);
     }
 
     res.json({ message: 'Password changed successfully' });
@@ -218,7 +213,6 @@ export const forgotPassword = async (req, res, next) => {
       [tokenHash, expiresAt, user.id]
     );
 
-    await sendResetEmail({ to: user.email, name: user.name, token });
 
     res.json({ message: 'If that email exists, a reset link has been sent' });
   } catch (err) { next(err); }
@@ -228,6 +222,7 @@ export const resetPassword = async (req, res, next) => {
   try {
     handleValidation(req);
     const { token, newPassword } = req.body;
+
 
     const payload = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
     const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [payload.sub]);
@@ -243,7 +238,7 @@ export const resetPassword = async (req, res, next) => {
     }
 
     const passwordHash = await hashPassword(newPassword);
-    
+
     await pool.query(
       'UPDATE users SET password_hash = $1, reset_token_hash = NULL, reset_token_expires_at = NULL, refresh_token_id = NULL WHERE id = $2',
       [passwordHash, user.id]
@@ -257,6 +252,30 @@ export const resetPassword = async (req, res, next) => {
     next(err);
   }
 };
+
+export const changePassword = async (req, res, next) => {
+  try {
+    handleValidation(req);
+    const userId = req.user?.id;
+    const { currentPassword, newPassword } = req.body;
+
+    const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+    const user = userRes.rows[0];
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const ok = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!ok) return res.status(400).json({ message: 'Current password is incorrect' });
+
+    const passwordHash = await hashPassword(newPassword);
+    await pool.query(
+      'UPDATE users SET password_hash = $1, refresh_token_id = NULL WHERE id = $2',
+      [passwordHash, userId]
+    );
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) { next(err); }
+};
+
 
 export const adminOnly = async (req, res) => {
   res.json({ message: 'Hello Admin!' });

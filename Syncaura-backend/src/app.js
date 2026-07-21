@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pool from './config/db.js';
@@ -28,7 +28,7 @@ import googleAuthRoutes from "./routes/googleAuth.route.js";
 import githubRoutes from "./routes/github.routes.js";
 import { initSlackBot } from "./services/slackBot.js";
 
-dotenv.config();
+// dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,9 +70,14 @@ app.use("/api/notes", noteRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api", calendarTestRoute);
 app.use("/auth", googleAuthRoutes);
-app.use("/api/messages", messageRoutes);
 
 app.use("/api/github", githubRoutes);
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "Syncaura Backend is running 🚀",
+  });
+});
 
 // Health check route
 app.get('/health', (req, res) => res.json({ status: 'ok' }));

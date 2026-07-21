@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { validate as isUUID } from "uuid";
 
 /**
  * CREATE PROJECT
@@ -25,7 +26,7 @@ export const createProject = async (req, res) => {
 export const getAllProjects = async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM projects WHERE created_by = $1",
+      "SELECT * FROM projects WHERE created_by = $1 AND is_archived = false",
       [req.user.id]
     );
     res.json(result.rows);
@@ -39,6 +40,12 @@ export const getAllProjects = async (req, res) => {
  */
 export const getProjectById = async (req, res) => {
   try {
+
+    if (!isUUID(req.params.id)) {
+  return res.status(400).json({
+    message: "Invalid project ID"
+  });
+}
     const result = await pool.query(
       "SELECT * FROM projects WHERE id = $1",
       [req.params.id]
@@ -58,6 +65,13 @@ export const getProjectById = async (req, res) => {
  */
 export const updateProject = async (req, res) => {
   try {
+
+    if (!isUUID(req.params.id)) {
+      return res.status(400).json({
+        message: "Invalid project ID"
+      });
+    }
+
     const { name, description, status } = req.body;
     let updateFields = [];
     let values = [];
@@ -102,6 +116,12 @@ export const updateProject = async (req, res) => {
  */
 export const deleteProject = async (req, res) => {
   try {
+
+    if (!isUUID(req.params.id)) {
+      return res.status(400).json({
+        message: "Invalid project ID"
+      });
+    }
     const result = await pool.query(
       "DELETE FROM projects WHERE id = $1 RETURNING *",
       [req.params.id]
@@ -112,6 +132,41 @@ export const deleteProject = async (req, res) => {
     }
 
     res.json({ message: "Project deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+/**
+ * ARCHIVE PROJECT
+ */
+export const archiveProject = async (req, res) => {
+  try {
+    const result = await pool.query(
+      "UPDATE projects SET is_archived = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    res.json({ message: "Project archived successfully", project: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/**
+ * RESTORE PROJECT
+ */
+export const restoreProject = async (req, res) => {
+  try {
+    const result = await pool.query(
+      "UPDATE projects SET is_archived = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    res.json({ message: "Project restored successfully", project: result.rows[0] });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
