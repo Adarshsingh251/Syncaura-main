@@ -45,6 +45,7 @@ const AttendanceLeave = () => {
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [leaveData, setLeaveData] = useState(leaveHistory);
+  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
 
   const [showPopup, setShowPopup] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Check-In");
@@ -62,19 +63,34 @@ const AttendanceLeave = () => {
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
 
   const handleConfirmAttendance = () => {
+    if (selectedTab === "Check-In" && checkInTime) {
+      toast.info(`You have already checked in today at ${checkInTime}`);
+      setShowPopup(false);
+      return;
+    }
+    if (selectedTab === "CheckOut" && !checkInTime) {
+      toast.error("Please check in before checking out!");
+      return;
+    }
+    if (selectedTab === "CheckOut" && checkOutTime) {
+      toast.info(`You have already checked out today at ${checkOutTime}`);
+      setShowPopup(false);
+      return;
+    }
+
     setIsSubmitting(true);
     // Simulate API delay
     setTimeout(() => {
       const now = new Date();
       const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       
-      if (selectedTab === "Check-In" && !checkInTime) {
+      if (selectedTab === "Check-In") {
         setCheckInTime(timeString);
         // Increment present days dynamically
         setAttendanceStats(prev => prev.map(stat => 
           stat.title === "Present Days" ? { ...stat, value: stat.value + 1 } : stat
         ));
-        toast.success("Attendance marked successfully!");
+        toast.success(`Attendance marked successfully for ${attendanceDate}!`);
       } else if (selectedTab === "CheckOut") {
         setCheckOutTime(timeString);
         toast.success("Check-out recorded successfully!");
@@ -99,26 +115,28 @@ const AttendanceLeave = () => {
       result = result.filter(
         (item) =>
           item.reason.toLowerCase().includes(debouncedValue) ||
-          item.status.toLowerCase().includes(debouncedValue),
+          item.status.toLowerCase().includes(debouncedValue) ||
+          item.type.toLowerCase().includes(debouncedValue),
       );
     }
 
     if (appliedFilters) {
-      if (appliedFilters.status) {
+      if (appliedFilters.status && appliedFilters.status !== "All") {
         result = result.filter((item) => item.status === appliedFilters.status);
       }
 
-      if (appliedFilters.type) {
+      if (appliedFilters.type && appliedFilters.type !== "All") {
         result = result.filter((item) => item.type === appliedFilters.type);
       }
 
       if (appliedFilters.date) {
-        const selectedDate = new Date(appliedFilters.date);
-
+        const selectedDateStr = appliedFilters.date;
         result = result.filter((item) => {
-          const start = new Date(item.startDate);
-          const end = new Date(item.endDate);
-          return selectedDate >= start && selectedDate <= end;
+          const startStr = item.startDate ? item.startDate.split("T")[0] : "";
+          const endStr = item.endDate ? item.endDate.split("T")[0] : "";
+          if (!startStr) return false;
+          if (!endStr) return selectedDateStr >= startStr;
+          return selectedDateStr >= startStr && selectedDateStr <= endStr;
         });
       }
     }
@@ -199,36 +217,36 @@ const AttendanceLeave = () => {
         </div>
       </div>
       <motion.div
-  initial={{ opacity: 0, x: -40 }}
-  animate={{ opacity: 1, x: 0 }}
-  transition={{ duration: 0.4, ease: "easeOut" }}
-  className="flex items-center gap-6 px-4 py-3 mt-2 ml-4 max-w-[980px]"
->
+        initial={{ opacity: 0, x: -40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 ml-2 sm:ml-4 max-w-full lg:max-w-[1200px]"
+      >
         {attendanceStats.map((item, index) => (
           <AttendanceCard key={index} {...item} />
         ))}
-        <div className="relative inline-block ml-20">
+        <div className="relative inline-block ml-0 lg:ml-auto">
           {/* TOP CARD */}
           <motion.div
-  onClick={() => setShowPopup((prev) => !prev)}
-  ref={triggerRef}
-  whileTap={{ scale: 0.97 }}
-  className="cursor-pointer w-[220px] h-[65px] px-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
->
-  <h1 className={`font-medium text-lg ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
-    {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
-  </h1>
+            onClick={() => setShowPopup((prev) => !prev)}
+            ref={triggerRef}
+            whileTap={{ scale: 0.97 }}
+            className="cursor-pointer w-[220px] h-[65px] px-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
+          >
+            <h1 className={`font-medium text-lg ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
+              {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
+            </h1>
 
-  <div className="flex items-center justify-between mt-1">
-    <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-      In: {checkInTime || '-'}
-    </p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
+                In: {checkInTime || '-'}
+              </p>
 
-    <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-      Out: {checkOutTime || '-'}
-    </p>
-  </div>
-</motion.div>
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
+                Out: {checkOutTime || '-'}
+              </p>
+            </div>
+          </motion.div>
 
           {/* POPUP */}
           <AnimatePresence>
@@ -240,11 +258,11 @@ const AttendanceLeave = () => {
                 transition={{ duration: 0.25, ease: "easeOut" }}
                 className="
                     absolute 
-                    left-1/2 
-                    -translate-x-1/2
-                    mt-2 md:mt-5
+                    right-0
+                    top-full
+                    mt-2 md:mt-3
                     z-50
-                    w-[95vw] sm:w-[90vw] md:w-[400px] 
+                    w-[90vw] sm:w-[380px] md:w-[400px] 
                   "
               >
                 <div
@@ -368,6 +386,7 @@ const AttendanceLeave = () => {
           LeaveData={filteredLeaveHistory}
           currId={selectedId}
           setCurrId={setSelectedId}
+          onViewDetail={(item) => setSelectedLeaveDetail(item)}
         />
       </div>
       <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5  w-full px-5 sm:px-10 ">
@@ -378,6 +397,7 @@ const AttendanceLeave = () => {
           currId={selectedId}
           setCurrId={setSelectedId}
           LeaveData={filteredLeaveHistory}
+          onViewDetail={(item) => setSelectedLeaveDetail(item)}
         />
       </div>
 
@@ -393,6 +413,66 @@ const AttendanceLeave = () => {
           onClose={() => setOpenModel(false)}
           setLeaveData={setLeaveData}
         />
+      )}
+
+      {selectedLeaveDetail && (
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-xs"
+            onClick={() => setSelectedLeaveDetail(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-[#2E2F2F] rounded-2xl p-6 w-full max-w-md shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4 border-b pb-3 dark:border-gray-700">
+                <h2 className="text-xl font-bold dark:text-white text-black">
+                  Leave Details
+                </h2>
+                <button
+                  onClick={() => setSelectedLeaveDetail(null)}
+                  className="text-gray-500 hover:text-black dark:hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex flex-col gap-3 text-sm dark:text-gray-200">
+                <div>
+                  <span className="font-semibold text-gray-500 dark:text-gray-400">Leave Type:</span>{" "}
+                  <span className="font-bold text-blue-600 dark:text-[#73FBFD]">{selectedLeaveDetail.type}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500 dark:text-gray-400">Status:</span>{" "}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${selectedLeaveDetail.status === 'Approved' ? 'bg-green-100 text-green-700' : selectedLeaveDetail.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                    {selectedLeaveDetail.status}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500 dark:text-gray-400">Duration:</span>{" "}
+                  {new Date(selectedLeaveDetail.startDate).toLocaleDateString()} - {new Date(selectedLeaveDetail.endDate).toLocaleDateString()}
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500 dark:text-gray-400">Reason:</span>
+                  <p className="mt-1 p-3 bg-gray-100 dark:bg-black/30 rounded-xl italic">
+                    "{selectedLeaveDetail.reason}"
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedLeaveDetail(null)}
+                className="mt-6 w-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white py-2 rounded-xl font-medium"
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
       )}
     </div>
   );

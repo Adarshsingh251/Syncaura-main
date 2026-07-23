@@ -4,11 +4,30 @@ import { useState } from "react";
 import { X } from "lucide-react";
 
 export default function AttendanceLeaveFilter({ onClose, onApply }) {
-  const [status, setStatus] = useState("Approved");
-  const [type, setType] = useState("Casual");
+  const [status, setStatus] = useState("All");
+  const [type, setType] = useState("All");
   const [date, setDate] = useState("");
 
-  const items = ["Approved", "Pending", "Rejected"];
+  const items = ["All", "Approved", "Pending", "Rejected"];
+  const typeOptions = [
+    "All",
+    "Casual",
+    "Sick",
+    "Earned",
+    "Paid",
+    "Unpaid",
+    "Maternity",
+    "Paternity",
+    "Work From Home",
+  ];
+
+  const handleReset = () => {
+    setStatus("All");
+    setType("All");
+    setDate("");
+    onApply(null);
+  };
+
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10">
       <motion.div
@@ -25,10 +44,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
           whileTap={{ scale: 0.9 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
           className="absolute top-4 right-10 md:right-15 z-100"
-          onClick={() => {
-            onApply(null);
-            onClose();
-          }}
+          onClick={onClose}
         >
           <X className="text-black dark:text-white size-5" />
         </motion.button>
@@ -50,7 +66,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
         </div>
         <div className="flex flex-col gap-2 w-full lg:w-1/4">
           <FilterDropdown
-            options={["Casual", "Sick", "Earned"]}
+            options={typeOptions}
             startVal={type}
             label="Type"
             onChange={setType}
@@ -67,7 +83,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
               <button
                 onClick={() => setStatus(item)}
                 key={item}
-                className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]" : "border-gray-300 text-gray-500"}`}
+                className={`btn-hover px-3 py-1.5 rounded-full text-xs sm:text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD] font-semibold" : "border-gray-300 text-gray-500"}`}
               >
                 {item}
               </button>
@@ -75,7 +91,15 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
           </div>
         </div>
 
-        <div className="w-full lg:w-auto flex items-end">
+        <div className="w-full lg:w-auto flex items-center justify-end gap-2 mt-2 lg:mt-0">
+          <motion.button
+            onClick={handleReset}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full lg:w-auto border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium px-4 py-2.5 rounded-full text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            Reset
+          </motion.button>
           <motion.button
             onClick={() => {
               onApply({
@@ -88,7 +112,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="w-full lg:w-auto bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium px-5 py-3 rounded-full shadow-sm text-sm"
+            className="w-full lg:w-auto bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium px-5 py-2.5 rounded-full shadow-sm text-sm"
           >
             Apply Filters
           </motion.button>

@@ -22,7 +22,7 @@ const ProtectRoute = ({ allowedRoles, publicOnly = false }) => {
 
   // Protected routes: redirect unauthenticated users to sign-in
   if (!publicOnly && !isAuthenticated) {
-  return <Navigate to="/signin" replace />;
+  return <Navigate to="/sign-in" replace />;
 }
   // Role-based guard: redirect if user doesn't have the required role
   if (!publicOnly && allowedRoles && !allowedRoles.includes(user?.role)) {

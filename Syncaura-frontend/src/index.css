@@ -230,3 +230,35 @@
     outline-offset: 2px;
   }
 }
+
+/* ── Feature Showcase Image Frame — Theme Adaptive ─────────── */
+
+/* Light mode: clean white frame with a subtle colored shadow */
+.feature-img-frame {
+  background: #ffffff;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  box-shadow:
+    0 32px 90px rgba(59, 130, 246, 0.12),
+    0 0 0 1px rgba(99, 102, 241, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Dark mode: rich glowing border */
+[data-theme="dark"] .feature-img-frame {
+  background: #0d1117;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 32px 90px rgba(59, 130, 246, 0.28),
+    0 0 0 1px rgba(99, 102, 241, 0.28),
+    0 0 60px rgba(139, 92, 246, 0.12);
+}
+
+/* Light glow: softer, blueish */
+.light-glow {
+  opacity: 0.12;
+}
+
+/* Dark glow: richer */
+[data-theme="dark"] .dark-glow {
+  opacity: 0.35;
+}

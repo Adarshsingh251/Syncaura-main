@@ -3,7 +3,7 @@ import { FileText, X } from "lucide-react"
 import MotionSelect from "../projects/Model/MotionSelect"
 import { Controller, useForm } from "react-hook-form"
 
-const LeaveModel = ({ onClose, setHistory }) => {
+const LeaveModel = ({ onClose, setLeaveData }) => {
 
     const leaveTypes = [
         "Casual",
@@ -30,6 +30,9 @@ const LeaveModel = ({ onClose, setHistory }) => {
         watch,
         formState: { errors },
     } = useForm({
+        defaultValues: {
+            leaveType: "Casual",
+        },
     });
     const startDate = watch("startDate");
     const today = new Date().toISOString().split("T")[0];
@@ -38,11 +41,13 @@ const LeaveModel = ({ onClose, setHistory }) => {
         const currData = {
             startDate: new Date(`${data["startDate"]}T00:00:00Z`).toISOString(),
             endDate: new Date(`${data["endDate"]}T00:00:00Z`).toISOString(),
-            type: data["leaveType"],
+            type: data["leaveType"] || "Casual",
             reason: data["reason"],
             status: "Pending"
         }
-        setHistory((prev)=>[currData, ...prev])
+        if (typeof setLeaveData === "function") {
+            setLeaveData((prev) => [currData, ...prev]);
+        }
 
 
         onClose();
@@ -104,7 +109,7 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                     control={control}
                                     rules={{ required: "Leave type is required" }}
                                     render={({ field }) => (
-                                        <MotionSelect {...field} startVal="Casual Leave" options={leaveTypes} />
+                                        <MotionSelect {...field} startVal="Casual" options={leaveTypes} />
                                     )}
                                 />
                                 {errors.leaveType && (
@@ -142,7 +147,7 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                         {...register("endDate", {
                                             required: "End date is required",
                                             validate: (value) =>
-                                                !startDate || value > startDate || "End date must be after start date",
+                                                !startDate || value >= startDate || "End date must be on or after start date",
                                         })}
 
 

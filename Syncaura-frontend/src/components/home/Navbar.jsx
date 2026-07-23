@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Home, Sparkles, CreditCard, Mail, LogIn, ArrowRight } from 'lucide-react';
 import { useNavigate, Link } from "react-router-dom";
 import { useDarkMode } from "../../hooks/useDarkMode";
 
@@ -10,7 +10,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['home', 'features', 'pricing', 'contact'];
+      const sections = ['home', 'features', 'contact'];
       const scrollPosition = window.scrollY + 100;
 
       for (const section of sections) {
@@ -52,82 +52,56 @@ const Navbar = () => {
       >
         <div className="gap-20 flex items-center">
           <div
-            className="text-2xl font-bold"
-            style={{ color: 'var(--accent-color)' }}
+            className="text-2xl font-bold text-blue-600 dark:text-[#4FE6E6]"
           >
-            FLOWBIT
+            FlowBit
           </div>
 
-          <nav className="flex items-center gap-8">
+          <nav 
+            className="flex items-center gap-1 p-1.5 rounded-2xl"
+            style={{
+              background: "linear-gradient(145deg, rgba(128, 128, 128, 0.05) 0%, rgba(128, 128, 128, 0.01) 100%)",
+              border: "1px solid rgba(128, 128, 128, 0.15)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+              backdropFilter: "blur(10px)"
+            }}
+          >
             <a
               href="#home"
               onClick={(e) => scrollToSection(e, 'home')}
-              className="text-sm font-medium border-b-2 pb-1 transition-all"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 group hover:bg-black/5 dark:hover:bg-white/5"
               style={{
-                color:
-                  activeSection === 'home'
-                    ? 'var(--accent-color)'
-                    : 'var(--text-secondary)',
-                borderColor:
-                  activeSection === 'home'
-                    ? 'var(--accent-color)'
-                    : 'transparent',
+                backgroundColor: activeSection === 'home' ? 'rgba(51, 102, 255, 0.1)' : '',
+                color: activeSection === 'home' ? 'var(--accent-color)' : 'var(--text-secondary)',
               }}
             >
+              <Home className="w-4 h-4 transition-transform group-hover:scale-110" />
               Home
             </a>
 
             <a
               href="#features"
               onClick={(e) => scrollToSection(e, 'features')}
-              className="text-sm font-medium border-b-2 pb-1 transition-all"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 group hover:bg-black/5 dark:hover:bg-white/5"
               style={{
-                color:
-                  activeSection === 'features'
-                    ? 'var(--accent-color)'
-                    : 'var(--text-secondary)',
-                borderColor:
-                  activeSection === 'features'
-                    ? 'var(--accent-color)'
-                    : 'transparent',
+                backgroundColor: activeSection === 'features' ? 'rgba(51, 102, 255, 0.1)' : '',
+                color: activeSection === 'features' ? 'var(--accent-color)' : 'var(--text-secondary)',
               }}
             >
+              <Sparkles className="w-4 h-4 transition-transform group-hover:scale-110" />
               Features
-            </a>
-
-            <a
-              href="#pricing"
-              onClick={(e) => scrollToSection(e, 'pricing')}
-              className="text-sm font-medium border-b-2 pb-1 transition-all"
-              style={{
-                color:
-                  activeSection === 'pricing'
-                    ? 'var(--accent-color)'
-                    : 'var(--text-secondary)',
-                borderColor:
-                  activeSection === 'pricing'
-                    ? 'var(--accent-color)'
-                    : 'transparent',
-              }}
-            >
-              Pricing
             </a>
 
             <a
               href="#contact"
               onClick={(e) => scrollToSection(e, 'contact')}
-              className="text-sm font-medium border-b-2 pb-1 transition-all"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 group hover:bg-black/5 dark:hover:bg-white/5"
               style={{
-                color:
-                  activeSection === 'contact'
-                    ? 'var(--accent-color)'
-                    : 'var(--text-secondary)',
-                borderColor:
-                  activeSection === 'contact'
-                    ? 'var(--accent-color)'
-                    : 'transparent',
+                backgroundColor: activeSection === 'contact' ? 'rgba(51, 102, 255, 0.1)' : '',
+                color: activeSection === 'contact' ? 'var(--accent-color)' : 'var(--text-secondary)',
               }}
             >
+              <Mail className="w-4 h-4 transition-transform group-hover:scale-110" />
               Contact
             </a>
           </nav>
@@ -147,22 +121,19 @@ const Navbar = () => {
           </button>
 
           <button
-            onClick={() => navigate("/signin")}
-            className="text-sm font-medium hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--accent-color)' }}
+            onClick={() => navigate("/sign-in")}
+            className="flex items-center gap-2 text-sm font-semibold transition-all hover:opacity-70 text-blue-600 dark:text-[#4FE6E6]"
           >
+            <LogIn className="w-4 h-4" />
             Login
           </button>
 
           <button
-            onClick={() => navigate("/signup")}
-            className="px-6 py-2 text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
-            style={{
-              backgroundColor: "var(--accent-color)",
-              color: "var(--bg-primary)",
-            }}
+            onClick={() => navigate("/sign-up")}
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl hover:-translate-y-0.5 transition-all duration-300 bg-blue-600 dark:bg-[#4FE6E6] text-white dark:text-gray-900 shadow-[0_4px_14px_0_rgba(51,102,255,0.39)] hover:shadow-[0_6px_20px_rgba(51,102,255,0.23)] dark:shadow-[0_4px_14px_0_rgba(79,230,230,0.39)] dark:hover:shadow-[0_6px_20px_rgba(79,230,230,0.23)]"
           >
             Start Free
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -171,19 +142,14 @@ const Navbar = () => {
       <div className="md:hidden">
         <div className="flex items-center justify-between px-6 py-5">
           <div
-            className="text-[23px] font-bold tracking-tight"
-            style={{ color: 'var(--text-primary)' }}
+            className="text-[23px] font-bold tracking-tight text-blue-600 dark:text-[#4FE6E6]"
           >
-            FLOWBIT
+            FlowBit
           </div>
 
           <button
-            onClick={() => navigate("/signup")}
-            className="px-4 py-1 text-sm font-medium rounded-[10px]"
-            style={{
-              backgroundColor: "var(--accent-color)",
-              color: "var(--bg-primary)",
-            }}
+            onClick={() => navigate("/SignUp")}
+            className="px-4 py-1.5 text-sm font-semibold rounded-[10px] bg-blue-600 dark:bg-[#4FE6E6] text-white dark:text-gray-900"
           >
             Start Free
           </button>
@@ -227,20 +193,6 @@ const Navbar = () => {
               }}
             >
               Features
-            </a>
-
-            <a
-              href="#pricing"
-              onClick={(e) => scrollToSection(e, 'pricing')}
-              className="text-sm font-medium whitespace-nowrap"
-              style={{
-                color:
-                  activeSection === 'pricing'
-                    ? 'var(--accent-color)'
-                    : 'var(--text-secondary)',
-              }}
-            >
-              Pricing
             </a>
 
             <a
