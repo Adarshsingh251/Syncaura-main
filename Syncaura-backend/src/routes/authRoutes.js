@@ -27,7 +27,7 @@ router.post('/forgot-password', forgotPasswordValidator, forgotPassword);
 router.post('/reset-password', resetPasswordValidator, resetPassword);
 
 // Traditional change password (with current password)
-router.post('/change-password', auth, changePasswordValidator, changePassword);
+router.put('/change-password', auth, changePasswordValidator, changePassword);
 
 // Example role-based route
 router.get('/admin', auth, permit('admin'), adminOnly);
