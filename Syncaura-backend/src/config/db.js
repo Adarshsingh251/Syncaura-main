@@ -19,6 +19,10 @@ const pool = new Pool({
   ssl: false,
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle database client:', err.message);
+});
+
 pool.connect()
   .then(() => console.log("✅ PostgreSQL Connected"))
   .catch((err) => console.error("❌ PostgreSQL Connection Error:", err));
