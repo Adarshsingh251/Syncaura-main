@@ -12,6 +12,9 @@ export const createTask = async (req, res) => {
       projectId, startDate, endDate, dependencies, reminderAt 
     } = req.body;
 
+    // RBAC: Fallback to logged-in user if assignedTo is omitted
+    const finalAssignedTo = assignedTo || req.user?.id;
+
     const result = await pool.query(
       `INSERT INTO tasks (
         title, description, priority, assigned_to, deadline, status, 
@@ -19,7 +22,7 @@ export const createTask = async (req, res) => {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
       RETURNING *`,
       [
-        title, description, priority || "medium", assignedTo, deadline, 
+        title, description, priority || "medium", finalAssignedTo, deadline, 
         status || "TODO", projectId || null, startDate || null, 
         endDate || null, reminderAt || deadline || null
       ]
@@ -37,13 +40,15 @@ export const createTask = async (req, res) => {
       }
       task.dependencies = dependencies;
     }
-await logTaskActivity({
-  taskId: task.id,
-  action: "TASK_CREATED",
-  changedBy: req.user?.id,
-  oldValue: null,
-  newValue: { title: task.title, status: task.status, priority: task.priority, assignedTo: task.assigned_to }
-});
+
+    await logTaskActivity({
+      taskId: task.id,
+      action: "TASK_CREATED",
+      changedBy: req.user?.id,
+      oldValue: null,
+      newValue: { title: task.title, status: task.status, priority: task.priority, assignedTo: task.assigned_to }
+    });
+
     res.status(201).json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -176,6 +181,19 @@ export const updateTask = async (req, res) => {
       projectId, startDate, endDate, reminderAt 
     } = req.body;
 
+    // Fetch existing task to check permissions
+    const taskCheck = await pool.query("SELECT * FROM tasks WHERE id = $1", [id]);
+    if (taskCheck.rowCount === 0) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const existingTask = taskCheck.rows[0];
+
+    // RBAC: Check if user is Admin OR assigned to this task
+    if (req.user?.role !== "admin" && existingTask.assigned_to !== req.user?.id) {
+      return res.status(403).json({ message: "Forbidden: Not authorized to update this task" });
+    }
+
     const result = await pool.query(
       `UPDATE tasks SET 
         title = COALESCE($1, title),
@@ -196,16 +214,13 @@ export const updateTask = async (req, res) => {
       ]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Task not found" });
-    }
     await logTaskActivity({
-  taskId: id,
-  action: "TASK_UPDATED",
-  changedBy: req.user?.id,
-  oldValue: { title, description, priority, status },
-  newValue: result.rows[0]
-});
+      taskId: id,
+      action: "TASK_UPDATED",
+      changedBy: req.user?.id,
+      oldValue: { title: existingTask.title, description: existingTask.description, priority: existingTask.priority, status: existingTask.status },
+      newValue: result.rows[0]
+    });
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -219,20 +234,31 @@ export const updateTask = async (req, res) => {
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query("DELETE FROM tasks WHERE id = $1 RETURNING *", [id]);
 
-    if (result.rowCount === 0) {
+    // Fetch existing task to check permissions
+    const taskCheck = await pool.query("SELECT * FROM tasks WHERE id = $1", [id]);
+    if (taskCheck.rowCount === 0) {
       return res.status(404).json({ message: "Task not found" });
     }
-    await logTaskActivity({
-  taskId: id,
-  action: "TASK_DELETED",
-  changedBy: req.user?.id,
-  oldValue: result.rows[0],
-  newValue: null
-});
 
-    res.json({ message: "Task deleted" });
+    const existingTask = taskCheck.rows[0];
+
+    // RBAC: Check if user is Admin OR assigned to this task
+    if (req.user?.role !== "admin" && existingTask.assigned_to !== req.user?.id) {
+      return res.status(403).json({ message: "Forbidden: Not authorized to delete this task" });
+    }
+
+    const result = await pool.query("DELETE FROM tasks WHERE id = $1 RETURNING *", [id]);
+
+    await logTaskActivity({
+      taskId: id,
+      action: "TASK_DELETED",
+      changedBy: req.user?.id,
+      oldValue: result.rows[0],
+      newValue: null
+    });
+
+    res.json({ message: "Task deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -270,13 +296,14 @@ export const updateTaskStatus = async (req, res) => {
       "UPDATE tasks SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
       [status, taskId]
     );
+
     await logTaskActivity({
-  taskId: taskId,
-  action: "STATUS_CHANGED",
-  changedBy: req.user?.id,
-  oldValue: { status: task.status },
-  newValue: { status: status }
-});
+      taskId: taskId,
+      action: "STATUS_CHANGED",
+      changedBy: req.user?.id,
+      oldValue: { status: task.status },
+      newValue: { status: status }
+    });
 
     res.json({
       message: "Task status updated successfully",
@@ -287,6 +314,9 @@ export const updateTaskStatus = async (req, res) => {
   }
 };
 
+/**
+ * ADD SUBTASK
+ */
 export const addSubtask = async (req, res) => {
   try {
     const { taskId } = req.params;
@@ -306,6 +336,9 @@ export const addSubtask = async (req, res) => {
   }
 };
 
+/**
+ * GET GANTT DATA
+ */
 export const getGanttData = async (req, res) => {
   try {
     const { projectId } = req.query;
@@ -329,11 +362,14 @@ export const getGanttData = async (req, res) => {
   }
 };
 
+/**
+ * GET UPCOMING REMINDERS
+ */
 export const getUpcomingReminders = async (req, res) => {
   try {
     const now = new Date();
     const upcoming = new Date();
-    upcoming.setDate(now.getDate() + 3); // next 3 days
+    upcoming.setDate(now.getDate() + 3);
 
     const result = await pool.query(
       `SELECT * FROM tasks 
@@ -351,11 +387,13 @@ export const getUpcomingReminders = async (req, res) => {
   }
 };
 
+/**
+ * START TASK
+ */
 export const startTask = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check dependencies
     const depsResult = await pool.query(
       `SELECT d.status 
        FROM task_dependencies td 
@@ -386,6 +424,7 @@ export const startTask = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 /**
  * GET TASK ACTIVITY LOG
  */
