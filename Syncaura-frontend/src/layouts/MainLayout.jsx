@@ -19,9 +19,7 @@ export default function MainLayout({ children, TopbarComponent, SideBar }) {
 
         <div className="min-w-0 flex-1">{children}</div>
       </div>
-      <div className="relative">
-        <SupportChatbot />
-      </div>
+      <SupportChatbot />
     </div>
   );
 }
