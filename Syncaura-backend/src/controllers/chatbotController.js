@@ -144,7 +144,7 @@ Instructions:
           ],
           stream: false
         }, {
-          timeout: 15000 // 15s timeout
+          timeout: 90000 // 90s timeout (allows model loading on startup)
         });
 
         if (response.data && response.data.message && response.data.message.content) {
