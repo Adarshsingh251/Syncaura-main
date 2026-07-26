@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import axios from 'axios';
 
 export const handleChat = async (req, res) => {
   try {
@@ -88,16 +89,14 @@ export const handleChat = async (req, res) => {
       };
     }
 
+    const provider = process.env.LLM_PROVIDER || 'ollama';
     const apiKey = process.env.GEMINI_API_KEY;
-    let geminiFailed = false;
+    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
+    const ollamaModel = process.env.OLLAMA_MODEL || 'llama3';
 
-    if (apiKey && apiKey !== 'your_gemini_api_key_here' && apiKey.trim() !== '') {
-      try {
-        // Gemini Integration
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    let modelFailed = false;
 
-        const systemPrompt = `You are Syncaura AI, the virtual assistant for the Syncaura workspace management portal.
+    const systemPrompt = `You are Syncaura AI, the virtual assistant for the Syncaura workspace management portal.
 You help customers and team members access information easily and effectively.
 
 User Information:
@@ -116,6 +115,12 @@ Instructions:
 5. If the user asks you to do something you cannot do (like update a task), guide them on how to do it manually in the portal.
 6. Make sure to refer to the user by their name (${userName}) if appropriate.`;
 
+    if (provider === 'gemini' && apiKey && apiKey !== 'your_gemini_api_key_here' && apiKey.trim() !== '') {
+      try {
+        // Gemini Integration
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
         const prompt = `User: ${message}`;
         const result = await model.generateContent([
           { text: systemPrompt },
@@ -126,7 +131,31 @@ Instructions:
         return res.json({ reply });
       } catch (geminiError) {
         console.warn("Gemini API call failed, falling back to local context mode:", geminiError.message);
-        geminiFailed = true;
+        modelFailed = true;
+      }
+    } else if (provider === 'ollama') {
+      try {
+        // Ollama Integration
+        const response = await axios.post(`${ollamaUrl}/api/chat`, {
+          model: ollamaModel,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message }
+          ],
+          stream: false
+        }, {
+          timeout: 90000 // 90s timeout (allows model loading on startup)
+        });
+
+        if (response.data && response.data.message && response.data.message.content) {
+          const reply = response.data.message.content;
+          return res.json({ reply });
+        } else {
+          throw new Error("Invalid response format from Ollama");
+        }
+      } catch (ollamaError) {
+        console.warn("Ollama API call failed, falling back to local context mode:", ollamaError.message);
+        modelFailed = true;
       }
     }
 
@@ -199,9 +228,13 @@ Instructions:
         reply += `- Meetings Scheduled: **${dbContext.summary.meetingsCount}**\n\n`;
       }
 
-      if (geminiFailed) {
-        reply += `\n> 💡 *Note: The AI assistant is currently showing database records directly because your Gemini API key has hit a rate limit or quota restriction.*`;
-      } else if (!apiKey) {
+      if (modelFailed) {
+        if (provider === 'ollama') {
+          reply += `\n> 💡 *Note: The AI assistant is currently showing database records directly because the local Ollama service (model: "${ollamaModel}" at ${ollamaUrl}) could not be reached. Make sure Ollama is running on your machine.*`;
+        } else {
+          reply += `\n> 💡 *Note: The AI assistant is currently showing database records directly because your Gemini API key has hit a rate limit or quota restriction.*`;
+        }
+      } else if (provider === 'gemini' && (!apiKey || apiKey === 'your_gemini_api_key_here')) {
         reply += `\n> 💡 *Tip for Admin: Set the \`GEMINI_API_KEY\` environment variable in the backend \`.env\` file to enable full conversational AI with Gemini!*`;
       }
 
