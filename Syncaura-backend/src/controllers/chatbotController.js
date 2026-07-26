@@ -91,7 +91,7 @@ export const handleChat = async (req, res) => {
 
     const provider = process.env.LLM_PROVIDER || 'ollama';
     const apiKey = process.env.GEMINI_API_KEY;
-    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
     const ollamaModel = process.env.OLLAMA_MODEL || 'llama3';
 
     let modelFailed = false;
