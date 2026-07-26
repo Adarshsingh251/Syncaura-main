@@ -391,7 +391,7 @@ export default function SupportChatbot() {
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                                    className="flex-1 text-sm outline-none placeholder:text-[#9CA3AF] text-[#9CA3AF]"
+                                    className="flex-1 text-sm outline-none placeholder:text-[#9CA3AF] text-gray-800 dark:text-gray-200 bg-transparent"
                                     placeholder="Type or speak..."
                                 />
                                 <button
