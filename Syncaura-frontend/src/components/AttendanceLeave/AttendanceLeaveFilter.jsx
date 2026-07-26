@@ -14,8 +14,6 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
     "Casual",
     "Sick",
     "Earned",
-    "Paid",
-    "Unpaid",
     "Maternity",
     "Paternity",
     "Work From Home",
