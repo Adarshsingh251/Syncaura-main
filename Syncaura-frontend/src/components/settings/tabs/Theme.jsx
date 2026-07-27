@@ -98,13 +98,7 @@ useEffect(() => {
   const handleFontChange = (e) => dispatch(setFont(e.target.value));
 
   const handleFontSizeChange = (e) => {
-    const map = {
-      Small: "small",
-      Medium: "medium",
-      Large: "large",
-      "Extra Large": "xlarge",
-    };
-    dispatch(setFontSize(map[e.target.value]));
+    dispatch(setFontSize(e.target.value));
   };
 
   const handleZoomDecrease = () =>
@@ -131,6 +125,14 @@ useEffect(() => {
 
   const currentLangLabel =
     LANGUAGES.find((l) => l.code === language)?.label || "English";
+
+  const fontSizeLabels = {
+    small: "Small",
+    medium: "Medium",
+    large: "Large",
+    xlarge: "Extra Large",
+  };
+  const currentFontSizeLabel = fontSizeLabels[fontSize] || "Medium";
 
   return (
     <div className="w-full flex justify-center bg-white dark:bg-[#0B0B0B] min-h-screen text-gray-900 dark:text-white">
@@ -185,16 +187,16 @@ useEffect(() => {
               </select>
             </SettingRow>
 
-            <SettingRow label={t("fontSize")} value={fontSize}>
+            <SettingRow label={t("fontSize")} value={currentFontSizeLabel}>
               <select
                 value={fontSize}
                 onChange={handleFontSizeChange}
                 className="bg-white dark:bg-[#0B0B0B] text-black dark:text-white border border-gray-300 dark:border-[#2A2A2A] px-3 py-1 rounded-md"
               >
-                <option value="Small">Small</option>
-                <option value="Medium">Medium</option>
-                <option value="Large">Large</option>
-                <option value="Extra Large">Extra Large</option>
+                <option value="small">{t("Small") || "Small"}</option>
+                <option value="medium">{t("Medium") || "Medium"}</option>
+                <option value="large">{t("Large") || "Large"}</option>
+                <option value="xlarge">{t("Extra Large") || "Extra Large"}</option>
               </select>
             </SettingRow>
 
