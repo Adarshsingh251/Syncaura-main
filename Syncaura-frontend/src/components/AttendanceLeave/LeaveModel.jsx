@@ -2,8 +2,9 @@ import { AnimatePresence, motion } from "framer-motion"
 import { FileText, X } from "lucide-react"
 import MotionSelect from "../projects/Model/MotionSelect"
 import { Controller, useForm } from "react-hook-form"
+import { useEffect } from "react"
 
-const LeaveModel = ({ onClose, setLeaveData }) => {
+const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
 
     const leaveTypes = [
         "Casual",
@@ -28,12 +29,26 @@ const LeaveModel = ({ onClose, setLeaveData }) => {
         handleSubmit,
         control,
         watch,
+        reset,
         formState: { errors },
     } = useForm({
         defaultValues: {
-            leaveType: "Casual",
+            leaveType: editingLeave?.type || "Casual",
+            startDate: editingLeave?.startDate ? new Date(editingLeave.startDate).toISOString().split("T")[0] : "",
+            endDate: editingLeave?.endDate ? new Date(editingLeave.endDate).toISOString().split("T")[0] : "",
+            reason: editingLeave?.reason || "",
         },
     });
+
+    useEffect(() => {
+        reset({
+            leaveType: editingLeave?.type || "Casual",
+            startDate: editingLeave?.startDate ? new Date(editingLeave.startDate).toISOString().split("T")[0] : "",
+            endDate: editingLeave?.endDate ? new Date(editingLeave.endDate).toISOString().split("T")[0] : "",
+            reason: editingLeave?.reason || "",
+        });
+    }, [editingLeave, reset]);
+
     const startDate = watch("startDate");
     const today = new Date().toISOString().split("T")[0];
 
@@ -43,10 +58,14 @@ const LeaveModel = ({ onClose, setLeaveData }) => {
             endDate: new Date(`${data["endDate"]}T00:00:00Z`).toISOString(),
             type: data["leaveType"] || "Casual",
             reason: data["reason"],
-            status: "Pending"
+            status: editingLeave ? editingLeave.status : "Pending"
         }
         if (typeof setLeaveData === "function") {
-            setLeaveData((prev) => [currData, ...prev]);
+            if (editingLeave) {
+                setLeaveData((prev) => prev.map((item) => item === editingLeave ? { ...item, ...currData } : item));
+            } else {
+                setLeaveData((prev) => [currData, ...prev]);
+            }
         }
 
 
@@ -89,7 +108,7 @@ const LeaveModel = ({ onClose, setLeaveData }) => {
                     <div className="flex items-center justify-between w-full ">
                         <div className="flex items-center justify-center gap-3  ">
                             <FileText className="size-6 text-[#000000] dark:text-[#FFFFFF]" />
-                            <h1 className="text-2xl font-medium text-[#000000] dark:text-[#F8F8F8]" >Apply Leave</h1>
+                            <h1 className="text-2xl font-medium text-[#000000] dark:text-[#F8F8F8]" >{editingLeave ? "Edit Leave" : "Apply Leave"}</h1>
                         </div>
                         <button
                             onClick={onClose}
@@ -125,7 +144,7 @@ const LeaveModel = ({ onClose, setLeaveData }) => {
                                 <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-2 px-5 rounded-xl">
                                     <input
                                         type="date"
-                                        min={today}
+                                        min={editingLeave ? undefined : today}
                                         {...register("startDate", { required: "Start date is required" })}
 
                                         className="bg-transparent w-full date-input font-semibold outline-none text-[#898888] text-sm placeholder:text-[#898888]"
@@ -143,7 +162,7 @@ const LeaveModel = ({ onClose, setLeaveData }) => {
                                 <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-2 px-5 rounded-xl">
                                     <input
                                         type="date"
-                                        min={startDate || today}
+                                        min={startDate || (editingLeave ? undefined : today)}
                                         {...register("endDate", {
                                             required: "End date is required",
                                             validate: (value) =>
@@ -192,7 +211,7 @@ const LeaveModel = ({ onClose, setLeaveData }) => {
                         </div>
                         <div className="flex items-center justify-center mt-5 w-full">
                             <button type="submit" className="flex cursor-pointer items-center justify-center bg-[#2461E6] dark:bg-[#73FBFD] px-7 py-2 rounded-4xl btn-hover">
-                                <p className="dark:text-[#2E2F2F] text-[#FFFFFF] text-lg font-medium" >Apply Leave</p>
+                                <p className="dark:text-[#2E2F2F] text-[#FFFFFF] text-lg font-medium" >{editingLeave ? "Update Leave" : "Apply Leave"}</p>
                             </button>
                         </div>
 
