@@ -1,7 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 
 const ProjectRisks = () => {
+  const { t } = useTranslation();
 
   const data = [
     {
@@ -61,7 +63,7 @@ const ProjectRisks = () => {
       <div className="p-4 px-6 flex justify-between items-center border-b border-gray-100 dark:border-zinc-800/50">
 
         <h2 className="text-2xl font-bold  text-black dark:text-white">
-          Project Risks
+          {t("admin_project_risks_title")}
         </h2>
 
         <motion.button
@@ -69,7 +71,7 @@ const ProjectRisks = () => {
           whileTap={{ scale: 0.95 }}
           className="text-xl font-bold text-gray-900 dark:text-[#00a3ff]"
         >
-          View All
+          {t("admin_view_all")}
         </motion.button>
 
       </div>
@@ -81,10 +83,10 @@ const ProjectRisks = () => {
 
           <thead>
             <tr className="bg-gray-50/50 dark:bg-[#161b22] text-[13px] uppercase tracking-wider text-gray-400 border-b border-gray-100 dark:border-zinc-800">
-              <th className="py-4 px-6 text-l font-semibold dark:text-white">Project Name</th>
-              <th className="py-4 px-6 text-l font-semibold dark:text-white">Risk Description</th>
-              <th className="py-4 px-6 text-l font-semibold dark:text-white">Owner</th>
-              <th className="py-4 pr-20 text-l text-right font-semibold dark:text-white">Severity</th>
+              <th className="py-4 px-6 text-l font-semibold dark:text-white">{t("admin_project_name")}</th>
+              <th className="py-4 px-6 text-l font-semibold dark:text-white">{t("admin_risk_description")}</th>
+              <th className="py-4 px-6 text-l font-semibold dark:text-white">{t("admin_owner")}</th>
+              <th className="py-4 pr-20 text-l text-right font-semibold dark:text-white">{t("admin_severity")}</th>
             </tr>
           </thead>
 

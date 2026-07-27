@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon, Home, Sparkles, CreditCard, Mail, LogIn, ArrowRight } from 'lucide-react';
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useDarkMode } from "../../hooks/useDarkMode";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { theme, toggleTheme } = useDarkMode();
   const [activeSection, setActiveSection] = useState('home');
 
@@ -76,7 +78,7 @@ const Navbar = () => {
               }}
             >
               <Home className="w-4 h-4 transition-transform group-hover:scale-110" />
-              Home
+              {t("nav_home")}
             </a>
 
             <a
@@ -89,7 +91,7 @@ const Navbar = () => {
               }}
             >
               <Sparkles className="w-4 h-4 transition-transform group-hover:scale-110" />
-              Features
+              {t("nav_features")}
             </a>
 
             <a
@@ -102,7 +104,7 @@ const Navbar = () => {
               }}
             >
               <Mail className="w-4 h-4 transition-transform group-hover:scale-110" />
-              Contact
+              {t("nav_contact")}
             </a>
           </nav>
         </div>
@@ -111,7 +113,7 @@ const Navbar = () => {
           <button
             onClick={toggleTheme}
             className="w-9 h-9 flex items-center justify-center rounded-md hover:opacity-70 btn-hover"
-            aria-label="Toggle theme"
+            aria-label={t("toggle_theme")}
           >
             {theme === 'light' ? (
               <Sun className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
@@ -125,7 +127,7 @@ const Navbar = () => {
             className="flex items-center gap-2 text-sm font-semibold transition-all hover:opacity-70 text-blue-600 dark:text-[#4FE6E6]"
           >
             <LogIn className="w-4 h-4" />
-            Login
+            {t("nav_login")}
           </button>
 
           <button

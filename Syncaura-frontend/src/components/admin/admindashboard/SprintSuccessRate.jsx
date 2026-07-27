@@ -1,6 +1,8 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const SprintSuccessRate = () => {
+  const { t } = useTranslation();
   const sprintData = [
     { name: "Sprint 24", rate: 92, color: "dark:bg-[#39ff14] dark:shadow-[0_0_10px_#39ff14]", textColor: "dark:text-[#39ff14]" },
     { name: "Sprint 23", rate: 85, color: "dark:bg-[#00f2ff] dark:shadow-[0_0_10px_#00f2ff]", textColor: "dark:text-[#00f2ff]" },
@@ -12,7 +14,7 @@ const SprintSuccessRate = () => {
     <div className="bg-white dark:bg-[#161616] rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-4 mt-6 transition-colors duration-300">
 
       <h2 className="text-2xl font-bold  text-black dark:text-white mb-6 transition-colors">
-        Sprint Success Rate
+        {t("admin_sprint_success_rate")}
       </h2>
       <div className="flex flex-col gap-1"> 
         {sprintData.map((sprint, index) => (

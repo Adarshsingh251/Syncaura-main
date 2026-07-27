@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from "react-i18next";
 import {
   Facebook, Instagram, Linkedin, Youtube,
   Twitter, Send, Zap, ArrowRight,
@@ -43,6 +44,7 @@ const NavLink = ({ children, href, onClick }) => (
 );
 
 const Footer = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState(''); // Stores the user's email input
   const [status, setStatus] = useState(''); // Stores success or error messages
 
@@ -61,12 +63,12 @@ const Footer = () => {
   // Handles the newsletter form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email) return setStatus('Enter an email address.');
+    if (!email) return setStatus(t("newsletter_errorEmpty"));
     
     // Basic regex to check for valid email format (contains @ and .)
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus('Invalid email address.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus(t("newsletter_errorInvalid"));
     
-    setStatus('✓ Subscribed successfully!');
+    setStatus(`✓ ${t("newsletter_success")}`);
     setEmail('');
     
     // Clear the success message after 3 seconds
@@ -124,7 +126,7 @@ const Footer = () => {
             </div>
 
             <p className="text-sm leading-relaxed max-w-xs" style={{ color: 'var(--text-secondary)' }}>
-              The all-in-one platform that unifies your team's projects, chats, meetings, and performance — so you can focus on what matters.
+              {t("footer_tagline")}
             </p>
 
             {/* Contact info */}
@@ -144,12 +146,12 @@ const Footer = () => {
             {/* Newsletter */}
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>
-                Stay in the loop
+                {t("newsletter_title")}
               </p>
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <input
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder={t("footer_emailPlaceholder")}
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="flex-1 h-10 px-4 rounded-xl text-sm focus:outline-none"
@@ -175,21 +177,21 @@ const Footer = () => {
                 </p>
               )}
               <p className="text-[11px]" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
-                No spam. Unsubscribe anytime.
+                {t("newsletter_disclaimer")}
               </p>
             </div>
           </div>
 
           {/* ── Product ── */}
           <div>
-            <ColHeading>Product</ColHeading>
+            <ColHeading>{t("footer_product")}</ColHeading>
             <ul className="space-y-3">
               {[
-                { label: 'Features', id: 'features' },
-                { label: 'Security' },
-                { label: 'Roadmap' },
-                { label: 'Changelog' },
-                { label: 'Status' }
+                { label: t("footer_features"), id: 'features' },
+                { label: t("footer_security") },
+                { label: t("footer_roadmap") },
+                { label: t("footer_blog") },
+                { label: t("footer_contact") }
               ].map(item => (
                 <NavLink 
                   key={item.label} 
@@ -204,9 +206,9 @@ const Footer = () => {
 
           {/* ── Company ── */}
           <div>
-            <ColHeading>Company</ColHeading>
+            <ColHeading>{t("footer_company")}</ColHeading>
             <ul className="space-y-3">
-              {['About us', 'Blog', 'Careers', 'Press kit', 'Contact', 'Partners'].map(item => (
+              {[t("footer_about"), t("footer_blog"), t("footer_careers"), t("footer_contact"), t("footer_social"), t("footer_followUs")].map(item => (
                 <NavLink key={item}>{item}</NavLink>
               ))}
             </ul>
@@ -214,7 +216,7 @@ const Footer = () => {
 
           {/* ── Follow Us ── */}
           <div>
-            <ColHeading>Follow Us</ColHeading>
+            <ColHeading>{t("footer_followUs")}</ColHeading>
             <div className="space-y-3">
               {socials.map(({ icon: Icon, label, href, color }) => (
                 <motion.a
@@ -255,12 +257,12 @@ const Footer = () => {
           <p className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
             © 2025{' '}
             <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>FlowBit, Inc.</span>
-            {' '}All rights reserved.
+            {' '}{t("footer_copyright")}
           </p>
 
           {/* Legal links */}
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
-            {['Privacy Policy', 'Terms of Service', 'Cookie Settings', 'Accessibility'].map((link, i, arr) => (
+            {[t("footer_privacyPolicy"), t("footer_termsOfService"), t("footer_cookiesSettings"), t("footer_accessibility")].map((link, i, arr) => (
               <React.Fragment key={link}>
                 <span className="hover:text-indigo-400 cursor-pointer transition-colors">{link}</span>
                 {i < arr.length - 1 && <span className="opacity-30">·</span>}

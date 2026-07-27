@@ -120,7 +120,7 @@ export default function Meetings() {
                 </button>
 
                 <h1 className="text-2xl font-bold text-black dark:text-white">
-                  Meetings
+                  {t("meetings")}
                 </h1>
               </div>
               <button
@@ -131,7 +131,7 @@ export default function Meetings() {
     className="text-[#111827] dark:text-white"
   />
 
-                <span className="text-sm font-medium">Sync Calendar</span>
+                <span className="text-sm font-medium">{t("syncCalendar")}</span>
               </button>
             </div>
 
@@ -139,10 +139,10 @@ export default function Meetings() {
             <div className="hidden lg:flex items-start justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-[#111827] dark:text-white">
-                  Meetings
+                  {t("meetings")}
                 </h1>
                 <p className="text-sm text-[#6b7280] dark:text-[#bdbdbd] mt-1">
-                  Manage your schedule and prepare for upcoming calls
+                  {t("meetingsSubtitle")}
                 </p>
               </div>
               <button
@@ -153,7 +153,7 @@ export default function Meetings() {
     className="text-[#111827] dark:text-white"
   />
 
-                <span className="text-[13px] font-medium">Sync Calendar</span>
+                <span className="text-[13px] font-medium">{t("syncCalendar")}</span>
               </button>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function Meetings() {
   className="flex items-center justify-center gap-1.5 bg-white dark:bg-[#2a2a2a] border border-[#f1f1f1] dark:border-[#2f2f2f] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-[#4b5563] dark:text-[#d1d5db] btn-hover"
 >   <Funnel size={14} />
                   <span className="text-[13px]">
-                    Filter
+                    {t("filter")}
                   </span>
                 </button>
 
@@ -197,7 +197,7 @@ export default function Meetings() {
 
                   <input
                     type="text"
-                    placeholder="Search meetings..."
+                    placeholder={t("searchMeetings")}
                     className="bg-transparent outline-none border-none pl-3 w-full text-[13px]"
                   />
                 </div>

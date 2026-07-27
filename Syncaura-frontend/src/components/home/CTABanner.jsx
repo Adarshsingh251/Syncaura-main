@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Sparkles, Zap } from 'lucide-react';
 import avatar1 from "../../assets/10-Photoroom.png";
 import avatar2 from "../../assets/12-Photoroom.png";
@@ -74,6 +75,8 @@ const TiltCard = ({ children }) => {
 
 /* ─── Main Component ────────────────────────────────────────── */
 const CTABanner = () => {
+  const { t } = useTranslation();
+
   return (
     <section
       className="w-full py-16 md:py-24"
@@ -132,7 +135,7 @@ const CTABanner = () => {
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 backdrop-blur-sm"
               >
                 <Zap size={13} className="text-cyan-300" />
-                <span className="text-xs font-semibold tracking-widest text-cyan-300 uppercase">All-in-one platform</span>
+                <span className="text-xs font-semibold tracking-widest text-cyan-300 uppercase">{t("cta_badge")}</span>
               </motion.div>
 
               {/* Headline */}
@@ -144,15 +147,15 @@ const CTABanner = () => {
                 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tight text-white max-w-4xl"
                 style={{ textShadow: '0 0 40px rgba(147,197,253,0.25)' }}
               >
-                Work smarter,{' '}
+                {t("cta_title_line1")}{' '}
                 <span
                   className="text-transparent bg-clip-text"
                   style={{ backgroundImage: 'linear-gradient(135deg, #60a5fa 0%, #38bdf8 40%, #a78bfa 100%)' }}
                 >
-                  faster,
+                  {t("cta_title_line2")},
                 </span>
                 <br />
-                <span className="text-white">together.</span>
+                <span className="text-white">{t("cta_title_line3")}</span>
               </motion.h2>
 
               {/* Sub-text */}
@@ -163,8 +166,8 @@ const CTABanner = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-base md:text-lg lg:text-xl text-white/60 max-w-xl leading-relaxed"
               >
-                Manage tasks, chat, meet, and track performance — all in{' '}
-                <span className="text-white/90 font-semibold">one seamless workspace</span>.
+                {t("cta_description")}{' '}
+                <span className="text-white/90 font-semibold">{t("cta_description_highlight")}</span>.
               </motion.p>
 
               {/* CTA Buttons */}
@@ -187,7 +190,7 @@ const CTABanner = () => {
                     }}
                   >
                     <span className="absolute inset-0 w-full h-full bg-white/20 -translate-x-[150%] skew-x-[-20deg] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
-                    Get Started Free
+                    {t("cta_getStarted")}
                     <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                   </motion.button>
                 </Link>
@@ -203,7 +206,7 @@ const CTABanner = () => {
                     backdropFilter: 'blur(12px)',
                   }}
                 >
-                  Learn more
+                  {t("cta_learnMore")}
                   <ArrowRight size={14} className="opacity-60 group-hover:opacity-100 transition-transform group-hover:translate-x-1" />
                 </motion.button>
               </motion.div>
@@ -307,4 +310,4 @@ const CTABanner = () => {
   );
 };
 
-export default CTABanner;
+export default CTABanner;

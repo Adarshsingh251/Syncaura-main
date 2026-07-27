@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { CircleAlert, CircleCheck, Clock, Plus } from "lucide-react";
 import NewComplaintModal from "../components/complaints/NewComplaintModal";
 
@@ -10,6 +11,7 @@ import { getMyComplaints, createComplaint } from "../redux/features/complaintThu
 
 export default function Complaints() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { complaints, isLoading, error } = useSelector((state) => state.complaint);
 
   const [activeId, setActiveId] = useState(null);
@@ -101,8 +103,8 @@ export default function Complaints() {
             onApplyFilters={handleApplyFilters}
           />
 
-          {isLoading && <p className="text-center text-gray-400 py-10">Loading complaints...</p>}
-          {error && <p className="text-center text-red-400 py-10">Failed to load complaints.</p>}
+          {isLoading && <p className="text-center text-gray-400 py-10">{t("complaints_loading")}</p>}
+          {error && <p className="text-center text-red-400 py-10">{t("complaints_error")}</p>}
           {!isLoading && !error && (
             <ComplaintsList
               COMPLAINTS={filteredComplaints}
@@ -118,7 +120,7 @@ export default function Complaints() {
             className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-500 px-6 py-3 text-white shadow-lg hover:bg-blue-400 dark:hover:bg-[#2cc4c7] btn-hover"
           >
             <Plus size={18} />
-            New Complaint
+            {t("newComplaint")}
           </button>
 
           {showModal && (

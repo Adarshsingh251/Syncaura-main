@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Filter,
@@ -31,6 +32,7 @@ const statusStyles = {
 };
 
 export default function ActiveEngagementTable() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("All");
   const [showFilter, setShowFilter] = useState(false);
@@ -63,14 +65,14 @@ export default function ActiveEngagementTable() {
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b border-slate-200 dark:border-[#2d2f31]">
-          <h2 className="text-2xl font-bold">Active Engagement Table</h2>
+          <h2 className="text-2xl font-bold">{t("project_active_engagement_title")}</h2>
 
           <div className="flex items-center gap-2 relative">
             <button
               onClick={() => setShowFilter((v) => !v)}
               className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-300 text-black dark:bg-[#242628] dark:border-[#3e4042] dark:text-white rounded-md text-sm hover:bg-slate-200 dark:hover:bg-[#2d2f31] btn-hover"
             >
-              <Filter size={14} /> Filter
+              <Filter size={14} /> {t("analytics_filter")}
             </button>
 
             {showFilter && (
@@ -97,7 +99,7 @@ export default function ActiveEngagementTable() {
               onClick={handleExport}
               className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-300 text-black dark:bg-[#242628] dark:border-[#3e4042] dark:text-white rounded-md text-sm hover:bg-slate-200 dark:hover:bg-[#2d2f31] btn-hover"
             >
-              <Download size={14} /> Export
+              <Download size={14} /> {t("analytics_export")}
             </button>
           </div>
         </div>
@@ -107,12 +109,12 @@ export default function ActiveEngagementTable() {
           <table className="w-full min-w-[800px] text-sm">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 dark:bg-[#1a1c1e] dark:border-[#2d2f31] dark:text-[#94a3b8] uppercase text-[11px]">
               <tr>
-                <th className="px-6 py-4 text-left">Project Name</th>
-                <th className="px-6 py-4 text-left">Role</th>
-                <th className="px-6 py-4 text-left">Tasks</th>
-                <th className="px-6 py-4 text-left">Progress</th>
-                <th className="px-6 py-4 text-left">Sprint</th>
-                <th className="px-6 py-4 text-left">Status</th>
+                <th className="px-6 py-4 text-left">{t("project_project_name")}</th>
+                <th className="px-6 py-4 text-left">{t("project_role_label")}</th>
+                <th className="px-6 py-4 text-left">{t("project_tasks_label")}</th>
+                <th className="px-6 py-4 text-left">{t("project_progress_label")}</th>
+                <th className="px-6 py-4 text-left">{t("project_sprint_label")}</th>
+                <th className="px-6 py-4 text-left">{t("project_status_label")}</th>
               </tr>
             </thead>
 
@@ -185,14 +187,14 @@ export default function ActiveEngagementTable() {
               onClick={() => setPage(page - 1)} 
               disabled={page === 1}
             >
-              Prev
+              {t("project_prev")}
             </button>
             <button 
               className="hover:text-black dark:hover:text-white disabled:opacity-30 btn-hover"
               onClick={() => setPage(page + 1)} 
               disabled={page === totalPages}
             >
-              Next
+              {t("project_next")}
             </button>
           </div>
         </div>
