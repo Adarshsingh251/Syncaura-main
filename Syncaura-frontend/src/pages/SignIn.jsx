@@ -18,11 +18,13 @@ export default function SignIn() {
   const [password, setPassword] = useState('')
   const [visible, setVisible] = useState(false)
   const [message, setMessage] = useState('')
+  const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setPasswordError("");
 
     // Validate required fields for login
     if (!email.trim()) {
@@ -66,17 +68,15 @@ export default function SignIn() {
 
       navigate("/user-dashboard");
 
-    } catch (error) {
+    } 
+    catch (error) {
       // setMessage(
       //   error?.message || "Invalid email or password."
       // );
-      setMessage(
-        typeof error === "string"
-          ? error
-          : error?.message || "Invalid email or password."
-      );
-      console.log(error);
-    }
+  console.log(error);
+
+  setMessage("Invalid email or password.");
+}
     finally {
       setIsLoading(false);
     }
@@ -88,16 +88,25 @@ export default function SignIn() {
       <h1>Welcome <em>Back</em></h1>
       <p className="lead">Login to continue your journey.</p>
       <div className="fields">
-        <label className="field"><Mail size={19} strokeWidth={1.8} /><input type="email" placeholder="Email" value={email} onChange={event => setEmail(event.target.value)}  required /></label>
-        <label className="field"><LockKeyhole size={19} strokeWidth={1.8} /><input type={visible ? 'text' : 'password'} placeholder="Password" value={password} onChange={event => setPassword(event.target.value)} required /><button type="button" className="reveal" aria-label="Show password" onClick={() => setVisible(!visible)}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button></label>
+        <label className="field"><Mail size={19} strokeWidth={1.8} /><input type="email" placeholder="Email" value={email} onChange={event => setEmail(event.target.value)} /></label>
+        <label className="field"><LockKeyhole size={19} strokeWidth={1.8} /><input type={visible ? 'text' : 'password'} placeholder="Password" value={password} onChange={event => setPassword(event.target.value)}/><button type="button" className="reveal" aria-label="Show password" onClick={() => setVisible(!visible)}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button></label>
       </div>
       <div className="options"><label className="check"><input type="checkbox" defaultChecked /><span>Remember Me</span></label><a href="#forgot">Forgot Password?</a></div>
-      
+        {message && (
+      <div className="login-error" role="alert">
+        {message}
+      </div>
+      )}
       <button className="submit" type="submit" disabled={isLoading}>
-        {isLoading ? <><Spinner /> <span>Logging in...</span></> : "Log In"}
+        {isLoading ? (
+           <>
+           <Spinner />
+            <span>Logging in...</span>
+         </>
+         ) : (
+        "Log In"
+      )}
       </button>
-
-      {message && <p className="message" role="status">{message}</p>}
       <div className="divider"><span>OR</span></div>
       <div className="socials"><button type="button" aria-label="Continue with Google"><FcGoogle size={23} /></button><button type="button" aria-label="Continue with GitHub"><FaGithub size={22} /></button><button type="button" className="facebook" aria-label="Continue with Facebook"><FaFacebookF size={19} /></button></div>
 

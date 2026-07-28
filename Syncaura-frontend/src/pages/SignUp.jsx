@@ -4,6 +4,7 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaGithub, FaFacebookF } from 'react-icons/fa'
 import leftArt from "../assets/left-art.png";
 import "./style9.css";
+
 import api from "../config/axios.js";
 import { useNavigate } from "react-router-dom";
 
@@ -11,7 +12,7 @@ function PasswordField({ label, value, onChange }) {
   const [visible, setVisible] = useState(false)
   return <label className="field">
     <LockKeyhole size={19} strokeWidth={1.8} />
-    <input type={visible ? 'text' : 'password'} placeholder={label} value={value} onChange={onChange} required />
+    <input type={visible ? 'text' : 'password'} placeholder={label} value={value} onChange={onChange}/>
     <button type="button" className="reveal" aria-label={`Show ${label}`} onClick={() => setVisible(!visible)}>
       {visible ? <EyeOff size={18} /> : <Eye size={18} />}
     </button>
@@ -22,46 +23,64 @@ export default function SignUpPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [message, setMessage] = useState('')
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const update = key => event => setForm({ ...form, [key]: event.target.value })
 
   async function handleSubmit(event) {
     event.preventDefault();
-
+    setMessage("");
+    setNameError("");
+    setEmailError("");
+    setPasswordError("");
     // Validate required fields
     // if (!form.name) {
     if (!form.name.trim()) {
-      setMessage("Name is required.");
+      setNameError("Name is required.");
       return;
     }
 	// if (!form.email) {
   if (!form.email.trim()) {
-		setMessage("Email is required.");
+		setEmailError("Email is required.");
 		return;
 	}
 	// Validate email format
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	// if (!emailRegex.test(form.email)) {
   if (!emailRegex.test(form.email.trim())) {
-		setMessage("Invalid email address.");
+		setEmailError("Invalid email address.");
 		return;
 	}
     // if (!form.password) {
     if (!form.password.trim()) {
-      setMessage("Password is required.");
+      setPasswordError("Password is required.");
       return;
     }
     // if (!form.confirm) {
     if (!form.confirm.trim()) {
-      setMessage("Confirm password is required.");
+      setPasswordError("Confirm password is required.");
       return;
     }
     // Check password match
     // if (form.password !== form.confirm) {
     if (form.password.trim() !== form.confirm.trim()) {
-      setMessage("Passwords do not match.");
+      setPasswordError("Passwords do not match.");
       return;
     }
+
+    //Validate password strength
+    const passwordRegex =
+  /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+
+if (!passwordRegex.test(form.password.trim())) {
+  setPasswordError(
+    "Password must be at least 6 characters and include 1 uppercase letter, 1 number, and 1 special character."
+  );
+  return;
+}
+   
 
     setIsLoading(true);
     setMessage("");
@@ -106,10 +125,30 @@ export default function SignUpPage() {
       <h1>Create <em>Account</em></h1>
       <p className="lead">Join us and explore what's possible.</p>
       <div className="fields">
-        <label className="field"><UserRound size={19} strokeWidth={1.8} /><input placeholder="Full name" value={form.name} onChange={update('name')} required /></label>
-        <label className="field"><Mail size={19} strokeWidth={1.8} /><input type="email" placeholder="Email" value={form.email} onChange={update('email')} required /></label>
-        <PasswordField label="Password" value={form.password} onChange={update('password')} />
-        <PasswordField label="Confirm password" value={form.confirm} onChange={update('confirm')} />
+        <label className="field"><UserRound size={19} strokeWidth={1.8} /><input placeholder="Full name" value={form.name} onChange={update('name')}/></label>
+          {nameError && (
+          <p className="field-error">{nameError}</p>
+          )}
+        <label className="field"><Mail size={19} strokeWidth={1.8} /><input type="email" placeholder="Email" value={form.email} onChange={update('email')}/></label>
+        {emailError && (
+        <p className="field-error">{emailError}</p>
+        )}
+        <PasswordField
+          label="Password"
+          value={form.password}
+          onChange={update("password")}
+        />
+
+        {passwordError && (
+          <p className="field-error">{passwordError}</p>
+        )}
+
+        <PasswordField
+          label="Confirm password"
+          value={form.confirm}
+          onChange={update("confirm")}
+        />
+      
       </div>
       <label className="check"><input type="checkbox" required /><span>I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>.</span></label>
       
@@ -128,3 +167,4 @@ export default function SignUpPage() {
     </form></div>
   </section></main>
 }
+

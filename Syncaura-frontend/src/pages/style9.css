@@ -300,3 +300,20 @@
   animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.field-error {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin: -5px 0 10px 8px;
+}
+
+.login-error {
+  margin: 8px 0 12px;
+  padding: 10px 14px;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ff6b6b;
+  font-size: 13px;
+  font-weight: 500;
+}
