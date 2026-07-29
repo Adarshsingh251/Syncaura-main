@@ -220,18 +220,18 @@ const AttendanceLeave = () => {
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 ml-2 sm:ml-4 max-w-full lg:max-w-[1200px]"
+        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 ml-2 sm:ml-4 max-w-full lg:max-w-[1200px]"className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 px-4 py-3 mt-2 w-full"
       >
         {attendanceStats.map((item, index) => (
           <AttendanceCard key={index} {...item} />
         ))}
-        <div className="relative inline-block ml-0 lg:ml-auto">
+       <div className="relative w-full flex justify-center mt-2">
           {/* TOP CARD */}
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
             ref={triggerRef}
             whileTap={{ scale: 0.97 }}
-            className="cursor-pointer w-[220px] h-[65px] px-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
+            className="cursor-pointer w-[220px] min-h-[90px] px-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
           >
             <h1 className={`font-medium text-lg ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
               {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
