@@ -11,7 +11,7 @@ import {
  */
 export const createComplaint = async (req, res, next) => {
   try {
-    const { title, description, category, severity, priority, isAnonymous, attachments = [] } = req.body;
+    const { title, description, category, severity, priority, isAnonymous, attachments = [] } = req.body || {};
 
     if (!title || !description || !category) {
       return res.status(400).json({
