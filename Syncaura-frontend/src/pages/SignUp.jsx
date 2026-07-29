@@ -1,372 +1,145 @@
-import { ChevronDown, Loader, Mail } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import SocialAuthButton from "../components/auth/SocialAuthButton";
-import { motion, AnimatePresence } from "framer-motion";
-import PasswordField from "../components/auth/PasswordField";
-import { Link } from "react-router-dom";
-import AnimatedInput from "../components/auth/AnimatedInput";
-import { useSelector, useDispatch } from "react-redux";
-import { registerUser } from "../redux/features/authThunks";
-import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { registerUser } from '../redux/features/authThunks'
+import { UserRound, Mail, LockKeyhole, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { FcGoogle } from 'react-icons/fc'
+import { FaGithub, FaFacebookF } from 'react-icons/fa'
+import leftArt from "../assets/left-art.png"
+import "./style9.css"
+import Spinner from "../components/Spinner"
 
-const SignUp = () => {
-  const {
-    control,
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      role: "User",
-    },
-  });
-  const navigate = useNavigate();
-  const roles = ["User", "Admin", "Co-Admin"];
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+function PasswordField({ label, value, onChange }) {
+  const [visible, setVisible] = useState(false)
+  return (
+    <label className="field">
+      <LockKeyhole size={19} strokeWidth={1.8} />
+      <input type={visible ? 'text' : 'password'} placeholder={label} value={value} onChange={onChange} required />
+      <button type="button" className="reveal" aria-label={`Show ${label}`} onClick={() => setVisible(!visible)}>
+        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </label>
+  )
+}
 
-  const wrapperRef = useRef(null);
-  const userRef = useRef(null);
-  const passRef = useRef(null);
-  const conPassRef = useRef(null);
-  const socialProviders = [
-    {
-      id: "google",
-      icon: "/images/Auth/google.png",
-      alt: "Google login",
-      onClick: () => console.log("Google Login"),
-    },
-    {
-      id: "github",
-      icon: "/images/Auth/github.png",
-      alt: "GitHub login",
-      onClick: () => console.log("GitHub Login"),
-    },
-    {
-      id: "facebook",
-      icon: "/images/Auth/facebook.png",
-      alt: "Facebook login",
-      onClick: () => console.log("Facebook Login"),
-    },
-  ];
+export default function SignUpPage() {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { isLoading: reduxLoading, error: reduxError } = useSelector((state) => state.auth || {})
 
-  const { user, isAuthenticated, isLoading, error } = useSelector(
-    (state) => state.auth,
-  );
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
+  const [message, setMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const update = key => event => setForm({ ...form, [key]: event.target.value })
 
-  const dispatch = useDispatch();
+  async function handleSubmit(event) {
+    event.preventDefault()
 
-  const handleFocus = (ref) => {
-    ref.current?.classList.add(
-      "border-[#01509C]",
-      "ring-2",
-      "ring-[#01509C]/30",
-    );
-  };
-  const handleBlur = (ref) => {
-    ref.current?.classList.remove(
-      "border-[#01509C]",
-      "ring-2",
-      "ring-[#01509C]/30",
-    );
-  };
-  const onSubmit = async (data) => {
+    if (!form.name.trim()) {
+      setMessage("Name is required.")
+      return
+    }
+    if (!form.email.trim()) {
+      setMessage("Email is required.")
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email.trim())) {
+      setMessage("Invalid email address.")
+      return
+    }
+    if (!form.password.trim()) {
+      setMessage("Password is required.")
+      return
+    }
+    if (!form.confirm.trim()) {
+      setMessage("Confirm password is required.")
+      return
+    }
+    if (form.password.trim() !== form.confirm.trim()) {
+      setMessage("Passwords do not match.")
+      return
+    }
+
+    setIsLoading(true)
+    setMessage("")
+
     try {
-      const res = await dispatch(registerUser(data)).unwrap();
+      const data = await dispatch(
+        registerUser({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password.trim(),
+        })
+      ).unwrap()
 
-      toast.success("Account created successfully");
+      setMessage("Account created successfully!")
 
-      switch (res?.role || data?.role) {
-        case "Admin":
-          navigate("/admin");
-          break;
-        case "Co-Admin":
-          navigate("/co-admin");
-          break;
-        default:
-          navigate("/user-dashboard");
-      }
+      setTimeout(() => {
+        const userRole = data?.user?.role || 'user'
+        const roleHome = userRole === 'admin' ? '/admin' : userRole === 'co-admin' ? '/co-admin' : '/user-dashboard'
+        navigate(roleHome)
+      }, 1000)
+
     } catch (err) {
-      toast.error(err || "Registration failed");
+      const serverMsg = typeof err === "string" ? err : err?.message || reduxError || "Registration failed."
+      setMessage(serverMsg)
+      console.log(err)
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
-  const onError = (errors) => {
-    const firstError = Object.values(errors)[0];
-
-    if (firstError?.message) {
-      toast.error(firstError.message);
-    } else {
-      toast.error("Please fix the form errors");
-    }
-
-    console.log(errors);
-  };
+  const loadingState = isLoading || reduxLoading
 
   return (
-    <div
-      className="bg-[radial-gradient(ellipse_60%_70%_at_center,#4a9df0_0%,#01509C_65%,#013b73_100%)]
- w-full min-h-screen flex items-center justify-center overflow-hidden  "
-    >
-      <motion.div
-        className="relative flex items-center justify-center w-[90%] md:w-[80%] lg:w-3/4 page-2xl:w-1/2"
-        initial={{ opacity: 0, y: 30, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{
-          type: "spring",
-          stiffness: 300,
-          damping: 25,
-          duration: 1,
-        }}
-      >
-        <div
-          className="absolute -bottom-5 -right-6 md:-bottom-11 md:-right-11 z-20 size-20 md:size-25 rounded-full bg-linear-to-bl 
- from-[#868686] to-[#ECECEC]"
-        />
-        <div
-          className="absolute -top-5 -left-6 md:-top-11 md:-left-11 z-20 size-20 md:size-25 rounded-full bg-linear-to-bl 
- from-[#0050FF] to-[#0040CC]"
-        />
-        <div className="rounded-4xl lg:rounded-r-none  relative z-100  w-full px-7 py-33.5 bg-[#ECECEC] hidden lg:flex flex-col items-center justify-center">
-          <div className="bg-[#A6A6A621] border border-[#7B9CE242] h-95 w-2/3 rounded-4xl" />
-          <div className="absolute z-60 -right-27 xl:top-15 2xl:top-1  2xl:-right-28 page-2xl:top-12 top-15 ">
-            <img
-              src="/images/Auth/signup.png"
-              alt=""
-              className="object-fill scale-65"
-            />
-          </div>
-        </div>
-        <div className="rounded-4xl lg:rounded-l-none z-80 py-5 px-10 xl:px-20 pr-5 xl:pr-15  w-full bg-[#2461E6] flex flex-col items-center justify-center">
-          <h1 className="text-[#FFFFFF] text-2xl font-bold">Create Account</h1>
-          <form
-            onSubmit={handleSubmit(onSubmit, onError)}
-            className="space-y-2 w-full mt-1"
-          >
-            <div className="relative flex flex-col items-start justify-center gap-1.5 ">
-              <label className="text-[#FFFFFF] text-base font-medium">
-                Full Name
+    <main className="page">
+      <section className="auth-card">
+        <aside className="art" aria-hidden="true"><img src={leftArt} alt="" /></aside>
+        <div className="form-pane">
+          <form onSubmit={handleSubmit}>
+            <p className="eyebrow">START YOUR JOURNEY</p>
+            <h1>Create <em>Account</em></h1>
+            <p className="lead">Join us and explore what's possible.</p>
+            <div className="fields">
+              <label className="field">
+                <UserRound size={19} strokeWidth={1.8} />
+                <input placeholder="Full name" value={form.name} onChange={update('name')} required />
               </label>
-              <div className="flex flex-col items-start justify-center w-full gap-1 ">
-                <AnimatedInput
-                  type="text"
-                  name={"name"}
-                  placeholder="John Doe"
-                  iconType="user"
-                  register={register}
-                  wrapperRef={userRef}
-                  label={"Full Name"}
-                  handleFocus={handleFocus}
-                  handleBlur={handleBlur}
-                />
-              </div>
+              <label className="field">
+                <Mail size={19} strokeWidth={1.8} />
+                <input type="email" placeholder="Email" value={form.email} onChange={update('email')} required />
+              </label>
+              <PasswordField label="Password" value={form.password} onChange={update('password')} />
+              <PasswordField label="Confirm password" value={form.confirm} onChange={update('confirm')} />
             </div>
-            <div className="relative flex flex-col items-start justify-center gap-1.5 ">
-              <label className="text-[#FFFFFF] text-base font-medium">
-                Email Address
-              </label>
-              <div className="flex flex-col items-start justify-center w-full gap-1 ">
-                <AnimatedInput
-                  type="email"
-                  name={"email"}
-                  placeholder="Email"
-                  iconType="mail"
-                  label={"Email"}
-                  register={register}
-                  wrapperRef={wrapperRef}
-                  handleFocus={handleFocus}
-                  handleBlur={handleBlur}
-                />
-              </div>
-            </div>
-            <div className="relative flex flex-col items-start justify-center w-full gap-1.5 ">
-              <label className="text-[#FFFFFF] text-base font-medium">
-                Password
-              </label>
-              <div className="flex flex-col items-start justify-center w-full gap-1 ">
-                <PasswordField
-                  name="password"
-                  placeholder="Password"
-                  register={register}
-                  handleFocus={handleFocus}
-                  handleBlur={handleBlur}
-                  passRef={passRef}
-                  validation={{
-                    required: "Password is required",
-                    pattern: {
-                      value:
-                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{6,}$/,
-                      message:
-                        "Min 6 chars, 1 uppercase, 1 lowercase, 1 number & 1 special character required",
-                    },
-                  }}
-                />
-              </div>
+            <label className="check">
+              <input type="checkbox" required />
+              <span>I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>.</span>
+            </label>
+            
+            <button className="submit" type="submit" disabled={loadingState}>
+              {loadingState ? <><Spinner /> <span>Creating Account...</span></> : <>Create Account <ArrowRight size={20} /></>}
+            </button>
+
+            {message && <p className="message" role="status">{message}</p>}
+
+            <div className="divider"><span>OR CONTINUE WITH</span></div>
+            <div className="socials">
+              <button type="button" aria-label="Continue with Google"><FcGoogle size={23} /></button>
+              <button type="button" aria-label="Continue with GitHub"><FaGithub size={22} /></button>
+              <button type="button" className="facebook" aria-label="Continue with Facebook"><FaFacebookF size={19} /></button>
             </div>
 
-            <div className="relative flex flex-col items-start justify-center w-full gap-1.5 ">
-              <label className="text-[#FFFFFF] text-base font-medium">
-                Confirm Password
-              </label>
-              <div className="flex flex-col items-start justify-center w-full gap-1 ">
-                <PasswordField
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                  register={register}
-                  handleFocus={handleFocus}
-                  handleBlur={handleBlur}
-                  passRef={conPassRef}
-                  validation={{
-                    required: "Confirm Password is required",
-                    validate: (value) =>
-                      value === watch("password") || "Passwords do not match",
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="relative flex flex-col items-start justify-center w-full gap-1.5 ">
-              <label className="text-[#FFFFFF] text-base font-medium">
-                Role
-              </label>
-              <div className="w-full">
-                <Controller
-                  name="role"
-                  control={control}
-                  rules={{ required: "Role is required" }}
-                  render={({ field }) => (
-                    <div ref={dropdownRef} className="relative">
-                      {/* FIELD */}
-                      <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={() => setOpen((prev) => !prev)}
-                        className="flex cursor-pointer items-center justify-between
-                         rounded-md border border-blue-600
-                         bg-white px-4 py-2 text-sm w-full"
-                      >
-                        {/*  selected value shown */}
-                        <span className="text-black">{field.value}</span>
-
-                        <motion.span
-                          animate={{ rotate: open ? 180 : 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="text-xs text-black"
-                        >
-                          <ChevronDown />
-                        </motion.span>
-                      </motion.div>
-
-                      {/* DROPDOWN */}
-                      <AnimatePresence>
-                        {open && (
-                          <motion.ul
-                            initial={{ opacity: 0, y: -8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.2 }}
-                            className="absolute z-10 mt-1 w-full overflow-hidden
-                             rounded-md border bg-white shadow-lg"
-                          >
-                            {roles.map((role) => (
-                              <li
-                                key={role}
-                                onClick={() => {
-                                  field.onChange(role);
-                                  setOpen(false);
-                                }}
-                                className="cursor-pointer text-black px-4 py-2 text-sm
-                                 hover:bg-blue-50"
-                              >
-                                {role}
-                              </li>
-                            ))}
-                          </motion.ul>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
-            <motion.div
-              whileHover={{
-                scale: 1.02,
-                boxShadow: "0px 12px 25px rgba(0,0,0,0.25)",
-              }}
-              whileTap={{
-                scale: 0.95,
-                boxShadow: "0px 6px 15px rgba(0,0,0,0.2)",
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 20,
-              }}
-              className="relative flex items-start justify-center w-full mt-5 rounded-md bg-[#E3E3E3] py-2 px-3"
-            >
-              <motion.button
-                type="submit"
-                disabled={isLoading}
-                whileHover={{ y: -1 }}
-                whileTap={{ y: 1 }}
-                transition={{ type: "spring", stiffness: 400 }}
-                className="text-[#000000] font-bold text-lg"
-              >
-                {isLoading ? (
-                  <Loader className="size-5 text-[#000000] animate-spin" />
-                ) : (
-                  " Create Account"
-                )}
-              </motion.button>
-            </motion.div>
-            <div className="flex relative items-center justify-center w-full top-2 ">
-              <span className="h-0.5 bg-[#FFFFFF]  w-full" />
-              <h1 className="absolute -top-2.5  bg-[#2461E6] px-2 text-white text-sm font-bold flex-1/3">
-                OR
-              </h1>
-            </div>
-            <div className="flex items-center justify-center w-full gap-4 mt-8 ">
-              {socialProviders.map((provider) => (
-                <SocialAuthButton
-                  key={provider.id}
-                  icon={provider.icon}
-                  alt={provider.alt}
-                  onClick={provider.onClick}
-                />
-              ))}
-            </div>
-            <div className="flex items-center justify-center w-full gap-1 ">
-              <span className="text-[#FFFFFF] text-base font-semibold">
-                Already have an account?{" "}
-              </span>
-              <Link
-                to={"/sign-in"}
-                className="flex items-center justify-center"
-              >
-                <span className="text-white hover:underline text-xl font-semibold">
-                  {" "}
-                  Login
-                </span>
-              </Link>
-            </div>
+            <p className="switch">
+              Already have an account?{" "}
+              <button type="button" onClick={() => navigate("/signin")}>
+                Log In
+              </button>
+            </p>
           </form>
         </div>
-      </motion.div>
-    </div>
-  );
-};
-
-export default SignUp;
+      </section>
+    </main>
+  )
+}

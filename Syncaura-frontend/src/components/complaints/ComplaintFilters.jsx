@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import FilterDropdown from "../FilterDropdown";
+import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
 
@@ -60,13 +60,15 @@ export default function ComplaintFilters({ onClose, onApply }) {
 
         {/* Status */}
         <div className="flex flex-col gap-2 w-full lg:w-1/4">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Status
+          </label>
           <div className="flex flex-wrap gap-2">
             {items.map((item) => (
               <button
                 onClick={() => setStatus(item)}
                 key={item}
-                className={`px-4 py-1.5 rounded-full text-sm border ${
+                className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${
                   status === item
                     ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]"
                     : "border-gray-300 text-gray-500"

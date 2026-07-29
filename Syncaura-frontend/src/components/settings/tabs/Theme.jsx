@@ -24,6 +24,31 @@ const Theme = () => {
   const { theme = "light", font = "Arial", fontSize = "medium", zoom = 100 } =
     useSelector((s) => s.ui || {});
 
+  // Apply page zoom based on zoom state
+  useEffect(() => {
+    document.body.style.zoom = `${zoom}%`;
+    // Optional: also set transform for better cross‑browser support
+    document.documentElement.style.transform = `scale(${zoom / 100})`;
+    document.documentElement.style.transformOrigin = '0 0';
+    return () => {
+      // Reset on cleanup
+      document.body.style.zoom = '';
+      document.documentElement.style.transform = '';
+      document.documentElement.style.transformOrigin = '';
+    };
+  }, [zoom]);
+  // Apply font size based on fontSize state
+useEffect(() => {
+  const sizeMap = {
+    small: "85%",
+    medium: "100%",
+    large: "115%",
+    xlarge: "130%",
+  };
+  const size = sizeMap[fontSize] || "100%";
+      document.documentElement.style.fontSize = size;
+}, [fontSize]);
+
   const [language, setLanguage] = useState(
     (localStorage.getItem("app_language") || i18n.language || "en").substring(0, 2)
   );
@@ -73,13 +98,7 @@ const Theme = () => {
   const handleFontChange = (e) => dispatch(setFont(e.target.value));
 
   const handleFontSizeChange = (e) => {
-    const map = {
-      Small: "small",
-      Medium: "medium",
-      Large: "large",
-      "Extra Large": "xlarge",
-    };
-    dispatch(setFontSize(map[e.target.value]));
+    dispatch(setFontSize(e.target.value));
   };
 
   const handleZoomDecrease = () =>
@@ -106,6 +125,14 @@ const Theme = () => {
 
   const currentLangLabel =
     LANGUAGES.find((l) => l.code === language)?.label || "English";
+
+  const fontSizeLabels = {
+    small: "Small",
+    medium: "Medium",
+    large: "Large",
+    xlarge: "Extra Large",
+  };
+  const currentFontSizeLabel = fontSizeLabels[fontSize] || "Medium";
 
   return (
     <div className="w-full flex justify-center bg-white dark:bg-[#0B0B0B] min-h-screen text-gray-900 dark:text-white">
@@ -160,25 +187,25 @@ const Theme = () => {
               </select>
             </SettingRow>
 
-            <SettingRow label={t("fontSize")} value={fontSize}>
+            <SettingRow label={t("fontSize")} value={currentFontSizeLabel}>
               <select
                 value={fontSize}
                 onChange={handleFontSizeChange}
                 className="bg-white dark:bg-[#0B0B0B] text-black dark:text-white border border-gray-300 dark:border-[#2A2A2A] px-3 py-1 rounded-md"
               >
-                <option value="Small">Small</option>
-                <option value="Medium">Medium</option>
-                <option value="Large">Large</option>
-                <option value="Extra Large">Extra Large</option>
+                <option value="small">{t("Small") || "Small"}</option>
+                <option value="medium">{t("Medium") || "Medium"}</option>
+                <option value="large">{t("Large") || "Large"}</option>
+                <option value="xlarge">{t("Extra Large") || "Extra Large"}</option>
               </select>
             </SettingRow>
 
             {/* ✅ Improved zoom UI */}
             <SettingRow label={t("pageZoom")} value="">
               <div className="flex items-center gap-2">
-                <button onClick={handleZoomDecrease} className="px-2 border rounded">-</button>
+                <button onClick={handleZoomDecrease} className="px-2 border rounded btn-hover">-</button>
                 <span>{zoom}%</span>
-                <button onClick={handleZoomIncrease} className="px-2 border rounded">+</button>
+                <button onClick={handleZoomIncrease} className="px-2 border rounded btn-hover">+</button>
               </div>
             </SettingRow>
           </div>
@@ -215,7 +242,7 @@ const SyncButton = ({ label, onClick, isSyncing }) => (
   <button
     onClick={onClick}
     disabled={isSyncing}
-    className="flex justify-between items-center w-full p-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl bg-white dark:bg-[#0B0B0B] text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-[#111]"
+    className="flex justify-between items-center w-full p-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl bg-white dark:bg-[#0B0B0B] text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-[#111] btn-hover"
   >
     <span>{label}</span>
     <RefreshCw className={isSyncing ? "animate-spin" : ""} />

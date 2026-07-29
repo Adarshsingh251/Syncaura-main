@@ -7,7 +7,7 @@ import FeatureShowcase from '../components/home/FeatureShowcase';
 import ToolsGrid from '../components/home/ToolsGrid';
 import Testimonials from '../components/home/Testimonials';
 import CTABanner from '../components/home/CTABanner';
-import Newsletter from '../components/home/Newsletter';
+import FAQs from '../components/home/FAQs';
 import Footer from '../components/home/Footer';
 
 export default function Home() {
@@ -21,7 +21,7 @@ export default function Home() {
       <ToolsGrid />
       <Testimonials />
       <CTABanner />
-      <Newsletter />
+      <FAQs />
       <Footer />
     </div>
   );

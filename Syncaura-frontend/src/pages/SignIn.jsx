@@ -1,189 +1,127 @@
-import { Loader, Mail } from "lucide-react";
-import React, { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import SocialAuthButton from "../components/auth/SocialAuthButton";
-import { motion } from "framer-motion";
-import PasswordField from "../components/auth/PasswordField";
-import { Link, useNavigate } from "react-router-dom";
-import AnimatedInput from "../components/auth/AnimatedInput";
-import { toast } from "react-toastify";
-import { loginUser } from "../redux/features/authThunks";
-import { useDispatch, useSelector } from "react-redux";
-import { FcGoogle } from "react-icons/fc";
-import { FaGithub, FaFacebook } from "react-icons/fa";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { loginUser } from '../redux/features/authThunks'
+import { Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react'
+import { FcGoogle } from 'react-icons/fc'
+import { FaGithub, FaFacebookF } from 'react-icons/fa'
+import leftArt from "../assets/left-art.png"
+import "./style9.css"
+import Spinner from "../components/Spinner"
 
-const SignIn = () => {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm();
-  const dispatch=useDispatch()
+export default function SignIn() {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { isLoading: reduxLoading, error: reduxError } = useSelector((state) => state.auth || {})
 
-  const wrapperRef = useRef(null);
-  const passRef = useRef(null);
-  const socialProviders = [
-    {
-      id: "google",
-      icon: "/images/Auth/google.png",
-      alt: "Google login",
-      onClick: () => console.log("Google Login"),
-    },
-    {
-      id: "github",
-      icon: "/images/Auth/github.png",
-      alt: "GitHub login",
-      onClick: () => console.log("GitHub Login"),
-    },
-    {
-      id: "facebook",
-      icon: "/images/Auth/facebook.png",
-      alt: "Facebook login",
-      onClick: () => console.log("Facebook Login"),
-    },
-  ];
-  const [isSubmitting, setIsSubmitting]=useState(false)
-  const navigate=useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [visible, setVisible] = useState(false)
+  const [message, setMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleFocus = (ref) => {
-    ref.current?.classList.add(
-      "border-[#01509C]",
-      "ring-2",
-      "ring-[#01509C]/30",
-    );
-  };
-  const handleBlur = (ref) => {
-    ref.current?.classList.remove(
-      "border-[#01509C]",
-      "ring-2",
-      "ring-[#01509C]/30",
-    );
-  };
-  const onSubmit = async (data) => {
-     try {
-      setIsSubmitting(true)
-       const res = await dispatch(loginUser(data)).unwrap();
-       console.log(res);
-       
- 
-       toast.success(`Welcome Back ${res?.user?.name}!!`);
- 
-       switch (res?.user?.role) {
-         case "Admin":
-           navigate("/admin");
-           break;
-         case "Co-Admin":
-           navigate("/co-admin");
-           break;
-         default:
-           navigate("/user-dashboard");
-       }
-     } catch (err) {
-       toast.error(err || "Registration failed");
-     }finally{
-      setIsSubmitting(false)
-     }
-   };
- 
-   const onError = (errors) => {
-    isSubmitting(false)
-     const firstError = Object.values(errors)[0];
- 
-     if (firstError?.message) {
-       toast.error(firstError.message);
-     } else {
-       toast.error("Please fix the form errors");
-     }
- 
-     console.log(errors);
-   };
- 
- return (
-  <div className="w-full h-screen bg-black flex items-center justify-center">
+  async function handleSubmit(event) {
+    event.preventDefault()
 
-    {/* MAIN WHITE CONTAINER */}
-    <div className="w-[95%] h-[90%] bg-white dark:bg-[#0F172A] rounded-3xl flex overflow-hidden relative">
+    if (!email.trim()) {
+      setMessage('Email is required')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email.trim())) {
+      setMessage('Invalid email address')
+      return
+    }
+    if (!password.trim()) {
+      setMessage('Password is required')
+      return
+    }
 
-      {/* LEFT SIDE */}
-      <div className="w-[45%] bg-[#1E4D7B] relative flex items-center justify-center">
+    setIsLoading(true)
+    setMessage("")
 
-        {/* CURVE */}
-        <div className="absolute right-0 top-0 w-[70%] h-full bg-white dark:bg-[#0F172A] rounded-l-[100px]"></div>
+    try {
+      const data = await dispatch(
+        loginUser({
+          email: email.trim(),
+          password: password.trim(),
+        })
+      ).unwrap()
 
-        {/* IMAGE */}
-        <img
-  src="/images/Auth/loginHuman.png"
-  alt="login"
-  className="w-[420px] lg:w-[500px] z-10 scale-x-[-1]"
-/>
-      </div>
+      if (data?.tokens?.accessToken) {
+        localStorage.setItem("accessToken", data.tokens.accessToken)
+      }
+      if (data?.tokens?.refreshToken) {
+        localStorage.setItem("refreshToken", data.tokens.refreshToken)
+      }
 
-      {/* RIGHT SIDE */}
-      <div className="w-full flex flex-col items-center max-w-md space-y-5">
+      setMessage("Welcome back! You're logged in.")
+      const userRole = data?.user?.role || 'user'
+      const roleHome = userRole === 'admin' ? '/admin' : userRole === 'co-admin' ? '/co-admin' : '/user-dashboard'
+      navigate(roleHome)
 
-        <div className="w-[380px] space-y-6 mt-4">
+    } catch (err) {
+      setMessage(
+        typeof err === "string"
+          ? err
+          : err?.message || reduxError || "Invalid email or password."
+      )
+      console.log(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-          <h1 className="text-2xl font-semibold text-center text-gray-800 dark:text-white">
-            Welcome Back
-          </h1>
+  const loadingState = isLoading || reduxLoading
 
-          {/* EMAIL */}
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">📧</span>
-            <input
-  type="email"
-  placeholder="Email Address"
-  className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-700 placeholder-gray-400 focus:outline-none"
-/>
-          </div>
+  return (
+    <main className="page">
+      <section className="auth-card">
+        <aside className="art" aria-hidden="true"><img src={leftArt} alt="" /></aside>
+        <div className="form-pane">
+          <form onSubmit={handleSubmit}>
+            <h1>Welcome <em>Back</em></h1>
+            <p className="lead">Login to continue your journey.</p>
+            <div className="fields">
+              <label className="field">
+                <Mail size={19} strokeWidth={1.8} />
+                <input type="email" placeholder="Email" value={email} onChange={event => setEmail(event.target.value)} required />
+              </label>
+              <label className="field">
+                <LockKeyhole size={19} strokeWidth={1.8} />
+                <input type={visible ? 'text' : 'password'} placeholder="Password" value={password} onChange={event => setPassword(event.target.value)} required />
+                <button type="button" className="reveal" aria-label="Show password" onClick={() => setVisible(!visible)}>
+                  {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </label>
+            </div>
+            <div className="options">
+              <label className="check"><input type="checkbox" defaultChecked /><span>Remember Me</span></label>
+              <a href="#forgot">Forgot Password?</a>
+            </div>
 
-          {/* PASSWORD */}
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔒</span>
-            <input
-  type="password"
-  placeholder="Password"
-  className="w-full border border-gray-300 px-4 py-3 rounded-lg bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-/>
-          </div>
+            <button className="submit" type="submit" disabled={loadingState}>
+              {loadingState ? <><Spinner /> <span>Logging in...</span></> : "Log In"}
+            </button>
 
-          <p className="text-sm text-right text-blue-500 cursor-pointer">
-            Forgot Password?
-          </p>
+            {message && <p className="message" role="status">{message}</p>}
 
-          <button className="w-full bg-blue-600 text-white py-3 rounded-md shadow-md">
-            Sign In
-          </button>
+            <div className="divider"><span>OR</span></div>
+            <div className="socials">
+              <button type="button" aria-label="Continue with Google"><FcGoogle size={23} /></button>
+              <button type="button" aria-label="Continue with GitHub"><FaGithub size={22} /></button>
+              <button type="button" className="facebook" aria-label="Continue with Facebook"><FaFacebookF size={19} /></button>
+            </div>
 
-          <div className="flex items-center my-6">
-  <div className="flex-grow h-px bg-gray-300"></div>
-  <span className="mx-4 text-sm text-gray-400">Or continue with</span>
-  <div className="flex-grow h-px bg-gray-300"></div>
-</div>
-
-<div className="flex justify-center gap-4 mb-4">
-  <button className="border p-2 rounded-md hover:shadow">
-    <FcGoogle size={20} />
-  </button>
-  <button className="border p-2 rounded-md hover:shadow">
-    <FaGithub size={20} />
-  </button>
-  <button className="border p-2 rounded-md hover:shadow">
-    <FaFacebook size={20} className="text-blue-600" />
-  </button>
-</div>
-
-          <p className="text-center text-sm text-gray-500">
-            Don’t have an account? <span className="text-blue-500">Sign Up</span>
-          </p>
-
+            <p className="switch">
+              Don't have an account?{" "}
+              <button type="button" onClick={() => navigate("/signup")}>
+                Sign Up
+              </button>
+            </p>
+          </form>
         </div>
-      </div>
-
-    </div>
-  </div>
-);
-};
-
-export default SignIn;
+      </section>
+    </main>
+  )
+}

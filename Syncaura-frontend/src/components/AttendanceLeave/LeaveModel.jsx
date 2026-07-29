@@ -3,14 +3,12 @@ import { FileText, X } from "lucide-react"
 import MotionSelect from "../projects/Model/MotionSelect"
 import { Controller, useForm } from "react-hook-form"
 
-const LeaveModel = ({ onClose, setHistory }) => {
+const LeaveModel = ({ onClose, setLeaveData }) => {
 
     const leaveTypes = [
         "Casual",
         "Sick",
         "Earned",
-        "Paid",
-        "Unpaid",
         "Maternity",
         "Paternity",
         "Marriage",
@@ -30,6 +28,9 @@ const LeaveModel = ({ onClose, setHistory }) => {
         watch,
         formState: { errors },
     } = useForm({
+        defaultValues: {
+            leaveType: "Casual",
+        },
     });
     const startDate = watch("startDate");
     const today = new Date().toISOString().split("T")[0];
@@ -38,11 +39,13 @@ const LeaveModel = ({ onClose, setHistory }) => {
         const currData = {
             startDate: new Date(`${data["startDate"]}T00:00:00Z`).toISOString(),
             endDate: new Date(`${data["endDate"]}T00:00:00Z`).toISOString(),
-            type: data["leaveType"],
+            type: data["leaveType"] || "Casual",
             reason: data["reason"],
             status: "Pending"
         }
-        setHistory((prev)=>[currData, ...prev])
+        if (typeof setLeaveData === "function") {
+            setLeaveData((prev) => [currData, ...prev]);
+        }
 
 
         onClose();
@@ -88,7 +91,7 @@ const LeaveModel = ({ onClose, setHistory }) => {
                         </div>
                         <button
                             onClick={onClose}
-                            className=" text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                            className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white btn-hover"
                         >
                             <X className="size-7" />
                         </button>
@@ -102,11 +105,14 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                 <Controller
                                     name="leaveType"
                                     control={control}
-                                    rules={{ required: true }}
+                                    rules={{ required: "Leave type is required" }}
                                     render={({ field }) => (
-                                        <MotionSelect {...field} startVal="Casual Leave" options={leaveTypes} />
+                                        <MotionSelect {...field} startVal="Casual" options={leaveTypes} />
                                     )}
                                 />
+                                {errors.leaveType && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.leaveType.message}</p>
+                                )}
                             </div>
                         </div>
                         <div className="flex sm:flex-row flex-col flex-1/2  w-full gap-2 ">
@@ -118,10 +124,13 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                     <input
                                         type="date"
                                         min={today}
-                                        {...register("startDate", { required: true })}
+                                        {...register("startDate", { required: "Start date is required" })}
 
                                         className="bg-transparent w-full date-input font-semibold outline-none text-[#898888] text-sm placeholder:text-[#898888]"
                                     />
+                                    {errors.startDate && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.startDate.message}</p>
+                                    )}
                                 </div>
 
                             </div>
@@ -136,12 +145,17 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                         {...register("endDate", {
                                             required: "End date is required",
                                             validate: (value) =>
-                                                !startDate || value > startDate || "End date must be after start date",
+                                                !startDate || value >= startDate || "End date must be on or after start date",
                                         })}
 
 
                                         className="bg-transparent w-full date-input font-semibold outline-none text-[#898888] text-sm placeholder:text-[#898888]"
                                     />
+                                    {errors.endDate && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                            {errors.endDate.message}
+                                        </p>
+                                    )}
                                 </div>
 
                             </div>
@@ -167,10 +181,15 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                     placeholder="Briefly explain the reason"
                                     className="bg-transparent w-full font-semibold outline-none text-[#898888] text-sm placeholder:text-[#898888]"
                                 ></textarea>
+                                {errors.reason && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {errors.reason.message}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <div className="flex items-center justify-center mt-5 w-full">
-                            <button type="submit" className="flex cursor-pointer items-center justify-center bg-[#2461E6] dark:bg-[#73FBFD] px-7 py-2 rounded-4xl ">
+                            <button type="submit" className="flex cursor-pointer items-center justify-center bg-[#2461E6] dark:bg-[#73FBFD] px-7 py-2 rounded-4xl btn-hover">
                                 <p className="dark:text-[#2E2F2F] text-[#FFFFFF] text-lg font-medium" >Apply Leave</p>
                             </button>
                         </div>
