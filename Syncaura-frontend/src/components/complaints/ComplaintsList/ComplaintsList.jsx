@@ -1,6 +1,7 @@
-import { CircleAlert, CircleCheck, Clock, Eye } from "lucide-react";
+import { Clock, Eye } from "lucide-react";
 import { FaClock } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export default function ComplaintsList({
   COMPLAINTS,
@@ -9,6 +10,7 @@ export default function ComplaintsList({
   statusStyle,
   statusIcon,
 }) {
+  const { t } = useTranslation();
  const formatDate = (dateString) => {
   if (!dateString) return "";
 
@@ -62,19 +64,19 @@ export default function ComplaintsList({
           border border-[#8a858560] dark:border-[#575757] gap-x-2 sticky top-0
           bg-white dark:bg-[#2E2F2F] transition-colors duration-500 z-10">
           <div className="text-sm xl:text-lg font-semibold uppercase col-span-2 text-[#000000] dark:text-[#FFFFFF]">
-            complaint id
+            {t("complaintsList_complaintId", "complaint id")}
           </div>
           <div className="text-sm flex items-center justify-start w-full xl:text-lg font-semibold uppercase col-span-4 text-[#000000] dark:text-[#FFFFFF]">
-            subject/category
+            {t("complaintsList_subjectCategory", "subject/category")}
           </div>
           <div className="text-sm xl:text-lg font-semibold uppercase col-span-2 text-[#000000] dark:text-[#FFFFFF]">
-            date
+            {t("complaintsList_date", "date")}
           </div>
           <div className="text-sm xl:text-lg font-semibold uppercase col-span-2 text-[#000000] dark:text-[#FFFFFF]">
-            status
+            {t("complaintsList_status", "status")}
           </div>
           <div className="text-sm xl:text-lg font-semibold uppercase col-span-1 text-[#000000] dark:text-[#FFFFFF]">
-            actions
+            {t("complaintsList_actions", "actions")}
           </div>
         </div>
 

@@ -39,13 +39,13 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
           <div
             className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium  ${statusColor[status]}`}
           >
-            {status}
+            {t(`status_${status.toLowerCase()}`, status)}
           </div>
         </div>
 
         <div className="flex-1/13 w-full flex justify-end">
           <button className="text-[#2461E6] hover:underline font-medium btn-hover">
-            Edit
+            {t("edit", "Edit")}
           </button>
         </div>
       </div>
@@ -83,14 +83,14 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
               <span
                 className={`inline-block px-5 py-1 mt-2 rounded-md text-xs font-medium ${statusColor[status]}`}
               >
-                {status}
+                {t(`status_${status.toLowerCase()}`, status)}
               </span>
             </div>
           </div>
 
           <div className="flex justify-end pt-2">
             <button className="text-sm font-medium text-[#2461E6] hover:underline btn-hover">
-              {t("edit")}
+              {t("edit", "Edit")}
             </button>
           </div>
         </div>
