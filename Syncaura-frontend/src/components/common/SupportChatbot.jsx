@@ -305,7 +305,9 @@ export default function SupportChatbot() {
 
                             </div>
                             <div className="flex items-center gap-5 ">
-                                <Minus className="text-white size-6" />
+                                <button className="btn-hover" onClick={() => setOpen(false)} >
+                                    <Minus className="text-white size-6" />
+                                </button>
                                 <button className="btn-hover" onClick={() => setOpen(false)} >
                                     <X className="text-white size-6" />
                                 </button>
