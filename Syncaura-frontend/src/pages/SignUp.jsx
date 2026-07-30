@@ -8,11 +8,24 @@ import "./style9.css";
 import api from "../config/axios.js";
 import { useNavigate } from "react-router-dom";
 
-function PasswordField({ label, value, onChange }) {
+function PasswordField({
+    label,
+    value,
+    onChange,
+    onFocus,
+    onBlur
+  }) {
   const [visible, setVisible] = useState(false)
   return <label className="field">
     <LockKeyhole size={19} strokeWidth={1.8} />
-    <input type={visible ? 'text' : 'password'} placeholder={label} value={value} onChange={onChange}/>
+    <input
+      type={visible ? "text" : "password"}
+      placeholder={label}
+      value={value}
+      onChange={onChange}
+      onFocus={onFocus}
+      onBlur={onBlur}
+    />
     <button type="button" className="reveal" aria-label={`Show ${label}`} onClick={() => setVisible(!visible)}>
       {visible ? <EyeOff size={18} /> : <Eye size={18} />}
     </button>
@@ -27,7 +40,36 @@ export default function SignUpPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [showStrength, setShowStrength] = useState(false);
   const update = key => event => setForm({ ...form, [key]: event.target.value })
+
+  const checkPasswordStrength = (password) => {
+  if (!password.trim()) {
+    setPasswordStrength("");
+    setShowStrength(false);
+    return;
+  }
+
+  let score = 0;
+
+  if (password.length >= 8) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/\d/.test(password)) score++;
+  if (/[@$#!%*?&]/.test(password)) score++;
+
+  if (score <= 2) {
+    setPasswordStrength("Weak");
+    setShowStrength(true);
+  } else if (score <= 4) {
+    setPasswordStrength("Medium");
+    setShowStrength(true);
+  } else {
+    setPasswordStrength("Strong");
+    setShowStrength(true);
+  }
+};
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -72,11 +114,11 @@ export default function SignUpPage() {
 
     //Validate password strength
     const passwordRegex =
-  /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#!%*?&]).{8,}$/;
 
 if (!passwordRegex.test(form.password.trim())) {
   setPasswordError(
-    "Password must be at least 6 characters and include 1 uppercase letter, 1 number, and 1 special character."
+    "Password must be at least 8 Characters and include Uppercase Letter, Lowercase Letter, Digit, and Special Character."
   );
   return;
 }
@@ -133,11 +175,36 @@ if (!passwordRegex.test(form.password.trim())) {
         {emailError && (
         <p className="field-error">{emailError}</p>
         )}
-        <PasswordField
-          label="Password"
-          value={form.password}
-          onChange={update("password")}
-        />
+      <PasswordField
+        label="Password"
+        value={form.password}
+        onFocus={() => {
+       if (form.password.trim() !== "") {
+        setShowStrength(true);
+        }
+        }}
+        onBlur={() => {
+        setShowStrength(false);
+        }}
+        onChange={(e) => {
+        update("password")(e);
+        checkPasswordStrength(e.target.value);
+        }}
+      />
+
+        {showStrength && (
+          <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
+          Password Strength: {passwordStrength}
+          </p>
+        )}
+
+        {showStrength && (
+         <div className="strength-bar">
+          <div className={`strength-fill ${passwordStrength.toLowerCase()}`}>
+
+          </div>
+          </div>
+          )}
 
         {passwordError && (
           <p className="field-error">{passwordError}</p>
