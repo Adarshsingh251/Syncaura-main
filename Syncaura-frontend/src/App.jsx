@@ -40,33 +40,65 @@ export default function App() {
   // const user = useSelector((state) => state.auth.user);
   const authChecking = useSelector((state) => state.auth.authChecking);
 
+  // useEffect(() => {
+  //   dispatch(refreshAccessToken());
+
+  //   // Backend connection test
+  //   fetch("/health")
+  //     .then(async (res) => {
+  //       if (!res.ok) {
+  //         throw new Error(`HTTP Error: ${res.status}`);
+  //       }
+
+  //       const contentType = res.headers.get("content-type");
+
+  //       if (!contentType || !contentType.includes("application/json")) {
+  //         throw new Error(
+  //           "Expected JSON response but received something else.",
+  //         );
+  //       }
+
+  //       return res.json();
+  //     })
+  //     .then((data) => {
+  //       console.log("✅ Backend Connected:", data);
+  //     })
+  //     .catch((err) => {
+  //       console.error("❌ Backend Connection Error:", err.message);
+  //     });
+  // }, [dispatch]);
+
+// new updatw 
   useEffect(() => {
-    dispatch(refreshAccessToken());
+  const initAuth = async () => {
+    try {
+      const result = await dispatch(refreshAccessToken());
 
-    // Backend connection test
-    fetch("/health")
-      .then(async (res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP Error: ${res.status}`);
-        }
+      if (refreshAccessToken.fulfilled.match(result)) {
+        dispatch(fetchUserProfile());
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-        const contentType = res.headers.get("content-type");
+  initAuth();
 
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error(
-            "Expected JSON response but received something else.",
-          );
-        }
+  fetch("/health")
+    .then(async (res) => {
+      if (!res.ok) {
+        throw new Error(`HTTP Error: ${res.status}`);
+      }
 
-        return res.json();
-      })
-      .then((data) => {
-        console.log("✅ Backend Connected:", data);
-      })
-      .catch((err) => {
-        console.error("❌ Backend Connection Error:", err.message);
-      });
-  }, [dispatch]);
+      return res.json();
+    })
+    .then((data) => {
+      console.log("Backend Connected:", data);
+    })
+    .catch((err) => {
+      console.error(err.message);
+    });
+}, [dispatch]);
 
   if (authChecking) {
     return (
