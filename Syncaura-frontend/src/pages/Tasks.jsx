@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -101,6 +102,7 @@ const ListRow = ({ task, onOpen, onDelete }) => {
 
 // ── Main Tasks Page ───────────────────────────────────────────────────────────
 const Tasks = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { tasks, isLoading } = useSelector((state) => state.tasks);
   const isDark = useSelector((state) => state.theme.isDark);

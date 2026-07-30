@@ -91,18 +91,18 @@ const Theme = () => {
   };
 
   const handleLanguageChange = (e) => {
-  const code = e.target.value;
+    const code = e.target.value;
 
-  console.log("Selected:", code);
+    console.log("Selected:", code);
 
-  setLanguage(code);
-  dispatch(setAppLanguage(code));
-  localStorage.setItem("app_language", code);
+    setLanguage(code);
+    dispatch(setAppLanguage(code));
+    localStorage.setItem("app_language", code);
 
-  i18n.changeLanguage(code);
+    i18n.changeLanguage(code);
 
-  console.log("After change:", i18n.language);
-};
+    console.log("After change:", i18n.language);
+  };
 
   const handleFontChange = (e) => dispatch(setFont(e.target.value));
 
@@ -134,6 +134,14 @@ const Theme = () => {
 
   const currentLangLabel =
     LANGUAGES.find((l) => l.code === language)?.label || "English";
+
+  const fontSizeLabels = {
+    small: "Small",
+    medium: "Medium",
+    large: "Large",
+    xlarge: "Extra Large",
+  };
+  const currentFontSizeLabel = fontSizeLabels[fontSize] || "Medium";
 
   return (
     <div className="w-full flex justify-center bg-white dark:bg-[#0B0B0B] min-h-screen text-gray-900 dark:text-white">
@@ -188,7 +196,7 @@ const Theme = () => {
               </select>
             </SettingRow>
 
-            <SettingRow label={t("fontSize")} value={fontSize}>
+            <SettingRow label={t("fontSize")} value={currentFontSizeLabel}>
               <select
                 value={fontSize}
                 onChange={handleFontSizeChange}
@@ -198,6 +206,10 @@ const Theme = () => {
                 <option value="medium">Medium</option>
                 <option value="large">Large</option>
                 <option value="xlarge">Extra Large</option>
+                <option value="small">{t("Small") || "Small"}</option>
+                <option value="medium">{t("Medium") || "Medium"}</option>
+                <option value="large">{t("Large") || "Large"}</option>
+                <option value="xlarge">{t("Extra Large") || "Extra Large"}</option>
               </select>
             </SettingRow>
 

@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { ArrowRight, Sparkles, Zap } from 'lucide-react';
 import avatar1 from "../../assets/10-Photoroom.png";
 import avatar2 from "../../assets/12-Photoroom.png";
@@ -75,8 +74,6 @@ const TiltCard = ({ children }) => {
 
 /* ─── Main Component ────────────────────────────────────────── */
 const CTABanner = () => {
-  const { t } = useTranslation();
-
   return (
     <section
       className="w-full py-16 md:py-24"
@@ -135,7 +132,7 @@ const CTABanner = () => {
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 backdrop-blur-sm"
               >
                 <Zap size={13} className="text-cyan-300" />
-                <span className="text-xs font-semibold tracking-widest text-cyan-300 uppercase">{t("cta_badge")}</span>
+                <span className="text-xs font-semibold tracking-widest text-cyan-300 uppercase">All-in-one platform</span>
               </motion.div>
 
               {/* Headline */}
@@ -147,15 +144,15 @@ const CTABanner = () => {
                 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tight text-white max-w-4xl"
                 style={{ textShadow: '0 0 40px rgba(147,197,253,0.25)' }}
               >
-                {t("cta_title_line1")}{' '}
+                Work smarter,{' '}
                 <span
                   className="text-transparent bg-clip-text"
                   style={{ backgroundImage: 'linear-gradient(135deg, #60a5fa 0%, #38bdf8 40%, #a78bfa 100%)' }}
                 >
-                  {t("cta_title_line2")},
+                  faster,
                 </span>
                 <br />
-                <span className="text-white">{t("cta_title_line3")}</span>
+                <span className="text-white">together.</span>
               </motion.h2>
 
               {/* Sub-text */}
@@ -166,8 +163,8 @@ const CTABanner = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-base md:text-lg lg:text-xl text-white/60 max-w-xl leading-relaxed"
               >
-                {t("cta_description")}{' '}
-                <span className="text-white/90 font-semibold">{t("cta_description_highlight")}</span>.
+                Manage tasks, chat, meet, and track performance — all in{' '}
+                <span className="text-white/90 font-semibold">one seamless workspace</span>.
               </motion.p>
 
               {/* CTA Buttons */}
@@ -190,25 +187,27 @@ const CTABanner = () => {
                     }}
                   >
                     <span className="absolute inset-0 w-full h-full bg-white/20 -translate-x-[150%] skew-x-[-20deg] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
-                    {t("cta_getStarted")}
+                    Get Started Free
                     <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                   </motion.button>
                 </Link>
 
                 {/* Secondary */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="group flex items-center gap-2 px-8 py-4 rounded-2xl text-sm md:text-base font-semibold text-white/80 hover:text-white transition-colors"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    backdropFilter: 'blur(12px)',
-                  }}
-                >
-                  {t("cta_learnMore")}
-                  <ArrowRight size={14} className="opacity-60 group-hover:opacity-100 transition-transform group-hover:translate-x-1" />
-                </motion.button>
+                <Link to="/learn-more" className="inline-block">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="group flex items-center gap-2 px-8 py-4 rounded-2xl text-sm md:text-base font-semibold text-white/80 hover:text-white transition-colors"
+                    style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      backdropFilter: 'blur(12px)',
+                    }}
+                  >
+                    Learn more
+                    <ArrowRight size={14} className="opacity-60 group-hover:opacity-100 transition-transform group-hover:translate-x-1" />
+                  </motion.button>
+                </Link>
               </motion.div>
 
               {/* 

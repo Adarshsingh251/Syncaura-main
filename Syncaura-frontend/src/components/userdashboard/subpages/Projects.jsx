@@ -3,6 +3,7 @@ import TopCard from '../TopCard'
 import { MdFolderShared } from "react-icons/md";
 import { TiClipboard } from "react-icons/ti";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import ProjectContributionCard from './Project/ProjectContributionCard'
 import OverallContextChart from './Project/OverallContextChart'

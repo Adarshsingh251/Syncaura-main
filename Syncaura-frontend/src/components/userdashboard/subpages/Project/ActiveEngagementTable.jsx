@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Filter,
   Download,
-  Dot,
   Smartphone,
   Database,
   Globe,
@@ -55,6 +54,14 @@ export default function ActiveEngagementTable() {
     a.click();
   };
 
+  const filterItems = [
+    { key: "All", label: t("project_all_filter") },
+    { key: "On Track", label: t("project_on_track") },
+    { key: "Delayed", label: t("project_delayed_status") },
+    { key: "At Risk", label: t("project_at_risk_status") },
+    { key: "Complete", label: t("project_complete_status") }
+  ];
+
   return (
     <div className="w-full bg-white dark:bg-[#0f1113] transition-colors">
       <motion.div
@@ -62,11 +69,9 @@ export default function ActiveEngagementTable() {
         animate={{ opacity: 1 }}
         className="bg-white text-black dark:bg-[#1E1E1E] dark:text-white rounded-xl shadow-none border border-slate-200 dark:border-[#2d2f31] overflow-hidden"
       >
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b border-slate-200 dark:border-[#2d2f31]">
           <h2 className="text-2xl font-bold">{t("project_active_engagement_title")}</h2>
-
           <div className="flex items-center gap-2 relative">
             <button
               onClick={() => setShowFilter((v) => !v)}
@@ -81,15 +86,15 @@ export default function ActiveEngagementTable() {
                 animate={{ opacity: 1, y: 0 }}
                 className="absolute right-0 top-10 z-20 bg-white border border-slate-300 dark:bg-[#1a1c1e] dark:border-[#3e4042] rounded-lg shadow-xl w-40"
               >
-                {["All", "On Track", "Delayed", "At Risk", "Complete"].map((item) => (
+                {filterItems.map((item) => (
                   <button
-                    key={item}
-                    onClick={() => { setFilter(item); setPage(1); setShowFilter(false); }}
+                    key={item.key}
+                    onClick={() => { setFilter(item.key); setPage(1); setShowFilter(false); }}
                     className={`btn-hover w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-[#2d2f31] ${
-                      filter === item ? "font-bold" : "text-gray-400 dark:text-gray-400"
+                      filter === item.key ? "font-bold" : "text-gray-400 dark:text-gray-400"
                     }`}
                   >
-                    {item}
+                    {item.label}
                   </button>
                 ))}
               </motion.div>
@@ -178,7 +183,7 @@ export default function ActiveEngagementTable() {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-200 dark:border-[#2d2f31] bg-white dark:bg-[#141517] flex justify-between text-xs">
           <span>
-            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredData.length)} of {filteredData.length}
+            {t("project_showing_rows", { start: (page - 1) * PAGE_SIZE + 1, end: Math.min(page * PAGE_SIZE, filteredData.length), total: filteredData.length })}
           </span>
 
           <div className="flex gap-2 text-slate-600 dark:text-[#94a3b8]">

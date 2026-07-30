@@ -1,38 +1,37 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useDispatch, useSelector } from 'react-redux'
+import { loginUser } from '../redux/features/authThunks'
 import { Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { FaGithub, FaFacebookF } from 'react-icons/fa'
-import leftArt from "../assets/left-art.png";
-import "./style9.css";
-// import api from "../config/axios.js";
-import { useDispatch } from "react-redux";
-import { loginUser } from "../redux/features/authThunks";
-import Spinner from "../components/Spinner";
+import leftArt from "../assets/left-art.png"
+import "./style9.css"
+import Spinner from "../components/Spinner"
 
 export default function SignIn() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const { isLoading: reduxLoading } = useSelector(
+    (state) => state.auth || {}
+  );
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [visible, setVisible] = useState(false)
   const [message, setMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false)
 
   async function handleSubmit(event) {
-    event.preventDefault();
+    event.preventDefault()
 
-    // Validate required fields for login
     if (!email.trim()) {
       setMessage(t('auth_email_required'));
       return;
     }
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email.trim())) {
       setMessage(t('auth_invalid_email'));
       return;
@@ -42,9 +41,8 @@ export default function SignIn() {
       return;
     }
 
-    setIsLoading(true);
-    setMessage("");
-    
+    setIsLoading(true)
+    setMessage("")
 
     try {
       const data = await dispatch(
@@ -52,21 +50,19 @@ export default function SignIn() {
           email: email.trim(),
           password: password.trim(),
         })
-      ).unwrap();
+      ).unwrap()
 
-      localStorage.setItem(
-        "accessToken",
-        data.tokens.accessToken
-      );
-
-      localStorage.setItem(
-        "refreshToken",
-        data.tokens.refreshToken
-      );
+      if (data?.tokens?.accessToken) {
+        localStorage.setItem("accessToken", data.tokens.accessToken)
+      }
+      if (data?.tokens?.refreshToken) {
+        localStorage.setItem("refreshToken", data.tokens.refreshToken)
+      }
 
       setMessage(t('auth_login_success'));
-
-      navigate("/user-dashboard");
+      const userRole = data?.user?.role || 'user'
+      const roleHome = userRole === 'admin' ? '/admin' : userRole === 'co-admin' ? '/co-admin' : '/user-dashboard'
+      navigate(roleHome)
 
     } catch (error) {
       // setMessage(
@@ -90,13 +86,17 @@ export default function SignIn() {
       <h1>{t('welcomeBack')} <em>{t('welcomeBackEmphasis')}</em></h1>
       <p className="lead">{t('auth_signin_lead')}</p>
       <div className="fields">
-        <label className="field"><Mail size={19} strokeWidth={1.8} /><input type="email" placeholder={t('emailAddress')} value={email} onChange={event => setEmail(event.target.value)}  required /></label>
+        <label className="field"><Mail size={19} strokeWidth={1.8} /><input type="email" placeholder={t('emailAddress')} value={email} onChange={event => setEmail(event.target.value)} required /></label>
         <label className="field"><LockKeyhole size={19} strokeWidth={1.8} /><input type={visible ? 'text' : 'password'} placeholder={t('password')} value={password} onChange={event => setPassword(event.target.value)} required /><button type="button" className="reveal" aria-label={t('show_password')} onClick={() => setVisible(!visible)}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button></label>
       </div>
       <div className="options"><label className="check"><input type="checkbox" defaultChecked /><span>{t('remember_me')}</span></label><a href="#forgot">{t('forgotPassword')}</a></div>
-      
-      <button className="submit" type="submit" disabled={isLoading}>
-        {isLoading ? <><Spinner /> <span>{t('auth_logging_in')}</span></> : t('login')}
+
+      <button
+        className="submit"
+        type="submit"
+        disabled={isLoading || reduxLoading}
+      >
+        {isLoading || reduxLoading ? <><Spinner /> <span>{t('auth_logging_in')}</span></> : t('login')}
       </button>
 
       {message && <p className="message" role="status">{message}</p>}
@@ -112,7 +112,7 @@ export default function SignIn() {
           {t('signUp')}
         </button>
       </p>
-
     </form></div>
   </section></main>
 }
+
