@@ -5,25 +5,25 @@ const ResourceUtilization = () => {
   const { t } = useTranslation();
   const resourceData = [
     { 
-      name: "Design", 
+      name: t("admin_resource_design"), 
       rate: 85, 
       color: "bg-indigo-500", 
       darkColor: "dark:bg-[#bf00ff] dark:shadow-[0_0_10px_#bf00ff]" 
     },
     { 
-      name: "Dev", 
+      name: t("admin_resource_dev"),
       rate: 94, 
       color: "bg-blue-500", 
       darkColor: "dark:bg-[#00f2ff] dark:shadow-[0_0_10px_#00f2ff]" 
     },
     { 
-      name: "QA", 
+      name: t("admin_resource_qa"),
       rate: 60, 
       color: "bg-green-500", 
       darkColor: "dark:bg-[#39ff14] dark:shadow-[0_0_10px_#39ff14]" 
     },
     { 
-      name: "Product", 
+      name: t("admin_resource_product"),
       rate: 72, 
       color: "bg-orange-500", 
       darkColor: "dark:bg-[#ff4d4d] dark:shadow-[0_0_10px_#ff4d4d]" 

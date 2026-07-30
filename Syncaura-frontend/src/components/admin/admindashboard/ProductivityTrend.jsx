@@ -2,17 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
-const data = [
-  { name: "Jan", val: 10 },
-  { name: "Feb", val: 25 },
-  { name: "Mar", val: 45 },
-  { name: "Apr", val: 30 },
-  { name: "May", val: 60 },
-  { name: "Jun", val: 75 },
-];
-
 const ProductivityTrend = () => {
   const { t } = useTranslation();
+  const data = [
+    { name: t("month_jan"), val: 10 },
+    { name: t("month_feb"), val: 25 },
+    { name: t("month_mar"), val: 45 },
+    { name: t("month_apr"), val: 30 },
+    { name: t("month_may"), val: 60 },
+    { name: t("month_jun"), val: 75 },
+  ];
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {

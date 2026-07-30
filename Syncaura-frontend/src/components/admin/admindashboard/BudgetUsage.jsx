@@ -5,8 +5,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 const BudgetUsage = () => {
   const { t } = useTranslation();
   const data = [
-    { name: "Consumed", value: 75 },
-    { name: "Remaining", value: 25 },
+    { name: t("admin_budget_consumed"), value: 75 },
+    { name: t("admin_budget_remaining"), value: 25 },
   ];
 
   return (

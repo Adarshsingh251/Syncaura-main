@@ -12,6 +12,7 @@ export default function TaskStatusDistribution({
   titleColor = "text-[#6E7184] dark:text-white" 
 }) {
   const { t } = useTranslation();
+  const resolvedTitle = title === "Task Status Distribution" ? t("task_status_distribution_default") : title;
   const total = percentage ? null : task.reduce((sum, s) => sum + s.count, 0);
 
   return (
@@ -22,7 +23,7 @@ export default function TaskStatusDistribution({
         <div className="flex items-start justify-between">
           {/* Use the titleColor variable here instead of the hardcoded class */}
           <h1 className={`${titleColor} font-bold text-xl sm:text-2xl`}>
-            {title}
+            {resolvedTitle}
           </h1>
           
           <div className="flex items-end gap-2">

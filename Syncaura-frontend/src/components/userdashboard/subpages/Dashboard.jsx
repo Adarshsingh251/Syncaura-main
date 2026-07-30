@@ -166,7 +166,7 @@ const Dashboard = () => {
       <div className="flex flex-col items-center justify-start w-full gap-y-7 shadow-[0_0_10px_0_#54545440] dark:shadow-[0_0_12px_#00000080] py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-transparent dark:border-[#2A2A2A]">
         <div className="flex items-center justify-between w-full">
           <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-2xl">{t("dashboard_issues_alerts")}</h1>
-          <motion.p whileHover={{ scale: 1.08, x: 6 }} className="text-[#C05328] dark:text-blue-400 text-lg font-medium cursor-pointer hover:underline">View All</motion.p>
+<motion.p whileHover={{ scale: 1.08, x: 6 }} className="text-[#C05328] dark:text-blue-400 text-lg font-medium cursor-pointer hover:underline">{t("dashboard_view_all")}</motion.p>
         </div>
         <div className="flex flex-wrap gap-4 md:gap-5 w-full justify-center xl:justify-start">
           <AnimatePresence>

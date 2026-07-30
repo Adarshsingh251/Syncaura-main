@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 const SprintSuccessRate = () => {
   const { t } = useTranslation();
   const sprintData = [
-    { name: "Sprint 24", rate: 92, color: "dark:bg-[#39ff14] dark:shadow-[0_0_10px_#39ff14]", textColor: "dark:text-[#39ff14]" },
-    { name: "Sprint 23", rate: 85, color: "dark:bg-[#00f2ff] dark:shadow-[0_0_10px_#00f2ff]", textColor: "dark:text-[#00f2ff]" },
-    { name: "Sprint 22", rate: 78, color: "dark:bg-[#bf00ff] dark:shadow-[0_0_10px_#bf00ff]", textColor: "dark:text-[#bf00ff]" },
-    { name: "Sprint 21", rate: 95, color: "dark:bg-[#39ff14] dark:shadow-[0_0_10px_#39ff14]", textColor: "dark:text-[#39ff14]" },
+    { name: t("admin_sprint_24"), rate: 92, color: "dark:bg-[#39ff14] dark:shadow-[0_0_10px_#39ff14]", textColor: "dark:text-[#39ff14]" },
+    { name: t("admin_sprint_23"), rate: 85, color: "dark:bg-[#00f2ff] dark:shadow-[0_0_10px_#00f2ff]", textColor: "dark:text-[#00f2ff]" },
+    { name: t("admin_sprint_22"), rate: 78, color: "dark:bg-[#bf00ff] dark:shadow-[0_0_10px_#bf00ff]", textColor: "dark:text-[#bf00ff]" },
+    { name: t("admin_sprint_21"), rate: 95, color: "dark:bg-[#39ff14] dark:shadow-[0_0_10px_#39ff14]", textColor: "dark:text-[#39ff14]" },
   ];
 
   return (

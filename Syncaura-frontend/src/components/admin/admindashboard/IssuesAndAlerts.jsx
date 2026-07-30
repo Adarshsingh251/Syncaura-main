@@ -12,27 +12,27 @@ const IssuesAndAlerts = () => {
 
   const alerts = [
     {
-      title: "Unauthorized Access Attempt",
-      subtitle: "IP.192.168.1.45",
-      time: "2 mins ago",
+      title: t("admin_alert_unauthorized"),
+      subtitle: t("admin_alert_ip"),
+      time: t("admin_time_2_mins"),
       icon: <GiCheckedShield className="text-red-500 dark:text-[#ff4d4d] text-2xl dark:drop-shadow-[0_0_5px_#ff4d4d]" />,
     },
     {
-      title: "Server Load High",
-      subtitle: "Cluster B usage > 90%",
-      time: "15 mins ago",
+      title: t("admin_alert_server_load"),
+      subtitle: t("admin_alert_cluster"),
+      time: t("admin_time_15_mins"),
       icon: <FiServer className="text-orange-500 dark:text-[#ffd700] text-2xl dark:drop-shadow-[0_0_5px_#ffd700]" />,
     },
     {
-      title: "System Patch Available",
-      subtitle: "v2.4.1 Security Patch",
-      time: "1 hour ago",
+      title: t("admin_alert_patch"),
+      subtitle: t("admin_alert_patch_version"),
+      time: t("admin_time_1_hour"),
       icon: <AiOutlineHistory className="text-blue-500 dark:text-[#00f2ff] text-2xl dark:drop-shadow-[0_0_5px_#00f2ff]" />,
     },
     {
-      title: "Daily Backup Completed",
-      subtitle: "Success",
-      time: "4 hours ago",
+      title: t("admin_alert_backup"),
+      subtitle: t("admin_alert_success"),
+      time: t("admin_time_4_hours"),
       icon: <IoCloud className="text-gray-600 dark:text-gray-400 text-2xl" />,
     },
   ];

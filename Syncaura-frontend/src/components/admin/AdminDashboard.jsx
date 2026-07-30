@@ -46,7 +46,7 @@ const AdminDashboard = () => {
           <StatCard title={t("admin_stat_active")} value="12" icon={<FaCirclePlay />} iconBg="bg-blue-50 dark:bg-cyan-950/30" iconColor="text-blue-500 dark:text-cyan-400" percent="0%" percentBg="bg-gray-100 dark:bg-zinc-800" percentColor="text-gray-500 dark:text-zinc-400" />
         </motion.div>
         <motion.div variants={item}>
-          <StatCard title={t("admin_stat_delayed")} value="3" icon={<FaExclamationTriangle />} iconBg="bg-orange-50 dark:bg-red-950/20" iconColor="text-orange-500 dark:text-red-500" percent="HIGH RISK" percentBg="bg-orange-100 dark:bg-transparent" percentColor="text-orange-600 dark:text-red-600" />
+          <StatCard title={t("admin_stat_delayed")} value="3" icon={<FaExclamationTriangle />} iconBg="bg-orange-50 dark:bg-red-950/20" iconColor="text-orange-500 dark:text-red-500" percent={t("admin_high_risk")} percentBg="bg-orange-100 dark:bg-transparent" percentColor="text-orange-600 dark:text-red-600" />
         </motion.div>
         <motion.div variants={item}>
           <StatCard title={t("admin_stat_completed")} value="27" icon={<FaCheckCircle />} iconBg="bg-green-50 dark:bg-green-950/20" iconColor="text-green-600 dark:text-green-500" percent="5%" percentBg="bg-green-50 dark:bg-green-900/20" percentColor="text-green-600 dark:text-green-500" />

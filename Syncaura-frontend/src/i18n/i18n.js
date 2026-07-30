@@ -313,20 +313,13 @@ const resources = {
       newsletter_errorInvalid: "Please enter a valid email",
       newsletter_success: "Successfully subscribed!",
 
-      // ✅ SIDEBAR
-      logout: "Log Out",
-      dashboard: "Dashboard",
-      projects: "Projects",
-      chat: "Chat",
-      meetings: "Meetings",
-      documents: "Documents & Reports",
+
       complaints: "Complaints",
       notice: "Notice",
       attendance: "Attendance & Leave",
       admin: "Admin",
 
-      // ✅ SETTINGS
-      settings: "Settings",
+
       settingsSubtitle: "Manage your account settings and preferences",
       profileTab: "Profile",
       accountSecurity: "Account & Security",
@@ -355,7 +348,7 @@ const resources = {
       needHelp: "Need Help? Ask me!",
 
       // ✅ PROFILE
-      
+
       profile: "Profile",
       save: "Save",
       edit: "Edit",
@@ -447,6 +440,7 @@ const resources = {
       actions: "Actions",
       admin_page_title: "DashBoard",
       admin_tabs_dashboard: "Dashboard",
+      admin_high_risk: "HIGH RISK",
       admin_tabs_projects: "Projects",
       admin_tabs_analytics: "Analytics",
       coadmin_page_title: "DashBoard",
@@ -517,6 +511,10 @@ const resources = {
       admin_budget_consumed_label: "CONSUMED",
       admin_issues_alerts_title: "Issues & Alerts",
       admin_sprint_success_rate: "Sprint Success Rate",
+      admin_sprint_10: "Sprint 10",
+      admin_sprint_11: "Sprint 11",
+      admin_sprint_12: "Sprint 12",
+      admin_sprint_13: "Sprint 13",
       admin_resource_utilization: "Resource Utilization",
       admin_analytics_title: "Analytics",
       admin_velocity: "Velocity",
@@ -526,6 +524,10 @@ const resources = {
       admin_productivity_quality: "Productivity & Quality",
       admin_team_productivity: "Team Productivity",
       admin_team_productivity_desc: "Story points delivered vs capacity",
+      admin_team_a: "Team A",
+      admin_team_b: "Team B",
+      admin_team_c: "Team C",
+      admin_team_d: "Team D",
       admin_delivered: "Delivered",
       admin_capacity: "Capacity",
       admin_defect_rate: "Defect Rate",
@@ -588,6 +590,27 @@ const resources = {
       analytics_showing_rows: "Showing {{start}}–{{end}} of {{total}}",
       analytics_prev: "Previous",
       analytics_next: "Next",
+
+      // ✅ USER DASHBOARD - SPRINT CONTRIBUTION
+      sprint_contribution: "Sprint Contribution",
+
+      // ✅ USER DASHBOARD - RECENT ACTIVITY
+      recent_activity_pr_merged: "Merged PR #452 into main",
+      recent_activity_completed_task: "Completed Task: Finalize documentation",
+      recent_activity_sarah_commented: "Sarah Chen commented on Login Refactor",
+      recent_activity_time_2h: "2 hours ago",
+      recent_activity_time_5h: "5 hours ago",
+      recent_activity_time_yesterday: "Yesterday",
+
+      // ✅ USER DASHBOARD - TASK STATUS
+      task_status_breakdown: "Task Status Breakdown",
+      task_status_distribution_default: "Task Status Distribution",
+      month_jan: "Jan",
+      month_feb: "Feb",
+      month_mar: "Mar",
+      month_apr: "Apr",
+      month_may: "May",
+      month_jun: "Jun",
       project_overall_context: "Overall Context",
       project_success_rate: "Success Rate",
       project_active_legend: "Active",
@@ -639,6 +662,22 @@ const resources = {
       meeting_clientDiscussion: "Client Discussion",
       meeting_marketingUpdate: "Marketing Update",
       meeting_engineeringReview: "Engineering Review",
+
+      admin_project_delivery_trends: "Project Delivery Trends",
+      admin_project_delivery_desc: "Cumulative Value Delivery",
+
+      admin_name: "NAME",
+      admin_mon: "MON",
+      admin_tue: "TUE",
+      admin_wed: "WED",
+      admin_thu: "THU",
+      admin_fri: "FRI",
+
+      admin_backlog: "Backlog",
+      admin_analysis: "Analysis",
+      admin_development: "Development",
+      admin_qa_review: "QA Review",
+      admin_deployed: "Deployed",
 
       // ✅ ATTENDANCE
       attendanceAndLeaveManagement: "Attendance & Leave Management",
@@ -796,8 +835,93 @@ const resources = {
       selectConversation: "Select a conversation to start chatting",
 
       searchPlaceholder: "Try Searching <<New Pages today>>",
-    },
+
+
+
+      // ✅ ISSUES AND ALERTS
+      admin_alert_unauthorized: "Unauthorized Access Attempt",
+      admin_alert_ip: "IP.192.168.1.45",
+      admin_time_2_mins: "2 mins ago",
+
+      admin_alert_server_load: "Server Load High",
+      admin_alert_cluster: "Cluster B usage > 90%",
+      admin_time_15_mins: "15 mins ago",
+
+      admin_alert_patch: "System Patch Available",
+      admin_alert_patch_version: "v2.4.1 Security Patch",
+      admin_time_1_hour: "1 hour ago",
+
+      admin_alert_backup: "Daily Backup Completed",
+      admin_alert_success: "Success",
+      admin_time_4_hours: "4 hours ago",
+
+
+      // ✅ PROJECT RISKS
+      admin_project_alpha: "Alpha Redesign",
+      admin_risk_backend_delay: "Backend integration delay",
+      admin_owner_john: "John D.",
+      admin_severity_high: "High",
+
+      admin_project_mobile: "Mobile App v2",
+      admin_risk_resource_shortage: "Resource shortage in QA",
+      admin_owner_sarah: "Sarah M.",
+      admin_severity_medium: "Medium",
+
+      admin_project_cloud: "Cloud Migration",
+      admin_risk_budget_variance: "Minor budget variance",
+      admin_owner_alex: "Alex K.",
+      admin_severity_low: "Low",
+
+      // ✅ PROUCTIVITY TRENDS
+      month_jan: "Jan",
+      month_feb: "Feb",
+      month_mar: "Mar",
+      month_apr: "Apr",
+      month_may: "May",
+      month_jun: "Jun",
+
+
+      // ✅ SPRINTSUCESSRATE
+      admin_sprint_24: "Sprint 24",
+      admin_sprint_23: "Sprint 23",
+      admin_sprint_22: "Sprint 22",
+      admin_sprint_21: "Sprint 21",
+
+      //✅ RESOURCE UTILIZATION
+      admin_resource_design: "Design",
+      admin_resource_dev: "Dev",
+      admin_resource_qa: "QA",
+      admin_resource_product: "Product",
+
+      //✅ PROJECT PAGE
+      admin_resource_allocation: "Resource Allocation",
+      admin_by_team: "By Team",
+      admin_by_project: "By Project",
+
+      admin_engineering: "Engineering",
+      admin_design: "Design",
+      admin_marketing: "Marketing",
+      admin_product_management: "Product Management",
+      admin_capacity: "Capacity",
+
+      admin_all_projects: "All Projects",
+      admin_filter_projects: "Filter projects...",
+      admin_filters: "Filters",
+
+      admin_progress: "Progress",
+      admin_status: "Status",
+      admin_health: "Health",
+      admin_deadline: "Deadline",
+      admin_risk: "Risk",
+
+      admin_review: "Review",
+
+      admin_showing_projects: "Showing 1-5 of 42 projects",
+      admin_prev: "Prev",
+      admin_next: "Next",
+    }
   },
+
 
   hi: {
     translation: {
@@ -1135,6 +1259,23 @@ const resources = {
       analytics_showing_rows: "{{start}}–{{end}} / {{total}} दिखाए जा रहे हैं",
       analytics_prev: "पिछला",
       analytics_next: "अगला",
+
+      // ✅ USER DASHBOARD
+      sprint_contribution: "स्प्रिंट योगदान",
+      recent_activity_pr_merged: "PR #452 को main में मर्ज किया गया",
+      recent_activity_completed_task: "पूर्ण कार्य: दस्तावेज़ीकरण अंतिम रूप दें",
+      recent_activity_sarah_commented: "सारा चेन ने लॉगिन रिफैक्टर पर टिप्पणी की",
+      recent_activity_time_2h: "2 घंटे पहले",
+      recent_activity_time_5h: "5 घंटे पहले",
+      recent_activity_time_yesterday: "कल",
+      task_status_breakdown: "कार्य स्थिति विच्छेदन",
+      task_status_distribution_default: "कार्य स्थिति वितरण",
+      month_jan: "जन",
+      month_feb: "फ़र",
+      month_mar: "मार्च",
+      month_apr: "अप्रैल",
+      month_may: "मई",
+      month_jun: "जून",
       project_overall_context: "कुल संदर्भ",
       project_success_rate: "सफलता दर",
       project_active_legend: "सक्रिय",
@@ -1274,6 +1415,43 @@ const resources = {
       activeTasks: "सक्रिय कार्य",
       spiralGoalProgress: "स्पाइरल लक्ष्य प्रगति",
       targetByFriday: "शुक्रवार तक लक्ष्य: {{percent}}%",
+      admin_total_projects: "कुल प्रोजेक्ट",
+      admin_active: "सक्रिय",
+      admin_completed: "पूर्ण",
+      admin_delayed: "विलंबित",
+      admin_at_risk: "जोखिम में",
+
+      admin_project_health_status: "प्रोजेक्ट की स्थिति",
+      admin_healthy: "स्वस्थ",
+      admin_on_track: "सही मार्ग पर",
+      admin_warning: "चेतावनी",
+      admin_critical: "गंभीर",
+
+      admin_resource_allocation: "संसाधन आवंटन",
+      admin_by_team: "टीम के अनुसार",
+      admin_by_project: "प्रोजेक्ट के अनुसार",
+
+      admin_engineering: "इंजीनियरिंग",
+      admin_design: "डिज़ाइन",
+      admin_marketing: "मार्केटिंग",
+      admin_product_management: "प्रोडक्ट प्रबंधन",
+      admin_capacity: "क्षमता",
+
+      admin_all_projects: "सभी प्रोजेक्ट",
+      admin_filter_projects: "प्रोजेक्ट फ़िल्टर करें...",
+      admin_filters: "फ़िल्टर",
+
+      admin_progress: "प्रगति",
+      admin_status: "स्थिति",
+      admin_health: "स्वास्थ्य",
+      admin_deadline: "अंतिम तिथि",
+      admin_risk: "जोखिम",
+
+      admin_review: "समीक्षा",
+
+      admin_showing_projects: "42 में से 1-5 प्रोजेक्ट दिखाए जा रहे हैं",
+      admin_prev: "पिछला",
+      admin_next: "अगला",
     },
   },
 
@@ -1425,6 +1603,43 @@ const resources = {
       employee: "empleado",
       needHelp: "¿Necesitas ayuda? ¡Pregúntame!",
       search: "Buscar",
+      admin_total_projects: "Proyectos Totales",
+      admin_active: "Activos",
+      admin_completed: "Completados",
+      admin_delayed: "Retrasados",
+      admin_at_risk: "En Riesgo",
+
+      admin_project_health_status: "Estado del Proyecto",
+      admin_healthy: "Saludable",
+      admin_on_track: "En Curso",
+      admin_warning: "Advertencia",
+      admin_critical: "Crítico",
+
+      admin_resource_allocation: "Asignación de Recursos",
+      admin_by_team: "Por Equipo",
+      admin_by_project: "Por Proyecto",
+
+      admin_engineering: "Ingeniería",
+      admin_design: "Diseño",
+      admin_marketing: "Marketing",
+      admin_product_management: "Gestión de Producto",
+      admin_capacity: "Capacidad",
+
+      admin_all_projects: "Todos los Proyectos",
+      admin_filter_projects: "Filtrar proyectos...",
+      admin_filters: "Filtros",
+
+      admin_progress: "Progreso",
+      admin_status: "Estado",
+      admin_health: "Salud",
+      admin_deadline: "Fecha Límite",
+      admin_risk: "Riesgo",
+
+      admin_review: "Revisión",
+
+      admin_showing_projects: "Mostrando 1-5 de 42 proyectos",
+      admin_prev: "Anterior",
+      admin_next: "Siguiente",
     },
   },
 
@@ -1590,6 +1805,43 @@ const resources = {
       email: "E-mail",
       phone: "Téléphone",
       welcome: "Bienvenue à FlowBit",
+      admin_total_projects: "Projets Totaux",
+      admin_active: "Actifs",
+      admin_completed: "Terminés",
+      admin_delayed: "Retardés",
+      admin_at_risk: "À Risque",
+
+      admin_project_health_status: "État du Projet",
+      admin_healthy: "Sain",
+      admin_on_track: "Sur la Bonne Voie",
+      admin_warning: "Avertissement",
+      admin_critical: "Critique",
+
+      admin_resource_allocation: "Allocation des Ressources",
+      admin_by_team: "Par Équipe",
+      admin_by_project: "Par Projet",
+
+      admin_engineering: "Ingénierie",
+      admin_design: "Conception",
+      admin_marketing: "Marketing",
+      admin_product_management: "Gestion de Produit",
+      admin_capacity: "Capacité",
+
+      admin_all_projects: "Tous les Projets",
+      admin_filter_projects: "Filtrer les projets...",
+      admin_filters: "Filtres",
+
+      admin_progress: "Progression",
+      admin_status: "Statut",
+      admin_health: "Santé",
+      admin_deadline: "Date Limite",
+      admin_risk: "Risque",
+
+      admin_review: "Révision",
+
+      admin_showing_projects: "Affichage de 1 à 5 sur 42 projets",
+      admin_prev: "Préc.",
+      admin_next: "Suiv.",
     },
   },
 
@@ -1736,6 +1988,43 @@ const resources = {
       employee: "Mitarbeiter",
       needHelp: "Brauchen Sie Hilfe? Fragen Sie mich!",
       search: "Suchen",
+      admin_total_projects: "Gesamtprojekte",
+      admin_active: "Aktiv",
+      admin_completed: "Abgeschlossen",
+      admin_delayed: "Verspätet",
+      admin_at_risk: "Gefährdet",
+
+      admin_project_health_status: "Projektstatus",
+      admin_healthy: "Gesund",
+      admin_on_track: "Im Plan",
+      admin_warning: "Warnung",
+      admin_critical: "Kritisch",
+
+      admin_resource_allocation: "Ressourcenzuweisung",
+      admin_by_team: "Nach Team",
+      admin_by_project: "Nach Projekt",
+
+      admin_engineering: "Entwicklung",
+      admin_design: "Design",
+      admin_marketing: "Marketing",
+      admin_product_management: "Produktmanagement",
+      admin_capacity: "Kapazität",
+
+      admin_all_projects: "Alle Projekte",
+      admin_filter_projects: "Projekte filtern...",
+      admin_filters: "Filter",
+
+      admin_progress: "Fortschritt",
+      admin_status: "Status",
+      admin_health: "Gesundheit",
+      admin_deadline: "Frist",
+      admin_risk: "Risiko",
+
+      admin_review: "Überprüfung",
+
+      admin_showing_projects: "1-5 von 42 Projekten werden angezeigt",
+      admin_prev: "Zurück",
+      admin_next: "Weiter",
     },
   },
 
@@ -1902,6 +2191,43 @@ const resources = {
       signIn: "登录",
       dontHaveAccount: "没有账户？",
       signUp: "注册",
+      admin_total_projects: "项目总数",
+      admin_active: "进行中",
+      admin_completed: "已完成",
+      admin_delayed: "已延期",
+      admin_at_risk: "有风险",
+
+      admin_project_health_status: "项目健康状态",
+      admin_healthy: "健康",
+      admin_on_track: "按计划进行",
+      admin_warning: "警告",
+      admin_critical: "严重",
+
+      admin_resource_allocation: "资源分配",
+      admin_by_team: "按团队",
+      admin_by_project: "按项目",
+
+      admin_engineering: "工程",
+      admin_design: "设计",
+      admin_marketing: "市场营销",
+      admin_product_management: "产品管理",
+      admin_capacity: "容量",
+
+      admin_all_projects: "所有项目",
+      admin_filter_projects: "筛选项目...",
+      admin_filters: "筛选",
+
+      admin_progress: "进度",
+      admin_status: "状态",
+      admin_health: "健康",
+      admin_deadline: "截止日期",
+      admin_risk: "风险",
+
+      admin_review: "审核",
+
+      admin_showing_projects: "显示第1-5个，共42个项目",
+      admin_prev: "上一页",
+      admin_next: "下一页",
     },
   },
 
@@ -2067,9 +2393,138 @@ const resources = {
       signIn: "サインイン",
       dontHaveAccount: "アカウントをお持ちでないですか？",
       signUp: "サインアップ",
+      admin_total_projects: "総プロジェクト数",
+      admin_active: "進行中",
+      admin_completed: "完了",
+      admin_delayed: "遅延",
+      admin_at_risk: "リスクあり",
+
+      admin_project_health_status: "プロジェクトの健全性",
+      admin_healthy: "良好",
+      admin_on_track: "順調",
+      admin_warning: "警告",
+      admin_critical: "重大",
+
+      admin_resource_allocation: "リソース配分",
+      admin_by_team: "チーム別",
+      admin_by_project: "プロジェクト別",
+
+      admin_engineering: "エンジニアリング",
+      admin_design: "デザイン",
+      admin_marketing: "マーケティング",
+      admin_product_management: "プロダクト管理",
+      admin_capacity: "稼働率",
+
+      admin_all_projects: "すべてのプロジェクト",
+      admin_total_projects: "総プロジェクト数",
+      admin_filter_projects: "プロジェクトを検索...",
+      admin_filters: "フィルター",
+
+      admin_progress: "進捗",
+      admin_status: "ステータス",
+      admin_health: "健全性",
+      admin_deadline: "期限",
+      admin_risk: "リスク",
+
+      admin_review: "レビュー",
+      coadmin_total_tasks: "総タスク数",
+
+      admin_showing_projects: "42件中1～5件を表示",
+      admin_prev: "前へ",
+      admin_next: "次へ",
+
     },
   },
 };
+
+Object.assign(resources.hi.translation, { notice_empty: "कोई सूचना नहीं मिली।" });
+Object.assign(resources.es.translation, {
+  notice_empty: "No se encontraron avisos.",
+  sprint_contribution: "Contribución del Sprint",
+  recent_activity_pr_merged: "PR #452 fusionado en main",
+  recent_activity_completed_task: "Tarea completada: Finalizar documentación",
+  recent_activity_sarah_commented: "Sarah Chen comentó en Login Refactor",
+  recent_activity_time_2h: "hace 2 horas",
+  recent_activity_time_5h: "hace 5 horas",
+  recent_activity_time_yesterday: "Ayer",
+  task_status_breakdown: "Desglose de Estado de Tareas",
+  task_status_distribution_default: "Distribución de Estado de Tareas",
+});
+Object.assign(resources.fr.translation, {
+  notice_empty: "Aucun avis trouvé.",
+  sprint_contribution: "Contribution au Sprint",
+  recent_activity_pr_merged: "PR #452 fusionné dans main",
+  recent_activity_completed_task: "Tâche terminée : Finaliser la documentation",
+  recent_activity_sarah_commented: "Sarah Chen a commenté sur Login Refactor",
+  recent_activity_time_2h: "il y a 2 heures",
+  recent_activity_time_5h: "il y a 5 heures",
+  recent_activity_time_yesterday: "Hier",
+  task_status_breakdown: "Répartition des statuts des tâches",
+  task_status_distribution_default: "Distribution des statuts des tâches",
+});
+Object.assign(resources.de.translation, {
+  notice_empty: "Keine Hinweise gefunden.",
+  sprint_contribution: "Sprint-Beitrag",
+  recent_activity_pr_merged: "PR #452 in main gemergt",
+  recent_activity_completed_task: "Abgeschlossene Aufgabe: Dokumentation finalisieren",
+  recent_activity_sarah_commented: "Sarah Chen kommentierte bei Login Refactor",
+  recent_activity_time_2h: "vor 2 Stunden",
+  recent_activity_time_5h: "vor 5 Stunden",
+  recent_activity_time_yesterday: "Gestern",
+  task_status_breakdown: "Aufgabenstatus-Aufschlüsselung",
+  task_status_distribution_default: "Aufgabenstatus-Verteilung",
+});
+Object.assign(resources.zh.translation, {
+  notice_empty: "未找到通知。",
+  sprint_contribution: "冲刺贡献",
+  recent_activity_pr_merged: "PR #452 已合并到 main",
+  recent_activity_completed_task: "已完成任务：最终确定文档",
+  recent_activity_sarah_commented: "Sarah Chen 评论了 Login Refactor",
+  recent_activity_time_2h: "2小时前",
+  recent_activity_time_5h: "5小时前",
+  recent_activity_time_yesterday: "昨天",
+  task_status_breakdown: "任务状态细分",
+  task_status_distribution_default: "任务状态分布",
+});
+Object.assign(resources.ja.translation, {
+  notice_empty: "お知らせが見つかりません。",
+  sprint_contribution: "スプリント貢献",
+  recent_activity_pr_merged: "PR #452 を main にマージ",
+  recent_activity_completed_task: "完了したタスク: ドキュメントを最終化",
+  recent_activity_sarah_commented: "Sarah Chen が Login Refactor にコメント",
+  recent_activity_time_2h: "2時間前",
+  recent_activity_time_5h: "5時間前",
+  recent_activity_time_yesterday: "昨日",
+  task_status_breakdown: "タスクステータス内訳",
+  task_status_distribution_default: "タスクステータス分布",
+});
+Object.assign(resources.en.translation, { sidebar_tasks: "Tasks" });
+Object.assign(resources.hi.translation, { sidebar_tasks: "कार्य" });
+Object.assign(resources.es.translation, { sidebar_tasks: "Tareas" });
+Object.assign(resources.fr.translation, { sidebar_tasks: "Tâches" });
+Object.assign(resources.de.translation, { sidebar_tasks: "Aufgaben" });
+Object.assign(resources.zh.translation, { sidebar_tasks: "任务" });
+Object.assign(resources.ja.translation, { sidebar_tasks: "タスク" });
+Object.assign(resources.es.translation, {
+  admin_budget_consumed: "Consumido", admin_budget_remaining: "Restante",
+  month_jan: "ene", month_feb: "feb", month_mar: "mar", month_apr: "abr", month_may: "may", month_jun: "jun",
+});
+Object.assign(resources.fr.translation, {
+  admin_budget_consumed: "Consommé", admin_budget_remaining: "Restant",
+  month_jan: "janv.", month_feb: "févr.", month_mar: "mars", month_apr: "avr.", month_may: "mai", month_jun: "juin",
+});
+Object.assign(resources.de.translation, {
+  admin_budget_consumed: "Verbraucht", admin_budget_remaining: "Verbleibend",
+  month_jan: "Jan.", month_feb: "Feb.", month_mar: "März", month_apr: "Apr.", month_may: "Mai", month_jun: "Juni",
+});
+Object.assign(resources.zh.translation, {
+  admin_budget_consumed: "已使用", admin_budget_remaining: "剩余",
+  month_jan: "1月", month_feb: "2月", month_mar: "3月", month_apr: "4月", month_may: "5月", month_jun: "6月",
+});
+Object.assign(resources.ja.translation, {
+  admin_budget_consumed: "使用済み", admin_budget_remaining: "残り",
+  month_jan: "1月", month_feb: "2月", month_mar: "3月", month_apr: "4月", month_may: "5月", month_jun: "6月",
+});
 
 i18n
   .use(initReactI18next)

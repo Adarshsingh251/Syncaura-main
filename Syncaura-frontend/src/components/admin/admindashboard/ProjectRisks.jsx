@@ -7,30 +7,30 @@ const ProjectRisks = () => {
 
   const data = [
     {
-      name: "Alpha Redesign",
-      risk: "Backend integration delay",
-      owner: "John D.",
+      name: t("admin_project_alpha"),
+      risk: t("admin_risk_backend_delay"),
+      owner: t("admin_owner_john"),
+      severity: t("admin_severity_high"),
       initials: "JD",
       avatarColor: "bg-purple-100 text-purple-600 dark:bg-purple-600 dark:text-white",
-      severity: "High",
       sevColor: "text-red-600 bg-red-50 border-red-100 dark:bg-transparent dark:border-red-600 dark:text-red-500"
     },
     {
-      name: "Mobile App v2",
-      risk: "Resource shortage in QA",
-      owner: "Sarah M.",
+      name: t("admin_project_mobile"),
+      risk: t("admin_risk_resource_shortage"),
+      owner: t("admin_owner_sarah"),
+      severity: t("admin_severity_medium"),
       initials: "SM",
       avatarColor: "bg-blue-100 text-blue-600 dark:bg-blue-600 dark:text-white",
-      severity: "Medium",
       sevColor: "text-yellow-600 bg-yellow-50 border-yellow-100 dark:bg-transparent dark:border-yellow-600 dark:text-yellow-500"
     },
     {
-      name: "Cloud Migration",
-      risk: "Minor budget variance",
-      owner: "Alex K.",
+      name: t("admin_project_cloud"),
+      risk: t("admin_risk_budget_variance"),
+      owner: t("admin_owner_alex"),
+      severity: t("admin_severity_low"),
       initials: "AK",
       avatarColor: "bg-green-100 text-green-600 dark:bg-green-600 dark:text-white",
-      severity: "Low",
       sevColor: "text-gray-600 bg-gray-50 border-gray-200 dark:bg-transparent dark:border-green-600 dark:text-green-500"
     },
   ];
