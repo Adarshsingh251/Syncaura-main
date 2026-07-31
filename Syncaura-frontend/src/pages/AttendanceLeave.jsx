@@ -45,7 +45,7 @@ const AttendanceLeave = () => {
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [leaveData, setLeaveData] = useState(leaveHistory);
-  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
+  const [leaveToEdit, setLeaveToEdit] = useState(null);
 
   const [showPopup, setShowPopup] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Check-In");
@@ -168,6 +168,30 @@ const AttendanceLeave = () => {
   const handleApplyFilters = useCallback((newFilters) => {
     setAppliedFilters(newFilters);
   }, []);
+
+  const handleOpenCreateModal = () => {
+    setLeaveToEdit(null);
+    setOpenModel(true);
+  };
+
+  const handleOpenEditModal = (leave) => {
+    setLeaveToEdit(leave);
+    setOpenModel(true);
+  };
+
+  const handleCloseLeaveModal = () => {
+    setOpenModel(false);
+    setLeaveToEdit(null);
+  };
+
+  const handleDeleteLeave = (leave) => {
+    if (!window.confirm("Are you sure you want to delete this leave request?")) {
+      return;
+    }
+
+    setLeaveData((prev) => prev.filter((item) => item !== leave));
+    toast.success("Leave request deleted successfully.");
+  };
 
   return (
     <div className="relative w-full min-h-[calc(92vh)] flex flex-col bg-[#FFFFFF] dark:bg-[#000000]">
@@ -386,7 +410,8 @@ const AttendanceLeave = () => {
           LeaveData={filteredLeaveHistory}
           currId={selectedId}
           setCurrId={setSelectedId}
-          onViewDetail={(item) => setSelectedLeaveDetail(item)}
+          onEditLeave={handleOpenEditModal}
+          onDeleteLeave={handleDeleteLeave}
         />
       </div>
       <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5  w-full px-5 sm:px-10 ">
@@ -397,12 +422,13 @@ const AttendanceLeave = () => {
           currId={selectedId}
           setCurrId={setSelectedId}
           LeaveData={filteredLeaveHistory}
-          onViewDetail={(item) => setSelectedLeaveDetail(item)}
+          onEditLeave={handleOpenEditModal}
+          onDeleteLeave={handleDeleteLeave}
         />
       </div>
 
       <button
-        onClick={() => setOpenModel(true)}
+        onClick={handleOpenCreateModal}
         className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-7 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover"
       >
         <p>Apply Leave</p>
@@ -410,69 +436,10 @@ const AttendanceLeave = () => {
 
       {openModel && (
         <LeaveModel
-          onClose={() => setOpenModel(false)}
+          onClose={handleCloseLeaveModal}
           setLeaveData={setLeaveData}
+          editingLeave={leaveToEdit}
         />
-      )}
-
-      {selectedLeaveDetail && (
-        <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-xs"
-            onClick={() => setSelectedLeaveDetail(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-[#2E2F2F] rounded-2xl p-6 w-full max-w-md shadow-2xl relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4 border-b pb-3 dark:border-gray-700">
-                <h2 className="text-xl font-bold dark:text-white text-black">
-                  Leave Details
-                </h2>
-                <button
-                  onClick={() => setSelectedLeaveDetail(null)}
-                  className="text-gray-500 hover:text-black dark:hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex flex-col gap-3 text-sm dark:text-gray-200">
-                <div>
-                  <span className="font-semibold text-gray-500 dark:text-gray-400">Leave Type:</span>{" "}
-                  <span className="font-bold text-blue-600 dark:text-[#73FBFD]">{selectedLeaveDetail.type}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500 dark:text-gray-400">Status:</span>{" "}
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${selectedLeaveDetail.status === 'Approved' ? 'bg-green-100 text-green-700' : selectedLeaveDetail.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                    {selectedLeaveDetail.status}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500 dark:text-gray-400">Duration:</span>{" "}
-                  {new Date(selectedLeaveDetail.startDate).toLocaleDateString()} - {new Date(selectedLeaveDetail.endDate).toLocaleDateString()}
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500 dark:text-gray-400">Reason:</span>
-                  <p className="mt-1 p-3 bg-gray-100 dark:bg-black/30 rounded-xl italic">
-                    "{selectedLeaveDetail.reason}"
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedLeaveDetail(null)}
-                className="mt-6 w-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white py-2 rounded-xl font-medium"
-              >
-                Close
-              </button>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
       )}
     </div>
   );
