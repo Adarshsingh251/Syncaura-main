@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {
   register, login, refresh, changePassword,
   forgotPassword, resetPassword, adminOnly,
-  requestPasswordOtp, changePasswordWithOtp,getProfile,updateProfile
+  requestPasswordOtp, changePasswordWithOtp,getProfile,updateProfile,logout
 } from '../controllers/authController.js';
 import  {auth}  from '../middlewares/auth.js';
 import  {permit}  from '../middlewares/role.js';
@@ -37,4 +37,5 @@ router.put("/profile", auth, updateProfile);
 // Example role-based route
 router.get('/admin', auth, permit('admin'), adminOnly);
 
+router.post("/logout", logout);
 export default router;
