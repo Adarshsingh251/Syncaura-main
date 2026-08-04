@@ -3,7 +3,7 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 // import { store } from "./redux/store";
 import MainLayout from "./layouts/MainLayout";
 import { lazy, Suspense, useEffect } from "react";
-import LearnMore from './pages/LearnMore';
+import LearnMore from "./pages/LearnMore";
 
 const Projects = lazy(() => import("./pages/Projects"));
 const Tasks = lazy(() => import("./pages/Tasks"));
@@ -30,7 +30,10 @@ import MobileSidebar from "./components/navigation/MobileSidebar";
 
 import { ToastContainer, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { refreshAccessToken, fetchUserProfile } from "./redux/features/authThunks";
+import {
+  refreshAccessToken,
+  fetchUserProfile,
+} from "./redux/features/authThunks";
 // import { logout } from "./redux/slices/authSlice";
 import { Loader } from "lucide-react";
 import ProtectRoute from "./RouteProtection/ProtectRoute";
@@ -69,37 +72,50 @@ export default function App() {
   //     });
   // }, [dispatch]);
 
-// new updatw 
+  // new updatw
   useEffect(() => {
-  const initAuth = async () => {
-    try {
-      const result = await dispatch(refreshAccessToken());
+    const initAuth = async () => {
+      try {
+        const result = await dispatch(refreshAccessToken());
 
-      if (refreshAccessToken.fulfilled.match(result)) {
-        dispatch(fetchUserProfile());
+        if (refreshAccessToken.fulfilled.match(result)) {
+          dispatch(fetchUserProfile());
+        }
+      } catch (err) {
+        console.log(err);
       }
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    };
 
-  initAuth();
+    initAuth();
 
-  fetch("/health")
-    .then(async (res) => {
-      if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
-      }
+    fetch("/health")
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP Error: ${res.status}`);
+        }
 
-      return res.json();
-    })
-    .then((data) => {
-      console.log("Backend Connected:", data);
-    })
-    .catch((err) => {
-      console.error(err.message);
-    });
-}, [dispatch]);
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Backend Connected:", data);
+      })
+      .catch((err) => {
+        console.error(err.message);
+      });
+  }, [dispatch]);
+
+  // Apply global page zoom + font size (runs on every page, since App.jsx is always mounted)
+  const { fontSize = "medium", zoom = 100 } = useSelector(
+    (state) => state.ui || {},
+  );
+
+  useEffect(() => {
+    const fontSizeMap = { small: 0.85, medium: 1, large: 1.15, xlarge: 1.3 };
+    const fontSizeMultiplier = fontSizeMap[fontSize] || 1;
+    const baseFontSize = 16; // px, default browser root font size
+    const finalSize = baseFontSize * fontSizeMultiplier * (zoom / 100);
+    document.documentElement.style.fontSize = `${finalSize}px`;
+  }, [fontSize, zoom]);
 
   if (authChecking) {
     return (

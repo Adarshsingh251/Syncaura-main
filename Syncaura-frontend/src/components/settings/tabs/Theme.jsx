@@ -3,7 +3,12 @@ import { RefreshCw } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n/i18n";
-import { setTheme as setUiTheme, setFont, setFontSize, setZoom } from "../../../redux/uiSlice";
+import {
+  setTheme as setUiTheme,
+  setFont,
+  setFontSize,
+  setZoom,
+} from "../../../redux/uiSlice";
 import { setTheme as setBoolTheme } from "../../../redux/slices/themeSlice";
 
 const LANGUAGES = [
@@ -21,36 +26,18 @@ const Theme = () => {
   const dispatch = useDispatch();
 
   // Default values
-  const { theme = "light", font = "Arial", fontSize = "medium", zoom = 100 } =
-    useSelector((s) => s.ui || {});
-
-  // Apply page zoom based on zoom state
-  useEffect(() => {
-    document.body.style.zoom = `${zoom}%`;
-    // Optional: also set transform for better cross‑browser support
-    document.documentElement.style.transform = `scale(${zoom / 100})`;
-    document.documentElement.style.transformOrigin = '0 0';
-    return () => {
-      // Reset on cleanup
-      document.body.style.zoom = '';
-      document.documentElement.style.transform = '';
-      document.documentElement.style.transformOrigin = '';
-    };
-  }, [zoom]);
-  // Apply font size based on fontSize state
-useEffect(() => {
-  const sizeMap = {
-    small: "85%",
-    medium: "100%",
-    large: "115%",
-    xlarge: "130%",
-  };
-  const size = sizeMap[fontSize] || "100%";
-      document.documentElement.style.fontSize = size;
-}, [fontSize]);
+  const {
+    theme = "light",
+    font = "Arial",
+    fontSize = "medium",
+    zoom = 100,
+  } = useSelector((s) => s.ui || {});
 
   const [language, setLanguage] = useState(
-    (localStorage.getItem("app_language") || i18n.language || "en").substring(0, 2)
+    (localStorage.getItem("app_language") || i18n.language || "en").substring(
+      0,
+      2,
+    ),
   );
 
   const [isSyncingCalendar, setIsSyncingCalendar] = useState(false);
@@ -101,11 +88,9 @@ useEffect(() => {
     dispatch(setFontSize(e.target.value));
   };
 
-  const handleZoomDecrease = () =>
-    dispatch(setZoom(Math.max(50, zoom - 10)));
+  const handleZoomDecrease = () => dispatch(setZoom(Math.max(50, zoom - 10)));
 
-  const handleZoomIncrease = () =>
-    dispatch(setZoom(Math.min(200, zoom + 10)));
+  const handleZoomIncrease = () => dispatch(setZoom(Math.min(200, zoom + 10)));
 
   const handleSyncCalendar = () => {
     setIsSyncingCalendar(true);
@@ -137,7 +122,6 @@ useEffect(() => {
   return (
     <div className="w-full flex justify-center bg-white dark:bg-[#0B0B0B] min-h-screen text-gray-900 dark:text-white">
       <div className="w-full max-w-[650px]">
-
         {/* Display */}
         <div className="mb-10">
           <h2 className="text-xl font-semibold mb-5 text-gray-900 dark:text-white">
@@ -170,7 +154,9 @@ useEffect(() => {
                 className="bg-white dark:bg-[#0B0B0B] text-black dark:text-white border border-gray-300 dark:border-[#2A2A2A] px-3 py-1 rounded-md"
               >
                 {LANGUAGES.map((l) => (
-                  <option key={l.code} value={l.code}>{l.label}</option>
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
                 ))}
               </select>
             </SettingRow>
@@ -196,16 +182,28 @@ useEffect(() => {
                 <option value="small">{t("Small") || "Small"}</option>
                 <option value="medium">{t("Medium") || "Medium"}</option>
                 <option value="large">{t("Large") || "Large"}</option>
-                <option value="xlarge">{t("Extra Large") || "Extra Large"}</option>
+                <option value="xlarge">
+                  {t("Extra Large") || "Extra Large"}
+                </option>
               </select>
             </SettingRow>
 
             {/* ✅ Improved zoom UI */}
             <SettingRow label={t("pageZoom")} value="">
               <div className="flex items-center gap-2">
-                <button onClick={handleZoomDecrease} className="px-2 border rounded btn-hover">-</button>
+                <button
+                  onClick={handleZoomDecrease}
+                  className="px-2 border rounded btn-hover"
+                >
+                  -
+                </button>
                 <span>{zoom}%</span>
-                <button onClick={handleZoomIncrease} className="px-2 border rounded btn-hover">+</button>
+                <button
+                  onClick={handleZoomIncrease}
+                  className="px-2 border rounded btn-hover"
+                >
+                  +
+                </button>
               </div>
             </SettingRow>
           </div>
@@ -218,11 +216,18 @@ useEffect(() => {
           </h2>
 
           <div className="space-y-4">
-            <SyncButton label={t("syncCalendar")} onClick={handleSyncCalendar} isSyncing={isSyncingCalendar} />
-            <SyncButton label={t("syncContact")} onClick={handleSyncContact} isSyncing={isSyncingContact} />
+            <SyncButton
+              label={t("syncCalendar")}
+              onClick={handleSyncCalendar}
+              isSyncing={isSyncingCalendar}
+            />
+            <SyncButton
+              label={t("syncContact")}
+              onClick={handleSyncContact}
+              isSyncing={isSyncingContact}
+            />
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -232,7 +237,9 @@ const SettingRow = ({ label, value, children }) => (
   <div className="flex justify-between items-center p-3 border border-gray-300 dark:border-[#2A2A2A] rounded-xl bg-white dark:bg-[#0B0B0B] text-gray-900 dark:text-white">
     <span className="text-gray-800 dark:text-white">{label}</span>
     <div className="flex gap-3 items-center">
-      {value && <span className="text-gray-600 dark:text-gray-300">{value}</span>}
+      {value && (
+        <span className="text-gray-600 dark:text-gray-300">{value}</span>
+      )}
       {children}
     </div>
   </div>
