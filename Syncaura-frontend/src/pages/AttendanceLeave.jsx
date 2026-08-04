@@ -6,7 +6,9 @@ import {
   Search,
   XCircleIcon,
   Loader,
+  UserCheck,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
@@ -287,6 +289,13 @@ const AttendanceLeave = () => {
           Attendance And Leave Management
         </h1>
         <div className="flex w-full flex-3/5 md:flex-2/5 2xl:flex-1/5 items-center justify-center gap-2 ">
+          <Link
+            to="/my-attendance"
+            className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-4xl font-semibold text-sm transition-transform active:scale-95 shadow-sm"
+          >
+            <UserCheck className="size-4" />
+            <span>My Attendance</span>
+          </Link>
           <button
             onClick={() => setShowFilter((prev) => !prev)}
             className={`btn-hover px-4 py-2 bg-white dark:bg-[#000000] flex items-center gap-2 border rounded-4xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#989696] dark:border-[#989696]"} `}
@@ -331,7 +340,7 @@ const AttendanceLeave = () => {
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 ml-2 sm:ml-4 max-w-full lg:max-w-[1200px]"className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 px-4 py-3 mt-2 w-full"
+        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 w-full"
       >
         {attendanceStats.map((item, index) => (
           <AttendanceCard key={index} {...item} />

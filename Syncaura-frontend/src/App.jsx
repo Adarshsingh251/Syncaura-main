@@ -17,6 +17,7 @@ const SignIn = lazy(() => import("./pages/SignIn"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const Complaints = lazy(() => import("./pages/Complaints"));
 const AttendanceLeave = lazy(() => import("./pages/AttendanceLeave"));
+const MyAttendance = lazy(() => import("./pages/MyAttendance"));
 const Notice = lazy(() => import("./pages/Notice"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Admin = lazy(() => import("./pages/Admin"));
@@ -221,6 +222,15 @@ export default function App() {
                 element={
                   <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
                     <AttendanceLeave />
+                  </MainLayout>
+                }
+              />
+
+              <Route
+                path="/my-attendance"
+                element={
+                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
+                    <MyAttendance />
                   </MainLayout>
                 }
               />

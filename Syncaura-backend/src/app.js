@@ -19,6 +19,7 @@ import messageRoutes from "./routes/messageRoutes.js";
 
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import leaveRoutes from './routes/leaveRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
 import complaintRoutes from './routes/complaintRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import noteRoutes from "./routes/note.routes.js";
@@ -73,6 +74,7 @@ app.use("/api/messages", messageRoutes);
 
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/leave', leaveRoutes);
+app.use('/api/attendance', attendanceRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use("/api/attachments", attachmentRoutes);
