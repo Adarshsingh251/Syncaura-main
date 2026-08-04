@@ -11,6 +11,7 @@ import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
 import { leaveHistory } from "../constant/constant";
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
@@ -41,7 +42,22 @@ const initialAttendanceStats = [
   },
 ];
 
+const ATTENDANCE_STORAGE_PREFIX = "syncaura:attendance:";
+
+const getToday = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offset).toISOString().split("T")[0];
+};
+
+const getInitialAttendanceState = () => ({
+  presentDays: initialAttendanceStats.find((stat) => stat.title === "Present Days")
+    .value,
+  records: {},
+});
+
 const AttendanceLeave = () => {
+  const user = useSelector((state) => state.auth.user);
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [leaveData, setLeaveData] = useState(leaveHistory);
@@ -56,43 +72,114 @@ const AttendanceLeave = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
 
-  const [attendanceDate, setAttendanceDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [attendanceDate] = useState(getToday);
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
+  const attendanceStateRef = useRef(getInitialAttendanceState());
+  const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+
+  // Until an attendance API exists, this keeps a user's daily status stable across
+  // refreshes, logins, and logouts. Replace this with a GET attendance-status call
+  // when the backend endpoint is available.
+  useEffect(() => {
+    const emptyState = getInitialAttendanceState();
+
+    try {
+      const storedValue = localStorage.getItem(attendanceStorageKey);
+      const storedState = storedValue ? JSON.parse(storedValue) : emptyState;
+      attendanceStateRef.current = {
+        presentDays: Number.isFinite(storedState.presentDays)
+          ? storedState.presentDays
+          : emptyState.presentDays,
+        records: storedState.records && typeof storedState.records === "object"
+          ? storedState.records
+          : {},
+      };
+    } catch {
+      attendanceStateRef.current = emptyState;
+    }
+
+    const todayRecord = attendanceStateRef.current.records[getToday()] || {};
+    let isCurrent = true;
+
+    queueMicrotask(() => {
+      if (!isCurrent) return;
+
+      setCheckInTime(todayRecord.checkInTime || null);
+      setCheckOutTime(todayRecord.checkOutTime || null);
+      setAttendanceStats((previousStats) =>
+        previousStats.map((stat) =>
+          stat.title === "Present Days"
+            ? { ...stat, value: attendanceStateRef.current.presentDays }
+            : stat,
+        ),
+      );
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [attendanceStorageKey]);
+
+  const saveAttendanceState = (nextState) => {
+    attendanceStateRef.current = nextState;
+    localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
+  };
+
+  const canCheckIn = !checkInTime && !checkOutTime;
+  const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In" && checkInTime) {
+    if (selectedTab === "Check-In" && !canCheckIn) {
       toast.info(`You have already checked in today at ${checkInTime}`);
       setShowPopup(false);
       return;
     }
-    if (selectedTab === "CheckOut" && !checkInTime) {
+    if (selectedTab === "CheckOut" && !canCheckOut) {
+      if (checkOutTime) {
+        toast.info(`You have already checked out today at ${checkOutTime}`);
+        setShowPopup(false);
+        return;
+      }
       toast.error("Please check in before checking out!");
-      return;
-    }
-    if (selectedTab === "CheckOut" && checkOutTime) {
-      toast.info(`You have already checked out today at ${checkOutTime}`);
-      setShowPopup(false);
       return;
     }
 
     setIsSubmitting(true);
-    // Simulate API delay
+    // This is UI-only until the backend provides attendance endpoints.
     setTimeout(() => {
       const now = new Date();
       const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
       
       if (selectedTab === "Check-In") {
         setCheckInTime(timeString);
-        // Increment present days dynamically
-        setAttendanceStats(prev => prev.map(stat => 
-          stat.title === "Present Days" ? { ...stat, value: stat.value + 1 } : stat
-        ));
+        const nextState = {
+          presentDays: attendanceStateRef.current.presentDays + 1,
+          records: {
+            ...attendanceStateRef.current.records,
+            [attendanceDate]: { ...currentRecord, checkInTime: timeString },
+          },
+        };
+        saveAttendanceState(nextState);
+        setAttendanceStats((previousStats) =>
+          previousStats.map((stat) =>
+            stat.title === "Present Days" ? { ...stat, value: nextState.presentDays } : stat,
+          ),
+        );
+        setSelectedTab("CheckOut");
         toast.success(`Attendance marked successfully for ${attendanceDate}!`);
       } else if (selectedTab === "CheckOut") {
         setCheckOutTime(timeString);
+        saveAttendanceState({
+          ...attendanceStateRef.current,
+          records: {
+            ...attendanceStateRef.current.records,
+            [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
+          },
+        });
         toast.success("Check-out recorded successfully!");
       }
       setIsSubmitting(false);
@@ -322,15 +409,19 @@ const AttendanceLeave = () => {
                       <input
                         type="date"
                         value={attendanceDate}
-                        onChange={(e) => setAttendanceDate(e.target.value)}
-                        className="w-full h-full text-[#898888] px-3 py-1 bg-white dark:bg-[#000000] dark:text-gray-200 outline-none date-input"
+                        disabled
+                        aria-label="Attendance date"
+                        className="w-full h-full text-[#898888] px-3 py-1 bg-white dark:bg-[#000000] dark:text-gray-200 outline-none date-input disabled:cursor-not-allowed disabled:opacity-80"
                       />
                     </div>
 
                     <div className="flex items-center justify-between gap-2">
-                      {["Check-In", "CheckOut"].map((item, idx) => (
+                      {["Check-In", "CheckOut"].map((item, idx) => {
+                        const isDisabled = item === "Check-In" ? !canCheckIn : !canCheckOut;
+
+                        return (
                         <motion.div
-                          onClick={() => setSelectedTab(item)}
+                          onClick={() => !isDisabled && setSelectedTab(item)}
                           key={idx}
                           whileTap={{ scale: 0.95 }}
                           layout
@@ -339,11 +430,12 @@ const AttendanceLeave = () => {
                             stiffness: 300,
                             damping: 20,
                           }}
+                          aria-disabled={isDisabled}
                           className={`flex flex-1 items-center justify-center border ${
                             selectedTab === item
                               ? "border-[#2461E6] dark:border-[#73FBFD]"
-                              : "border-[#EDEDED] dark:border-[#575757] cursor-pointer"
-                          } px-5 py-2 rounded-lg`}
+                              : "border-[#EDEDED] dark:border-[#575757]"
+                          } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
                         >
                           <p
                             className={`font-bold text-xs ${
@@ -355,12 +447,13 @@ const AttendanceLeave = () => {
                             {item}
                           </p>
                         </motion.div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <button
                       onClick={handleConfirmAttendance}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || (selectedTab === "Check-In" ? !canCheckIn : !canCheckOut)}
                       className="w-full mt-2 flex items-center justify-center gap-2 bg-[#2461E6] hover:bg-[#1a4bb3] text-white dark:bg-[#73FBFD] dark:hover:bg-[#5ce1e3] dark:text-black py-2 rounded-lg font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? (
@@ -369,7 +462,9 @@ const AttendanceLeave = () => {
                           Confirming...
                         </>
                       ) : (
-                        "Confirm"
+                        selectedTab === "Check-In"
+                          ? canCheckIn ? "Check In" : "Checked In"
+                          : canCheckOut ? "Check Out" : checkOutTime ? "Attendance Complete" : "Check In First"
                       )}
                     </button>
                   </div>
