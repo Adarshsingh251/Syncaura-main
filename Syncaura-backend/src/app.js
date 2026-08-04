@@ -13,6 +13,7 @@ import noticeRoutes from "./routes/notice.routes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
+import profileRoutes from "./routes/profile.routes.js";
 
 import messageRoutes from "./routes/messageRoutes.js";
 
@@ -66,6 +67,7 @@ app.use('/api/channels', channelRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use("/api/messages", messageRoutes);
 
