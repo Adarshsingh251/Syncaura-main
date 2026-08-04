@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState} from "react";
 import {
   Menu,
   LayoutDashboard,
@@ -14,7 +14,7 @@ import {
   X,
   LogOut,
 } from "lucide-react";
-
+import LogoutConfirmationModal from "../common/LogoutConfirmationModal";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
@@ -49,6 +49,8 @@ export default function MobileSidebar({ open, setOpen }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   useEffect(() => {
     if (isDesktop && open) {
       setOpen(false);
@@ -56,10 +58,8 @@ export default function MobileSidebar({ open, setOpen }) {
   }, [isDesktop, open, setOpen]);
 
   const logOutHandle = useCallback(() => {
-    console.log("LogOut SUccessfully");
-    dispatch(logout());
-    navigate("/");
-  }, [dispatch, navigate]);
+    setShowLogoutModal(true); // Opens the popup overlay modal
+  }, []);
 
   return (
     <>
@@ -145,6 +145,10 @@ export default function MobileSidebar({ open, setOpen }) {
           </button>
         </div>
       </aside>
+      <LogoutConfirmationModal 
+        isOpen={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)} 
+      />
     </>
   );
 }
