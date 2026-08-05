@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import i18n from "./i18n/i18n";
 import { Provider, useDispatch, useSelector } from "react-redux";
 // import { store } from "./redux/store";
 import MainLayout from "./layouts/MainLayout";
@@ -42,6 +43,7 @@ import ProtectRoute from "./RouteProtection/ProtectRoute";
 export default function App() {
   const dispatch = useDispatch();
   const isDark = useSelector((state) => state.theme.isDark);
+  const language = useSelector((state) => state.language.language);
   // const user = useSelector((state) => state.auth.user);
   const authChecking = useSelector((state) => state.auth.authChecking);
 
@@ -104,6 +106,12 @@ export default function App() {
         console.error(err.message);
       });
   }, [dispatch]);
+
+  useEffect(() => {
+    if (language && i18n.language !== language) {
+      i18n.changeLanguage(language);
+    }
+  }, [language]);
 
   // Apply global page zoom + font size (runs on every page, since App.jsx is always mounted)
   const { fontSize = "medium", zoom = 100 } = useSelector(

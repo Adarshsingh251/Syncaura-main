@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { registerUser } from '../redux/features/authThunks'
@@ -23,7 +24,8 @@ function PasswordField({ label, value, onChange }) {
 }
 
 export default function SignUpPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const dispatch = useDispatch()
   const { isLoading: reduxLoading, error: reduxError } = useSelector((state) => state.auth || {})
 
@@ -36,32 +38,27 @@ export default function SignUpPage() {
     event.preventDefault()
 
     if (!form.name.trim()) {
-      setMessage("Name is required.")
-      return
+      setMessage(t('auth_name_required'));
+      return;
     }
+    // if (!form.email) {
     if (!form.email.trim()) {
-      setMessage("Email is required.")
-      return
+      setMessage(t('auth_email_required'));
+      return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // if (!emailRegex.test(form.email)) {
     if (!emailRegex.test(form.email.trim())) {
-      setMessage("Invalid email address.")
-      return
+      setMessage(t('auth_invalid_email'));
+      return;
     }
+    // if (!form.password) {
     if (!form.password.trim()) {
-      setMessage("Password is required.")
-      return
-    }
-    if (!form.confirm.trim()) {
-      setMessage("Confirm password is required.")
-      return
-    }
-    if (form.password.trim() !== form.confirm.trim()) {
-      setMessage("Passwords do not match.")
-      return
+      setMessage(t('auth_password_required'));
+      return;
     }
 
-    setIsLoading(true)
     setMessage("")
 
     try {
@@ -73,7 +70,9 @@ export default function SignUpPage() {
         })
       ).unwrap()
 
-      setMessage("Account created successfully!")
+      console.log("Register success:", data);
+
+      setMessage(t('auth_signup_success'));
 
       setTimeout(() => {
         const userRole = data?.user?.role || 'user'
@@ -81,65 +80,47 @@ export default function SignUpPage() {
         navigate(roleHome)
       }, 1000)
 
-    } catch (err) {
-      const serverMsg = typeof err === "string" ? err : err?.message || reduxError || "Registration failed."
-      setMessage(serverMsg)
-      console.log(err)
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      console.log("Register error:", error.response?.data);
+      // Show specific server error if available, otherwise generic message
+      const serverMsg = error.response?.data?.message;
+      if (serverMsg) {
+        setMessage(serverMsg);
+      } else {
+        setMessage(t('auth_signup_error'));
+      }
+    }
+    finally {
+      setIsLoading(false);
     }
   }
 
-  const loadingState = isLoading || reduxLoading
+  return <main className="page"><section className="auth-card">
+    <aside className="art" aria-hidden="true"><img src={leftArt} alt="" /></aside>
+    <div className="form-pane"><form onSubmit={handleSubmit}>
+      <p className="eyebrow">{t('auth_signup_eyebrow').toUpperCase()}</p>
+      <h1>{t('createAccount')} <em>{t('account_emphasis')}</em></h1>
+      <p className="lead">{t('auth_signup_lead')}</p>
+      <div className="fields">
+        <label className="field"><UserRound size={19} strokeWidth={1.8} /><input placeholder={t('fullName')} value={form.name} onChange={update('name')} required /></label>
+        <label className="field"><Mail size={19} strokeWidth={1.8} /><input type="email" placeholder={t('emailAddress')} value={form.email} onChange={update('email')} required /></label>
+        <PasswordField label={t('password')} value={form.password} onChange={update('password')} />
+        <PasswordField label={t('confirmPassword')} value={form.confirm} onChange={update('confirm')} />
+      </div>
+      <label className="check"><input type="checkbox" required /><span>{t('auth_terms_intro')} <a href="#terms">{t('footer_termsOfService')}</a> {t('auth_terms_and')} <a href="#privacy">{t('footer_privacyPolicy')}</a>.</span></label>
 
-  return (
-    <main className="page">
-      <section className="auth-card">
-        <aside className="art" aria-hidden="true"><img src={leftArt} alt="" /></aside>
-        <div className="form-pane">
-          <form onSubmit={handleSubmit}>
-            <p className="eyebrow">START YOUR JOURNEY</p>
-            <h1>Create <em>Account</em></h1>
-            <p className="lead">Join us and explore what's possible.</p>
-            <div className="fields">
-              <label className="field">
-                <UserRound size={19} strokeWidth={1.8} />
-                <input placeholder="Full name" value={form.name} onChange={update('name')} required />
-              </label>
-              <label className="field">
-                <Mail size={19} strokeWidth={1.8} />
-                <input type="email" placeholder="Email" value={form.email} onChange={update('email')} required />
-              </label>
-              <PasswordField label="Password" value={form.password} onChange={update('password')} />
-              <PasswordField label="Confirm password" value={form.confirm} onChange={update('confirm')} />
-            </div>
-            <label className="check">
-              <input type="checkbox" required />
-              <span>I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>.</span>
-            </label>
-            
-            <button className="submit" type="submit" disabled={loadingState}>
-              {loadingState ? <><Spinner /> <span>Creating Account...</span></> : <>Create Account <ArrowRight size={20} /></>}
-            </button>
+      <button className="submit" type="submit" disabled={isLoading}>
+        {isLoading ? t('auth_creating_account') : t('createAccount')}
+      </button>
 
-            {message && <p className="message" role="status">{message}</p>}
-
-            <div className="divider"><span>OR CONTINUE WITH</span></div>
-            <div className="socials">
-              <button type="button" aria-label="Continue with Google"><FcGoogle size={23} /></button>
-              <button type="button" aria-label="Continue with GitHub"><FaGithub size={22} /></button>
-              <button type="button" className="facebook" aria-label="Continue with Facebook"><FaFacebookF size={19} /></button>
-            </div>
-
-            <p className="switch">
-              Already have an account?{" "}
-              <button type="button" onClick={() => navigate("/signin")}>
-                Log In
-              </button>
-            </p>
-          </form>
-        </div>
-      </section>
-    </main>
-  )
-}
+      {message && <p className="message" role="status">{message}</p>}
+      <div className="divider"><span>{t('orContinueWith').toUpperCase()}</span></div>
+      <div className="socials">
+        <button type="button" aria-label={t('continue_with_google')}><FcGoogle size={23} /></button>
+        <button type="button" aria-label={t('continue_with_github')}><FaGithub size={22} /></button>
+        <button type="button" className="facebook" aria-label={t('continue_with_facebook')}><FaFacebookF size={19} /></button>
+      </div>
+      <p className="switch">{t('alreadyHaveAccount')} <a href="/signin">{t('login')}</a></p>
+    </form></div>
+  </section></main>
+} 
