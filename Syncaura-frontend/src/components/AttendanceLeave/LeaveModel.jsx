@@ -3,7 +3,7 @@ import { FileText, X } from "lucide-react"
 import MotionSelect from "../projects/Model/MotionSelect"
 import { Controller, useForm } from "react-hook-form"
 
-const LeaveModel = ({ onClose, setLeaveData }) => {
+const LeaveModel = ({ onClose, fetchLeaves }) => {
 
     const leaveTypes = [
         "Casual",
@@ -35,21 +35,48 @@ const LeaveModel = ({ onClose, setLeaveData }) => {
     const startDate = watch("startDate");
     const today = new Date().toISOString().split("T")[0];
 
-    const onSubmit = (data) => {
-        const currData = {
-            startDate: new Date(`${data["startDate"]}T00:00:00Z`).toISOString(),
-            endDate: new Date(`${data["endDate"]}T00:00:00Z`).toISOString(),
-            type: data["leaveType"] || "Casual",
-            reason: data["reason"],
-            status: "Pending"
-        }
-        if (typeof setLeaveData === "function") {
-            setLeaveData((prev) => [currData, ...prev]);
+
+ const onSubmit = async (data) => {
+    try {
+        const token = localStorage.getItem("accessToken");
+
+        if (!token) {
+            throw new Error("Access token not found");
         }
 
+        const response = await fetch(
+            "http://localhost:5000/api/leave/applyleave",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    fromDate: data.startDate,
+                    toDate: data.endDate,
+                    reason: data.reason,
+                }),
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to apply leave");
+        }
+
+
+
+        await fetchLeaves();
 
         onClose();
-    };
+
+    } catch (error) {
+        console.error("Error applying leave:", error);
+    }
+};
+
 
     const onError = (err) => {
         console.error("FORM ERRORS ", err);
