@@ -44,7 +44,11 @@ const Header = ({ setOpen }) => {
                   {t("hello")}
                 </h1>
                 <h1 className="font-semibold text-base sm:text-lg">
-                  {displayName}
+                  {/* {user?.name || "John Doe"} */}
+                  
+                   {user?.first_name
+    ? `${user.first_name} ${user.last_name || ""}`
+    : user?.name || "John Doe"}
                 </h1>
               </div>
 
