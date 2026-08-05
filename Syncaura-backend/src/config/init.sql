@@ -264,14 +264,18 @@ CREATE TABLE IF NOT EXISTS attachments (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- Attendance
+CREATE TABLE IF NOT EXISTS attendance (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  check_in_time VARCHAR(20),
+  check_out_time VARCHAR(20),
+  working_hours NUMERIC(4, 2) DEFAULT 0,
+  status VARCHAR(20) NOT NULL CHECK (status IN ('Present', 'Absent', 'Late', 'Leave')),
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, date)
+);
 
--- -- Canva Export Files
--- CREATE TABLE IF NOT EXISTS canva_export_files (
---   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---   template_id VARCHAR(255) NOT NULL,
---   format VARCHAR(50) NOT NULL,
---   filename VARCHAR(255) NOT NULL,
---   canva_url TEXT,
---   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
--- );
