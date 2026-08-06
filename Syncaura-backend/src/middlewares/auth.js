@@ -19,7 +19,7 @@ export const auth = async (req, res, next) => {
 
   const payload = jwt.verify(
   token, 
-  process.env.JWT_ACCESS_SECRET || process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || 'my_super_secret_access_key_12345'
+  process.env.JWT_ACCESS_SECRET || process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET
 );
 
     // Fetch full user from DB
