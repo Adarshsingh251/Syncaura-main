@@ -6,7 +6,7 @@ export const someToken = uuidv4();
 export const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user.id, role: user.role },
-    process.env.ACCESS_TOKEN_SECRET || 'my_super_secret_access_key_12345', 
+    process.env.ACCESS_TOKEN_SECRET || process.env.JWT_ACCESS_SECRET,
     { expiresIn: '15m' }
   );
 };
@@ -14,7 +14,7 @@ export const generateAccessToken = (user) => {
 export const generateRefreshToken = (user, rid) => {
   return jwt.sign(
     { id: user.id, rid },
-    process.env.REFRESH_TOKEN_SECRET || 'my_super_secret_refresh_key_12345',
+    process.env.REFRESH_TOKEN_SECRET || process.env.JWT_REFRESH_SECRET
     { expiresIn: '7d' }
   );
 };
