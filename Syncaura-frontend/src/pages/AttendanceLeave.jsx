@@ -121,10 +121,13 @@ const fetchLeaves = useCallback(async () => {
       throw new Error("Access token not found");
     }
 
-    const endpoint =
-  user?.role === "admin"
-    ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
-    : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
+    const isAdminOrCoAdmin =
+  user?.role === "admin" ||
+  user?.role === "co-admin";
+
+   const endpoint = isAdminOrCoAdmin
+  ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
+  : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
 
     const response = await fetch(endpoint, {
       method: "GET",
