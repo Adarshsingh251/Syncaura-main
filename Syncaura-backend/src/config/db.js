@@ -15,7 +15,7 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 const { Pool } = pkg;
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:shaik2430@localhost:5432/syncaura",
   ssl: false,
 });
 
