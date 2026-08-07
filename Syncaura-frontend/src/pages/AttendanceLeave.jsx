@@ -80,6 +80,7 @@ const AttendanceLeave = () => {
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const attendanceStateRef = useRef(getInitialAttendanceState());
   const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
@@ -136,95 +137,59 @@ const AttendanceLeave = () => {
   const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    const nextState = {
-      presentDays: attendanceStateRef.current.presentDays + 1,
-      records: {
-        ...attendanceStateRef.current.records,
-        [attendanceDate]: { ...currentRecord, checkInTime: timeString },
-      },
-    };
+    setIsSubmitting(true);
+    // This is UI-only until the backend provides attendance endpoints.
+    setTimeout(() => {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
 
-    saveAttendanceState(nextState);
-
-    setAttendanceStats((previousStats) =>
-      previousStats.map((stat) =>
-        stat.title === "Present Days"
-          ? { ...stat, value: nextState.presentDays }
-          : stat,
-      ),
-    );
-
-    setSelectedTab("CheckOut");
-
-    toast.success(t("attendance_marked_success", { date: attendanceDate }));
-  } else if (selectedTab === "CheckOut") {
-    setCheckOutTime(timeString);
-
-    saveAttendanceState({
-      ...attendanceStateRef.current,
-      records: {
-        ...attendanceStateRef.current.records,
-        [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
-      },
-    });
-
-    toast.success(t("attendance_checkout_success"));
-  }
-
-  setIsSubmitting(true);
-  // This is UI-only until the backend provides attendance endpoints.
-  setTimeout(() => {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
-
-    if (selectedTab === "Check-In") {
-      setCheckInTime(timeString);
-      const nextState = {
-        presentDays: attendanceStateRef.current.presentDays + 1,
-        records: {
-          ...attendanceStateRef.current.records,
-          [attendanceDate]: {
-            ...currentRecord,
-            checkInTime: timeString,
+      if (selectedTab === "Check-In") {
+        setCheckInTime(timeString);
+        const nextState = {
+          presentDays: attendanceStateRef.current.presentDays + 1,
+          records: {
+            ...attendanceStateRef.current.records,
+            [attendanceDate]: {
+              ...currentRecord,
+              checkInTime: timeString,
+            },
           },
-        },
-      };
+        };
 
-      saveAttendanceState(nextState);
+        saveAttendanceState(nextState);
 
-      setAttendanceStats((previousStats) =>
-        previousStats.map((stat) =>
-          stat.title === "Present Days"
-            ? { ...stat, value: nextState.presentDays }
-            : stat,
-        ),
-      );
+        setAttendanceStats((previousStats) =>
+          previousStats.map((stat) =>
+            stat.title === "Present Days"
+              ? { ...stat, value: nextState.presentDays }
+              : stat,
+          ),
+        );
 
-      setSelectedTab("CheckOut");
+        setSelectedTab("CheckOut");
 
-      toast.success(t("attendance_marked_success", { date: attendanceDate }));
+        toast.success(t("attendance_marked_success", { date: attendanceDate }));
 
-    } else if (selectedTab === "CheckOut") {
-      setCheckOutTime(timeString);
+      } else if (selectedTab === "CheckOut") {
+        setCheckOutTime(timeString);
 
-      saveAttendanceState({
-        ...attendanceStateRef.current,
-        records: {
-          ...attendanceStateRef.current.records,
-          [attendanceDate]: {
-            ...currentRecord,
-            checkOutTime: timeString,
+        saveAttendanceState({
+          ...attendanceStateRef.current,
+          records: {
+            ...attendanceStateRef.current.records,
+            [attendanceDate]: {
+              ...currentRecord,
+              checkOutTime: timeString,
+            },
           },
-        },
-      });
+        });
 
-      toast.success(t("attendance_checkout_success"));
-    }
-  }
+        toast.success(t("attendance_checkout_success"));
+      }
       setIsSubmitting(false);
-  setShowPopup(false);
-}, 1000);
+      setShowPopup(false);
+    }, 1000);
   };
 
 useEffect(() => {
