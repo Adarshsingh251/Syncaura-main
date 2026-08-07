@@ -4,7 +4,8 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 // import { store } from "./redux/store";
 import MainLayout from "./layouts/MainLayout";
 import { lazy, Suspense, useEffect } from "react";
-import LearnMore from "./pages/LearnMore";
+const LearnMore = lazy(() => import("./pages/LearnMore"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
 
 const Projects = lazy(() => import("./pages/Projects"));
 const Tasks = lazy(() => import("./pages/Tasks"));
@@ -173,8 +174,11 @@ export default function App() {
                 path="/auth/github/callback"
                 element={<GithubCallback />}
               />
-              <Route path="/learn-more" element={<LearnMore />} />
             </Route>
+
+            {/* General Public routes */}
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/learn-more" element={<LearnMore />} />
 
             <Route
               element={
