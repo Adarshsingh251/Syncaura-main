@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState} from "react";
 import {
   Menu,
   LayoutDashboard,
@@ -10,44 +10,55 @@ import {
   AlertTriangle,
   Megaphone,
   Clock,
+  UserCheck,
   Settings,
   X,
   LogOut,
 } from "lucide-react";
-
+import LogoutConfirmationModal from "../common/LogoutConfirmationModal";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
 import { useIsDesktop } from "../dashboard/Main/SubMain/Left/hook/useMediaQuery";
+import { useTranslation } from "react-i18next";
 
 const menuItems = [
   {
-    label: "Dashboard",
+    labelKey: "dashboard",
     icon: LayoutDashboard,
     path: "/user-dashboard",
     count: 0,
   },
-  { label: "Projects", icon: Folder, path: "/projects", count: 0 },
-  { label: "Chat", icon: MessageCircle, path: "/chat", count: 10 },
-  { label: "Meetings", icon: Calendar, path: "/meetings", count: 2 },
-  { label: "Tasks", icon: CheckSquare, path: "/tasks", count: 0 },
-  { label: "Notice", icon: Megaphone, path: "/notice", count: 0 },
-  { label: "Documents", icon: FileText, path: "/documents", count: 0 },
-  { label: "Complaints", icon: AlertTriangle, path: "/complaints", count: 0 },
+  { labelKey: "projects", icon: Folder, path: "/projects", count: 0 },
+  { labelKey: "chat", icon: MessageCircle, path: "/chat", count: 10 },
+  { labelKey: "meetings", icon: Calendar, path: "/meetings", count: 2 },
+  { labelKey: "sidebar_tasks", icon: CheckSquare, path: "/tasks", count: 0 },
+  { labelKey: "notice", icon: Megaphone, path: "/notice", count: 0 },
+  { labelKey: "documents", icon: FileText, path: "/documents", count: 0 },
+  { labelKey: "complaints", icon: AlertTriangle, path: "/complaints", count: 0 },
   {
-    label: "Attendance & Leave",
+    labelKey: "attendance",
     icon: Clock,
     path: "/attendance-leave",
+    count: 0,
+  },
+  {
+    label: "My Attendance",
+    icon: UserCheck,
+    path: "/my-attendance",
     count: 0,
   },
   { label: "Settings", icon: Settings, path: "/settings", count: 0 },
 ];
 
 export default function MobileSidebar({ open, setOpen }) {
+  const { t } = useTranslation();
   const isDark = useSelector((state) => state.theme.isDark);
   const isDesktop = useIsDesktop();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     if (isDesktop && open) {
@@ -56,10 +67,8 @@ export default function MobileSidebar({ open, setOpen }) {
   }, [isDesktop, open, setOpen]);
 
   const logOutHandle = useCallback(() => {
-    console.log("LogOut SUccessfully");
-    dispatch(logout());
-    navigate("/");
-  }, [dispatch, navigate]);
+    setShowLogoutModal(true); // Opens the popup overlay modal
+  }, []);
 
   return (
     <>
@@ -97,7 +106,7 @@ export default function MobileSidebar({ open, setOpen }) {
             const Icon = item.icon;
             return (
               <NavLink
-                key={item.label}
+                key={item.labelKey}
                 to={item.path}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
@@ -113,7 +122,7 @@ export default function MobileSidebar({ open, setOpen }) {
               >
                 <div className="flex items-center gap-3">
                   <Icon size={20} />
-                  <span className="text-lg">{item.label}</span>
+                  <span className="text-lg">{t(item.labelKey)}</span>
                 </div>
 
                 {item.count > 0 && (
@@ -141,10 +150,14 @@ export default function MobileSidebar({ open, setOpen }) {
             className="flex cursor-pointer items-center justify-center gap-5 w-full"
           >
             <LogOut className="size-6 text-[#FF0000]" />
-            <h2 className="text-[#FF0000] text-xl font-semibold">Log Out</h2>
+            <h2 className="text-[#FF0000] text-xl font-semibold">{t("logout")}</h2>
           </button>
         </div>
       </aside>
+      <LogoutConfirmationModal 
+        isOpen={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)} 
+      />
     </>
   );
 }

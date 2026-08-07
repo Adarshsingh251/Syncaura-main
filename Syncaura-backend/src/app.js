@@ -13,11 +13,13 @@ import noticeRoutes from "./routes/notice.routes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
+import profileRoutes from "./routes/profile.routes.js";
 
 import messageRoutes from "./routes/messageRoutes.js";
 
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import leaveRoutes from './routes/leaveRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
 import complaintRoutes from './routes/complaintRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import noteRoutes from "./routes/note.routes.js";
@@ -42,7 +44,14 @@ const app = express();
 // initSlackBot();
 
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: [
+    process.env.CLIENT_URL,
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174'
+  ].filter(Boolean),
   credentials: true
 }));
 app.use(express.json({ limit: '10kb' }));
@@ -59,11 +68,13 @@ app.use('/api/channels', channelRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use("/api/messages", messageRoutes);
 
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/leave', leaveRoutes);
+app.use('/api/attendance', attendanceRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use("/api/attachments", attachmentRoutes);

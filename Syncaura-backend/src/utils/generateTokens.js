@@ -1,21 +1,22 @@
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import 'dotenv/config'; 
 
 export const someToken = uuidv4();
 
 export const generateAccessToken = (user) => {
   return jwt.sign(
-    { role: user.role },
-    process.env.JWT_ACCESS_SECRET,
-    { expiresIn: process.env.JWT_ACCESS_EXPIRES, subject: String(user.id || user._id) }
+    { id: user.id, role: user.role },
+    process.env.ACCESS_TOKEN_SECRET || process.env.JWT_ACCESS_SECRET,
+    { expiresIn: '15m' }
   );
 };
 
-export const generateRefreshToken = (user, refreshId) => {
+export const generateRefreshToken = (user, rid) => {
   return jwt.sign(
-    { rid: refreshId },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES, subject: String(user.id || user._id) }
+    { id: user.id, rid },
+    process.env.REFRESH_TOKEN_SECRET || process.env.JWT_REFRESH_SECRET,
+    { expiresIn: '7d' }
   );
 };
 

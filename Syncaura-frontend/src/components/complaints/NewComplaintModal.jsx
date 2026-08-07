@@ -2,26 +2,25 @@ import { X, Upload, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 export default function NewComplaintModal({ onClose, addComplaint }) {
-  const { register, handleSubmit, setValue, watch } = useForm();
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm({
+    defaultValues: { category: "", title: "", description: "" },
+  });
   const [category, setCategory] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
   const files = watch("attachments");
   const fileRef = useRef(null);
 
-  const onSubmit = (data) => {
-    const id = `#${Date.now().toString().slice(0, 4)}`;
-    const subject = data.subject;
-    const category = data.category;
-    const date = new Date().toISOString();
-    const status = "In progress";
-    addComplaint((prev) => [{ id, subject, category, date, status }, ...prev]);
-    onClose();
-  };
-  const onError = (formErrors) => {
-    console.log("Form Errors:", formErrors);
+  const onSubmit = async ({ title, description, category, attachments }) => {
+    const complaint = new FormData();
+    complaint.append("title", title.trim());
+    complaint.append("description", description.trim());
+    complaint.append("category", category);
+    Array.from(attachments || []).forEach((file) => complaint.append("attachments", file));
+    await addComplaint(complaint);
   };
 
   const handleFileClick = () => {
@@ -78,22 +77,22 @@ export default function NewComplaintModal({ onClose, addComplaint }) {
           </button>
 
           <form
-            onSubmit={handleSubmit(onSubmit, onError)}
+            onSubmit={handleSubmit(onSubmit)}
             className="space-y-4"
           >
             <h2 className="text-lg font-semibold text-black dark:text-white">
-              New Complaint
+              {t("newComplaint")}
             </h2>
 
             {/* Category */}
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                Category
+                {t("category")}
               </label>
 
               <div className="relative mt-1">
                 <select
-                  {...register("category", { required: true })}
+                  {...register("category", { required: "Please select a category." })}
                   value={category}
                   onChange={(e) => {
                     setCategory(e.target.value);
@@ -112,11 +111,11 @@ export default function NewComplaintModal({ onClose, addComplaint }) {
                     }
                   `}
                 >
-                  <option value="">Select Category</option>
-                  <option>Network</option>
-                  <option>Facilities</option>
-                  <option>Security</option>
-                  <option>IT</option>
+                  <option value="">{t("selectCategory")}</option>
+                  <option>{t("category_network")}</option>
+                  <option>{t("category_facilities")}</option>
+                  <option>{t("category_security")}</option>
+                  <option>{t("category_it")}</option>
                 </select>
 
                 <ChevronDown
@@ -124,15 +123,19 @@ export default function NewComplaintModal({ onClose, addComplaint }) {
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                 />
               </div>
+              {errors.category && <p className="mt-1 text-xs text-red-600">{errors.category.message}</p>}
             </div>
 
             {/* Subject */}
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                Subject
+                {t("subject")}
               </label>
               <input
-                {...register("subject", { required: true })}
+                {...register("title", {
+                  required: "Please enter a subject.",
+                  validate: (value) => value.trim().length > 0 || "Please enter a subject.",
+                })}
                 placeholder="Brief title of the issue"
                 className="
                   mt-1 w-full rounded-full px-4 py-2 text-sm outline-none
@@ -143,17 +146,21 @@ export default function NewComplaintModal({ onClose, addComplaint }) {
                   transition-all
                 "
               />
+              {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
             </div>
 
             {/* Description */}
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                Description
+                {t("description")}
               </label>
               <textarea
-                {...register("description", { required: true })}
+                {...register("description", {
+                  required: "Please describe the issue.",
+                  validate: (value) => value.trim().length > 0 || "Please describe the issue.",
+                })}
                 rows={3}
-                placeholder="Describe the issue in detail..."
+                placeholder={t("complaint_description_placeholder")}
                 className="
                   mt-1 w-full rounded-xl px-4 py-2 text-sm resize-none outline-none
                   bg-white dark:bg-[#1f1f1f]
@@ -163,12 +170,13 @@ export default function NewComplaintModal({ onClose, addComplaint }) {
                   transition-all
                 "
               />
+              {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
             </div>
 
             {/* Attachment */}
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                Attachments
+                {t("attachments")}
               </label>
 
               <motion.div
@@ -194,7 +202,7 @@ export default function NewComplaintModal({ onClose, addComplaint }) {
     `}
               >
                 <Upload size={18} />
-                <span>Click to upload or drag & drop</span>
+                <span>{t("complaint_upload_hint")}</span>
               </motion.div>
 
               <input
@@ -226,6 +234,7 @@ export default function NewComplaintModal({ onClose, addComplaint }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               type="submit"
+              disabled={isSubmitting}
               className="
                 mt-5 mx-auto
                 dark:bg-[#73FBFD] px-5 py-2 dark:text-black
@@ -233,10 +242,10 @@ export default function NewComplaintModal({ onClose, addComplaint }) {
                 bg-blue-600 hover:bg-blue-700
                 text-[13px] font-medium text-white
                 transition-colors
-                flex items-center justify-center
+                flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60
               "
             >
-              Submit Complaint
+              {isSubmitting ? "Submitting..." : "Submit Complaint"}
             </motion.button>
           </form>
         </motion.div>
