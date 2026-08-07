@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser } from '../redux/features/authThunks'
 import { Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react'
@@ -11,6 +11,7 @@ import Spinner from "../components/Spinner"
 
 export default function SignIn() {
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useDispatch()
   const { isLoading: reduxLoading, error: reduxError } = useSelector((state) => state.auth || {})
 
@@ -19,6 +20,16 @@ export default function SignIn() {
   const [visible, setVisible] = useState(false)
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Read optional role query param from URL (e.g. ?role=admin)
+  const searchParams = new URLSearchParams(location.search)
+  const selectedRole = searchParams.get('role') || 'employee'
+
+  const getHeading = () => {
+    if (selectedRole === 'admin') return 'Admin Sign In'
+    if (selectedRole === 'co-admin') return 'Co-Admin Sign In'
+    return 'Welcome Back'
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -80,8 +91,8 @@ export default function SignIn() {
         <aside className="art" aria-hidden="true"><img src={leftArt} alt="" /></aside>
         <div className="form-pane">
           <form onSubmit={handleSubmit}>
-            <h1>Welcome <em>Back</em></h1>
-            <p className="lead">Login to continue your journey.</p>
+            <h1>{getHeading()} {selectedRole === 'employee' ? <em>Back</em> : null}</h1>
+            <p className="lead">{selectedRole === 'employee' ? 'Login to continue your journey.' : 'Enter your credentials to continue.'}</p>
             <div className="fields">
               <label className="field">
                 <Mail size={19} strokeWidth={1.8} />

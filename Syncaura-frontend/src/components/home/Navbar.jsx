@@ -121,7 +121,7 @@ const Navbar = () => {
           </button>
 
           <button
-            onClick={() => navigate("/sign-in")}
+            onClick={() => navigate("/role-selection")}
             className="flex items-center gap-2 text-sm font-semibold transition-all hover:opacity-70 text-blue-600 dark:text-[#4FE6E6]"
           >
             <LogIn className="w-4 h-4" />
