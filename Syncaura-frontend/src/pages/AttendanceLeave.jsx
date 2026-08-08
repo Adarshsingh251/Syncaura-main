@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
-import { leaveHistory } from "../constant/constant";
+
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
 import { toast } from "react-toastify";
@@ -22,13 +22,13 @@ import { toast } from "react-toastify";
 const initialAttendanceStats = [
   {
     title: "Present Days",
-    value: 13,
+    value: 0,
     borderColor: "border-[#29CC39]",
     icon: <CircleCheckBig className="size-3.5 text-[#29CC39]" />,
   },
   {
     title: "Absent Days",
-    value: 2,
+    value: 0,
     borderColor: "border-[#FF0000]",
     icon: (
       <div className="border border-[#FF0000] size-3.5">
@@ -38,13 +38,14 @@ const initialAttendanceStats = [
   },
   {
     title: "Leave Taken",
-    value: 4,
+    value: 0,
     borderColor: "border-[#FF9500]",
     icon: <Calendar className="size-3.5 text-[#FF9500]" />,
   },
 ];
 
 const ATTENDANCE_STORAGE_PREFIX = "syncaura:attendance:";
+const LEAVE_STORAGE_PREFIX = "syncaura:leaves:";
 
 const getToday = () => {
   const now = new Date();
@@ -62,7 +63,6 @@ const AttendanceLeave = () => {
   const user = useSelector((state) => state.auth.user);
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
-  const [leaveData, setLeaveData] = useState(leaveHistory);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
 
   const [showPopup, setShowPopup] = useState(false);
@@ -81,6 +81,30 @@ const AttendanceLeave = () => {
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const attendanceStateRef = useRef(getInitialAttendanceState());
   const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+  const leaveStorageKey = `${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+
+  // Load leave data from localStorage (persists across refreshes)
+  const [leaveData, setLeaveData] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persist leave data to localStorage whenever it changes
+  const syncLeavesToStorage = useCallback((updater) => {
+    setLeaveData((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      try {
+        localStorage.setItem(leaveStorageKey, JSON.stringify(next));
+      } catch {
+        // storage quota exceeded — silently ignore
+      }
+      return next;
+    });
+  }, [leaveStorageKey]);
 
   // Until an attendance API exists, this keeps a user's daily status stable across
   // refreshes, logins, and logouts. Replace this with a GET attendance-status call
@@ -155,7 +179,7 @@ const AttendanceLeave = () => {
       const now = new Date();
       const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
-      
+
       if (selectedTab === "Check-In") {
         setCheckInTime(timeString);
         const nextState = {
@@ -277,8 +301,7 @@ const AttendanceLeave = () => {
     if (!window.confirm("Are you sure you want to delete this leave request?")) {
       return;
     }
-
-    setLeaveData((prev) => prev.filter((item) => item !== leave));
+    syncLeavesToStorage((prev) => prev.filter((item) => item !== leave));
     toast.success("Leave request deleted successfully.");
   };
 
@@ -345,7 +368,7 @@ const AttendanceLeave = () => {
         {attendanceStats.map((item, index) => (
           <AttendanceCard key={index} {...item} />
         ))}
-       <div className="relative w-full flex justify-center mt-2">
+        <div className="relative w-full flex justify-center mt-2">
           {/* TOP CARD */}
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
@@ -429,33 +452,31 @@ const AttendanceLeave = () => {
                         const isDisabled = item === "Check-In" ? !canCheckIn : !canCheckOut;
 
                         return (
-                        <motion.div
-                          onClick={() => !isDisabled && setSelectedTab(item)}
-                          key={idx}
-                          whileTap={{ scale: 0.95 }}
-                          layout
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                          }}
-                          aria-disabled={isDisabled}
-                          className={`flex flex-1 items-center justify-center border ${
-                            selectedTab === item
-                              ? "border-[#2461E6] dark:border-[#73FBFD]"
-                              : "border-[#EDEDED] dark:border-[#575757]"
-                          } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
-                        >
-                          <p
-                            className={`font-bold text-xs ${
-                              selectedTab === item
-                                ? "text-[#2461E6] dark:text-[#73FBFD]"
-                                : "text-[#554d4d] dark:text-gray-400"
-                            }`}
+                          <motion.div
+                            onClick={() => !isDisabled && setSelectedTab(item)}
+                            key={idx}
+                            whileTap={{ scale: 0.95 }}
+                            layout
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 20,
+                            }}
+                            aria-disabled={isDisabled}
+                            className={`flex flex-1 items-center justify-center border ${selectedTab === item
+                                ? "border-[#2461E6] dark:border-[#73FBFD]"
+                                : "border-[#EDEDED] dark:border-[#575757]"
+                              } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
                           >
-                            {item}
-                          </p>
-                        </motion.div>
+                            <p
+                              className={`font-bold text-xs ${selectedTab === item
+                                  ? "text-[#2461E6] dark:text-[#73FBFD]"
+                                  : "text-[#554d4d] dark:text-gray-400"
+                                }`}
+                            >
+                              {item}
+                            </p>
+                          </motion.div>
                         );
                       })}
                     </div>
@@ -541,7 +562,7 @@ const AttendanceLeave = () => {
       {openModel && (
         <LeaveModel
           onClose={handleCloseLeaveModal}
-          setLeaveData={setLeaveData}
+          setLeaveData={syncLeavesToStorage}
           editingLeave={leaveToEdit}
         />
       )}
