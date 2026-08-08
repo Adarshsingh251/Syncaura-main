@@ -22,16 +22,18 @@ export default function SignIn() {
   const [password, setPassword] = useState('')
   const [visible, setVisible] = useState(false)
   const [message, setMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(event) {
-    event.preventDefault()
+    event.preventDefault();
+    setPasswordError("");
 
     if (!email.trim()) {
       setMessage(t('auth_email_required'));
       return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       setMessage(t('auth_invalid_email'));
       return;
@@ -41,8 +43,8 @@ export default function SignIn() {
       return;
     }
 
-    setIsLoading(true)
-    setMessage("")
+    setIsLoading(true);
+    setMessage("");
 
     try {
       const data = await dispatch(
@@ -50,32 +52,27 @@ export default function SignIn() {
           email: email.trim(),
           password: password.trim(),
         })
-      ).unwrap()
+      ).unwrap();
 
       if (data?.tokens?.accessToken) {
-        localStorage.setItem("accessToken", data.tokens.accessToken)
+        localStorage.setItem("accessToken", data.tokens.accessToken);
       }
       if (data?.tokens?.refreshToken) {
-        localStorage.setItem("refreshToken", data.tokens.refreshToken)
+        localStorage.setItem("refreshToken", data.tokens.refreshToken);
       }
 
       setMessage(t('auth_login_success'));
-      const userRole = data?.user?.role || 'user'
-      const roleHome = userRole === 'admin' ? '/admin' : userRole === 'co-admin' ? '/co-admin' : '/user-dashboard'
-      navigate(roleHome)
-
+      const userRole = data?.user?.role || 'user';
+      const roleHome = userRole === 'admin' ? '/admin' : userRole === 'co-admin' ? '/co-admin' : '/user-dashboard';
+      navigate(roleHome);
     } catch (error) {
-      // setMessage(
-      //   error?.message || "Invalid email or password."
-      // );
       setMessage(
         typeof error === "string"
           ? error
-          : error?.message || t('auth_login_error')
+          : error?.message || t("auth_login_error")
       );
       console.log(error);
-    }
-    finally {
+    } finally {
       setIsLoading(false);
     }
   }
@@ -115,4 +112,3 @@ export default function SignIn() {
     </form></div>
   </section></main>
 }
-
