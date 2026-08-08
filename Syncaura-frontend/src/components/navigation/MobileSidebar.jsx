@@ -37,7 +37,7 @@ const menuItems = [
   { labelKey: "Documents", icon: FileText, path: "/documents", count: 0 },
   { labelKey: "Complaints", icon: AlertTriangle, path: "/complaints", count: 0 },
   {
-    labelKey: "Attendance",
+    labelKey: "Attendance and Leave",
     icon: Clock,
     path: "/attendance-leave",
     count: 0,
