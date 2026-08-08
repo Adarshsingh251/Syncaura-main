@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import i18n from "./i18n/i18n";
 import { Provider, useDispatch, useSelector } from "react-redux";
 // import { store } from "./redux/store";
 import MainLayout from "./layouts/MainLayout";
 import { lazy, Suspense, useEffect } from "react";
+const LearnMore = lazy(() => import("./pages/LearnMore"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
 
 const Projects = lazy(() => import("./pages/Projects"));
 const Tasks = lazy(() => import("./pages/Tasks"));
@@ -16,6 +19,7 @@ const SignIn = lazy(() => import("./pages/SignIn"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const Complaints = lazy(() => import("./pages/Complaints"));
 const AttendanceLeave = lazy(() => import("./pages/AttendanceLeave"));
+const MyAttendance = lazy(() => import("./pages/MyAttendance"));
 const Notice = lazy(() => import("./pages/Notice"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Admin = lazy(() => import("./pages/Admin"));
@@ -29,7 +33,10 @@ import MobileSidebar from "./components/navigation/MobileSidebar";
 
 import { ToastContainer, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { refreshAccessToken, fetchUserProfile } from "./redux/features/authThunks";
+import {
+  refreshAccessToken,
+  fetchUserProfile,
+} from "./redux/features/authThunks";
 // import { logout } from "./redux/slices/authSlice";
 import { Loader } from "lucide-react";
 import ProtectRoute from "./RouteProtection/ProtectRoute";
@@ -37,36 +44,88 @@ import ProtectRoute from "./RouteProtection/ProtectRoute";
 export default function App() {
   const dispatch = useDispatch();
   const isDark = useSelector((state) => state.theme.isDark);
+  const language = useSelector((state) => state.language.language);
   // const user = useSelector((state) => state.auth.user);
   const authChecking = useSelector((state) => state.auth.authChecking);
 
-  useEffect(() => {
-    dispatch(refreshAccessToken());
+  // useEffect(() => {
+  //   dispatch(refreshAccessToken());
 
-    // Backend connection test
+  //   // Backend connection test
+  //   fetch("/health")
+  //     .then(async (res) => {
+  //       if (!res.ok) {
+  //         throw new Error(`HTTP Error: ${res.status}`);
+  //       }
+
+  //       const contentType = res.headers.get("content-type");
+
+  //       if (!contentType || !contentType.includes("application/json")) {
+  //         throw new Error(
+  //           "Expected JSON response but received something else.",
+  //         );
+  //       }
+
+  //       return res.json();
+  //     })
+  //     .then((data) => {
+  //       console.log("✅ Backend Connected:", data);
+  //     })
+  //     .catch((err) => {
+  //       console.error("❌ Backend Connection Error:", err.message);
+  //     });
+  // }, [dispatch]);
+
+  // new updatw
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const result = await dispatch(refreshAccessToken());
+
+        if (refreshAccessToken.fulfilled.match(result)) {
+          dispatch(fetchUserProfile());
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    initAuth();
+
     fetch("/health")
       .then(async (res) => {
         if (!res.ok) {
           throw new Error(`HTTP Error: ${res.status}`);
         }
 
-        const contentType = res.headers.get("content-type");
-
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error(
-            "Expected JSON response but received something else.",
-          );
-        }
-
         return res.json();
       })
       .then((data) => {
-        console.log("✅ Backend Connected:", data);
+        console.log("Backend Connected:", data);
       })
       .catch((err) => {
-        console.error("❌ Backend Connection Error:", err.message);
+        console.error(err.message);
       });
   }, [dispatch]);
+
+  useEffect(() => {
+    if (language && i18n.language !== language) {
+      i18n.changeLanguage(language);
+    }
+  }, [language]);
+
+  // Apply global page zoom + font size (runs on every page, since App.jsx is always mounted)
+  const { fontSize = "medium", zoom = 100 } = useSelector(
+    (state) => state.ui || {},
+  );
+
+  useEffect(() => {
+    const fontSizeMap = { small: 0.85, medium: 1, large: 1.15, xlarge: 1.3 };
+    const fontSizeMultiplier = fontSizeMap[fontSize] || 1;
+    const baseFontSize = 16; // px, default browser root font size
+    const finalSize = baseFontSize * fontSizeMultiplier * (zoom / 100);
+    document.documentElement.style.fontSize = `${finalSize}px`;
+  }, [fontSize, zoom]);
 
   if (authChecking) {
     return (
@@ -116,6 +175,10 @@ export default function App() {
                 element={<GithubCallback />}
               />
             </Route>
+
+            {/* General Public routes */}
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/learn-more" element={<LearnMore />} />
 
             <Route
               element={
@@ -171,6 +234,15 @@ export default function App() {
                 element={
                   <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
                     <AttendanceLeave />
+                  </MainLayout>
+                }
+              />
+
+              <Route
+                path="/my-attendance"
+                element={
+                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
+                    <MyAttendance />
                   </MainLayout>
                 }
               />

@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { CircleAlert, CircleCheck, Clock, Plus } from "lucide-react";
 import NewComplaintModal from "../components/complaints/NewComplaintModal";
 
@@ -7,9 +8,11 @@ import ComplaintsList from "../components/complaints/ComplaintsList/ComplaintsLi
 import Complaintheader from "../components/complaints/complaintHeader/Complaintheader";
 import ComplaintSlider from "../components/complaints/ComplaintSlider";
 import { getMyComplaints, createComplaint } from "../redux/features/complaintThunks";
+import { toast } from "react-toastify";
 
 export default function Complaints() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { complaints, isLoading, error } = useSelector((state) => state.complaint);
 
   const [activeId, setActiveId] = useState(null);
@@ -56,7 +59,7 @@ export default function Complaints() {
       result = result.filter(
         (item) =>
           item.title?.toLowerCase().includes(debounceSearch.toLowerCase()) ||
-          item._id?.includes(debounceSearch)
+          item.id?.includes(debounceSearch)
       );
     }
 
@@ -65,11 +68,11 @@ export default function Complaints() {
         result = result.filter((item) => item.status === appliedFilters.status);
       }
       if (appliedFilters.date) {
-        result = result.filter((item) => item.createdAt?.startsWith(appliedFilters.date));
+        result = result.filter((item) => item.created_at?.startsWith(appliedFilters.date));
       }
       result.sort((a, b) => {
-        const dateA = new Date(a.createdAt);
-        const dateB = new Date(b.createdAt);
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
         return appliedFilters.order === "Ascending" ? dateA - dateB : dateB - dateA;
       });
     }
@@ -81,8 +84,15 @@ export default function Complaints() {
     setAppliedFilters(newFilters);
   };
 
-  const handleAddComplaint = (formData) => {
-    dispatch(createComplaint(formData));
+  const handleAddComplaint = async (complaint) => {
+    try {
+      const result = await dispatch(createComplaint(complaint)).unwrap();
+      toast.success(result.message || "Complaint submitted successfully");
+      setShowModal(false);
+    } catch (submissionError) {
+      toast.error(submissionError || "Unable to submit complaint. Please try again.");
+      throw submissionError;
+    }
   };
 
   return (
@@ -101,8 +111,8 @@ export default function Complaints() {
             onApplyFilters={handleApplyFilters}
           />
 
-          {isLoading && <p className="text-center text-gray-400 py-10">Loading complaints...</p>}
-          {error && <p className="text-center text-red-400 py-10">Failed to load complaints.</p>}
+          {isLoading && <p className="text-center text-gray-400 py-10">{t("complaints_loading")}</p>}
+          {error && <p className="text-center text-red-400 py-10">{t("complaints_error")}</p>}
           {!isLoading && !error && (
             <ComplaintsList
               COMPLAINTS={filteredComplaints}
@@ -118,7 +128,7 @@ export default function Complaints() {
             className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-500 px-6 py-3 text-white shadow-lg hover:bg-blue-400 dark:hover:bg-[#2cc4c7] btn-hover"
           >
             <Plus size={18} />
-            New Complaint
+            {t("newComplaint")}
           </button>
 
           {showModal && (

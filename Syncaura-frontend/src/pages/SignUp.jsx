@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { registerUser } from '../redux/features/authThunks'
 import { UserRound, Mail, LockKeyhole, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { FaGithub, FaFacebookF } from 'react-icons/fa'
@@ -16,8 +20,10 @@ function PasswordField({
     onBlur
   }) {
   const [visible, setVisible] = useState(false)
-  return <label className="field">
+return (
+  <label className="field">
     <LockKeyhole size={19} strokeWidth={1.8} />
+
     <input
       type={visible ? "text" : "password"}
       placeholder={label}
@@ -25,15 +31,27 @@ function PasswordField({
       onChange={onChange}
       onFocus={onFocus}
       onBlur={onBlur}
+      required
     />
-    <button type="button" className="reveal" aria-label={`Show ${label}`} onClick={() => setVisible(!visible)}>
+
+    <button
+      type="button"
+      className="reveal"
+      aria-label={`Show ${label}`}
+      onClick={() => setVisible(!visible)}
+    >
       {visible ? <EyeOff size={18} /> : <Eye size={18} />}
     </button>
   </label>
+)
 }
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const dispatch = useDispatch()
+  const { isLoading: reduxLoading, error: reduxError } = useSelector((state) => state.auth || {})
+
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [message, setMessage] = useState('')
   const [nameError, setNameError] = useState('');
@@ -128,22 +146,23 @@ if (!passwordRegex.test(form.password.trim())) {
     setMessage("");
 
     try {
-      const response = await api.post("/auth/register", {
-        // name: form.name,
-        // email: form.email,
-        // password: form.password,
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password.trim(),
-      });
+      const data = await dispatch(
+        registerUser({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password.trim(),
+        })
+      ).unwrap()
 
-      console.log("Register success:", response.data);
+      console.log("Register success:", data);
 
-      setMessage("Account created successfully!");
+      setMessage(t('auth_signup_success'));
 
       setTimeout(() => {
-        navigate("/signin");
-      }, 1000);
+        const userRole = data?.user?.role || 'user'
+        const roleHome = userRole === 'admin' ? '/admin' : userRole === 'co-admin' ? '/co-admin' : '/user-dashboard'
+        navigate(roleHome)
+      }, 1000)
 
     } catch (error) {
       console.log("Register error:", error.response?.data);
@@ -152,7 +171,7 @@ if (!passwordRegex.test(form.password.trim())) {
       if (serverMsg) {
         setMessage(serverMsg);
       } else {
-        setMessage("Registration failed.");
+        setMessage(t('auth_signup_error'));
       }
     }
     finally {
@@ -163,75 +182,85 @@ if (!passwordRegex.test(form.password.trim())) {
   return <main className="page"><section className="auth-card">
     <aside className="art" aria-hidden="true"><img src={leftArt} alt="" /></aside>
     <div className="form-pane"><form onSubmit={handleSubmit}>
-      <p className="eyebrow">START YOUR JOURNEY</p>
-      <h1>Create <em>Account</em></h1>
-      <p className="lead">Join us and explore what's possible.</p>
+      <p className="eyebrow">{t('auth_signup_eyebrow').toUpperCase()}</p>
+      <h1>{t('createAccount')} <em>{t('account_emphasis')}</em></h1>
+      <p className="lead">{t('auth_signup_lead')}</p>
       <div className="fields">
-        <label className="field"><UserRound size={19} strokeWidth={1.8} /><input placeholder="Full name" value={form.name} onChange={update('name')}/></label>
-          {nameError && (
-          <p className="field-error">{nameError}</p>
-          )}
-        <label className="field"><Mail size={19} strokeWidth={1.8} /><input type="email" placeholder="Email" value={form.email} onChange={update('email')}/></label>
-        {emailError && (
-        <p className="field-error">{emailError}</p>
-        )}
-      <PasswordField
-        label="Password"
-        value={form.password}
-        onFocus={() => {
-       if (form.password.trim() !== "") {
-        setShowStrength(true);
-        }
-        }}
-        onBlur={() => {
-        setShowStrength(false);
-        }}
-        onChange={(e) => {
-        update("password")(e);
-        checkPasswordStrength(e.target.value);
-        }}
-      />
+<input
+  placeholder={t('fullName')}
+  value={form.name}
+  onChange={update('name')}
+  required
+/>
+{nameError && (
+  <p className="field-error">{nameError}</p>
+)}
 
-        {showStrength && (
-          <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
-          Password Strength: {passwordStrength}
-          </p>
-        )}
+<input
+  type="email"
+  placeholder={t('emailAddress')}
+  value={form.email}
+  onChange={update('email')}
+  required
+/>
+{emailError && (
+  <p className="field-error">{emailError}</p>
+)}
 
-        {showStrength && (
-         <div className="strength-bar">
-          <div className={`strength-fill ${passwordStrength.toLowerCase()}`}>
+<PasswordField
+  label={t('password')}
+  value={form.password}
+  onFocus={() => {
+    if (form.password.trim() !== "") {
+      setShowStrength(true);
+    }
+  }}
+  onBlur={() => {
+    setShowStrength(false);
+  }}
+  onChange={(e) => {
+    update("password")(e);
+    checkPasswordStrength(e.target.value);
+  }}
+/>
 
-          </div>
-          </div>
-          )}
+{showStrength && (
+  <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
+    Password Strength: {passwordStrength}
+  </p>
+)}
 
-        {passwordError && (
-          <p className="field-error">{passwordError}</p>
-        )}
+{showStrength && (
+  <div className="strength-bar">
+    <div className={`strength-fill ${passwordStrength.toLowerCase()}`}>
+    </div>
+  </div>
+)}
 
-        <PasswordField
-          label="Confirm password"
-          value={form.confirm}
-          onChange={update("confirm")}
-        />
-      
+{passwordError && (
+  <p className="field-error">{passwordError}</p>
+)}
+
+<PasswordField
+  label={t('confirmPassword')}
+  value={form.confirm}
+  onChange={update("confirm")}
+/>
       </div>
-      <label className="check"><input type="checkbox" required /><span>I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>.</span></label>
-      
+      <label className="check"><input type="checkbox" required /><span>{t('auth_terms_intro')} <a href="#terms">{t('footer_termsOfService')}</a> {t('auth_terms_and')} <a href="#privacy">{t('footer_privacyPolicy')}</a>.</span></label>
+
       <button className="submit" type="submit" disabled={isLoading}>
-        {isLoading ? "Creating account..." : "Create Account"}
+        {isLoading ? t('auth_creating_account') : t('createAccount')}
       </button>
 
       {message && <p className="message" role="status">{message}</p>}
-      <div className="divider"><span>OR CONTINUE WITH</span></div>
+      <div className="divider"><span>{t('orContinueWith').toUpperCase()}</span></div>
       <div className="socials">
-        <button type="button" aria-label="Continue with Google"><FcGoogle size={23} /></button>
-        <button type="button" aria-label="Continue with GitHub"><FaGithub size={22} /></button>
-        <button type="button" className="facebook" aria-label="Continue with Facebook"><FaFacebookF size={19} /></button>
+        <button type="button" aria-label={t('continue_with_google')}><FcGoogle size={23} /></button>
+        <button type="button" aria-label={t('continue_with_github')}><FaGithub size={22} /></button>
+        <button type="button" className="facebook" aria-label={t('continue_with_facebook')}><FaFacebookF size={19} /></button>
       </div>
-      <p className="switch">Already have an account? <a href="/signin">Log In</a></p>
+      <p className="switch">{t('alreadyHaveAccount')} <a href="/signin">{t('login')}</a></p>
     </form></div>
   </section></main>
-}
-
+} 

@@ -60,10 +60,16 @@ export const register = async (req, res, next) => {
       console.error("Welcome email failed:", err);
     }
 
+    res.cookie("refreshToken",refreshToken,{
+      httpOnly:true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
 
     res.status(201).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
-      tokens: { accessToken, refreshToken }
+      tokens: { accessToken}
     });
   } catch (err) { next(err); }
 };
@@ -87,17 +93,26 @@ export const login = async (req, res, next) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user, rid);
 
+    res.cookie("refreshToken",refreshToken,{
+      httpOnly:true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    }); 
+
     res.json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
-      tokens: { accessToken, refreshToken }
+      tokens: { accessToken }
     });
   } catch (err) { next(err); }
 };
 
 export const refresh = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(400).json({ message: 'Missing refreshToken' });
+    const refreshToken  = req.cookies.refreshToken;
+    if (!refreshToken){ 
+      return res.status(400).json({ message: 'Missing refreshToken' })
+    };
 
     const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const userId = payload.sub;
@@ -212,9 +227,23 @@ export const forgotPassword = async (req, res, next) => {
       'UPDATE users SET reset_token_hash = $1, reset_token_expires_at = $2 WHERE id = $3',
       [tokenHash, expiresAt, user.id]
     );
+console.log(user.email);
 
+    try {
+      await sendResetEmail({
+        to: user.email,
+        name: user.name,
+        token
+      });
 
-    res.json({ message: 'If that email exists, a reset link has been sent' });
+      console.log("Reset email sent");
+    } catch (err) {
+      console.error("Reset email failed:", err.message);
+    }
+
+    res.json({
+      message: 'If that email exists, a reset link has been sent'
+    });
   } catch (err) { next(err); }
 };
 
@@ -279,4 +308,68 @@ export const changePassword = async (req, res, next) => {
 
 export const adminOnly = async (req, res) => {
   res.json({ message: 'Hello Admin!' });
+};
+
+export const getProfile = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const userRes = await pool.query(
+      'SELECT id, name, email, role, phone, language, created_at FROM users WHERE id = $1',
+      [userId]
+    );
+    if (userRes.rowCount === 0) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ user: userRes.rows[0] });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateProfile = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const { name, email, phone, language } = req.body;
+
+    if (email) {
+      const existingRes = await pool.query(
+        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        [email.toLowerCase(), userId]
+      );
+      if (existingRes.rowCount > 0) {
+        return res.status(409).json({ message: 'Email already in use' });
+      }
+    }
+
+    const updateRes = await pool.query(
+      `UPDATE users 
+       SET name = COALESCE($1, name),
+           email = COALESCE($2, email),
+           phone = COALESCE($3, phone),
+           language = COALESCE($4, language),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $5 
+       RETURNING id, name, email, role, phone, language`,
+      [name, email ? email.toLowerCase() : null, phone, language, userId]
+    );
+
+    if (updateRes.rowCount === 0) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ user: updateRes.rows[0] });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//new changes,
+
+export const logout = async (req, res) => {
+  res.clearCookie("refreshToken");
+
+  res.json({
+    message: "Logged out successfully"
+  });
 };

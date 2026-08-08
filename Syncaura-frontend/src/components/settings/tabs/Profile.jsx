@@ -8,6 +8,7 @@ import {
   fetchUserProfile,
   updateUserProfile,
 } from "../../../redux/features/authThunks";
+import { number } from "framer-motion";
 
 const languageNames = {
   en: "English",
@@ -37,7 +38,7 @@ const Profile = () => {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
+    phone : "",
     language: (localStorage.getItem("app_language") || "en").substring(0, 2),
   });
 
@@ -50,8 +51,8 @@ const Profile = () => {
     const [firstName = "", ...lastNameParts] = fullName.trim().split(" ");
 
     return {
-      firstName: profile?.firstName || firstName,
-      lastName: profile?.lastName || lastNameParts.join(" "),
+      firstName: profile?.first_name || firstName,
+      lastName: profile?.last_name || lastNameParts.join(" "),
     };
   };
 
@@ -112,8 +113,8 @@ const Profile = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   const buildProfilePayload = () => ({
-    firstName: formData.firstName.trim(),
-    lastName: formData.lastName.trim(),
+    first_name: formData.firstName.trim(),
+    last_name: formData.lastName.trim(),
     name: `${formData.firstName} ${formData.lastName}`.trim(),
     email: formData.email.trim(),
     phone: formData.phone.trim(),
