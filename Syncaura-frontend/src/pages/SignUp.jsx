@@ -8,9 +8,8 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaGithub, FaFacebookF } from 'react-icons/fa'
 import leftArt from "../assets/left-art.png";
 import "./style9.css";
-
+import RoleSelector from "../components/roles/RoleSelector";
 import api from "../config/axios.js";
-import { useNavigate } from "react-router-dom";
 
 function PasswordField({
     label,
@@ -20,6 +19,7 @@ function PasswordField({
     onBlur
   }) {
   const [visible, setVisible] = useState(false)
+
 return (
   <label className="field">
     <LockKeyhole size={19} strokeWidth={1.8} />
@@ -51,7 +51,7 @@ export default function SignUpPage() {
   const { t } = useTranslation();
   const dispatch = useDispatch()
   const { isLoading: reduxLoading, error: reduxError } = useSelector((state) => state.auth || {})
-
+  const [selectedRole, setSelectedRole] = useState("User");
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [message, setMessage] = useState('')
   const [nameError, setNameError] = useState('');
@@ -151,6 +151,7 @@ if (!passwordRegex.test(form.password.trim())) {
           name: form.name.trim(),
           email: form.email.trim(),
           password: form.password.trim(),
+          role: selectedRole,
         })
       ).unwrap()
 
@@ -185,69 +186,91 @@ if (!passwordRegex.test(form.password.trim())) {
       <p className="eyebrow">{t('auth_signup_eyebrow').toUpperCase()}</p>
       <h1>{t('createAccount')} <em>{t('account_emphasis')}</em></h1>
       <p className="lead">{t('auth_signup_lead')}</p>
-      <div className="fields">
-<input
-  placeholder={t('fullName')}
-  value={form.name}
-  onChange={update('name')}
-  required
-/>
-{nameError && (
-  <p className="field-error">{nameError}</p>
-)}
+            <div className="fields">
+        {/* Full Name Input Box Container */}
+        <label className="field">
+          <UserRound size={19} strokeWidth={1.8} />
+          <input
+            type="text"
+            placeholder={t('fullName')}
+            value={form.name}
+            onChange={update('name')}
+            required
+          />
+        </label>
+        {nameError && (
+          <p className="field-error">{nameError}</p>
+        )}
 
-<input
-  type="email"
-  placeholder={t('emailAddress')}
-  value={form.email}
-  onChange={update('email')}
-  required
-/>
-{emailError && (
-  <p className="field-error">{emailError}</p>
-)}
+        {/* Email Address Input Box Container */}
+        <label className="field">
+          <Mail size={19} strokeWidth={1.8} />
+          <input
+            type="email"
+            placeholder={t('emailAddress')}
+            value={form.email}
+            onChange={update('email')}
+            required
+          />
+        </label>
+        {emailError && (
+          <p className="field-error">{emailError}</p>
+        )}
 
-<PasswordField
-  label={t('password')}
-  value={form.password}
-  onFocus={() => {
-    if (form.password.trim() !== "") {
-      setShowStrength(true);
-    }
-  }}
-  onBlur={() => {
-    setShowStrength(false);
-  }}
-  onChange={(e) => {
-    update("password")(e);
-    checkPasswordStrength(e.target.value);
-  }}
-/>
+        {/* Password Component */}
+        <PasswordField
+          label={t('password')}
+          value={form.password}
+          onFocus={() => {
+            if (form.password.trim() !== "") {
+              setShowStrength(true);
+            }
+          }}
+          onBlur={() => {
+            setShowStrength(false);
+          }}
+          onChange={(e) => {
+            update("password")(e);
+            checkPasswordStrength(e.target.value);
+          }}
+        />
 
-{showStrength && (
-  <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
-    Password Strength: {passwordStrength}
-  </p>
-)}
+        {showStrength && (
+          <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
+            Password Strength: {passwordStrength}
+          </p>
+        )}
 
-{showStrength && (
-  <div className="strength-bar">
-    <div className={`strength-fill ${passwordStrength.toLowerCase()}`}>
-    </div>
-  </div>
-)}
+        {showStrength && (
+          <div className="strength-bar">
+            <div className={`strength-fill ${passwordStrength.toLowerCase()}`}></div>
+          </div>
+        )}
 
-{passwordError && (
-  <p className="field-error">{passwordError}</p>
-)}
+        {passwordError && (
+          <p className="field-error">{passwordError}</p>
+        )}
 
-<PasswordField
-  label={t('confirmPassword')}
-  value={form.confirm}
-  onChange={update("confirm")}
-/>
+        {/* Confirm Password Component */}
+        <PasswordField
+          label={t('confirmPassword')}
+          value={form.confirm}
+          onChange={update("confirm")}
+        />
+
+        {/* Role based logic registration */}
+        <div className="w-full mt-4 text-white">
+          <RoleSelector 
+            selectedRole={selectedRole} 
+            onRoleChange={setSelectedRole} 
+          />
+        </div>
       </div>
-      <label className="check"><input type="checkbox" required /><span>{t('auth_terms_intro')} <a href="#terms">{t('footer_termsOfService')}</a> {t('auth_terms_and')} <a href="#privacy">{t('footer_privacyPolicy')}</a>.</span></label>
+
+      <label className="check">
+        <input type="checkbox" required />
+        <span>{t('auth_terms_intro')} <a href="#terms">{t('footer_termsOfService')}</a> {t('auth_terms_and')} <a href="#privacy">{t('footer_privacyPolicy')}</a>.</span>
+      </label>
 
       <button className="submit" type="submit" disabled={isLoading}>
         {isLoading ? t('auth_creating_account') : t('createAccount')}
@@ -262,5 +285,6 @@ if (!passwordRegex.test(form.password.trim())) {
       </div>
       <p className="switch">{t('alreadyHaveAccount')} <a href="/signin">{t('login')}</a></p>
     </form></div>
+
   </section></main>
 } 
