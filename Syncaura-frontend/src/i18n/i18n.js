@@ -365,13 +365,13 @@ const resources = {
       twoStepDesc: "We recommend requiring a verification code in addition to your password",
 
       // ✅ AUTH
-      createAccount: "Create Account",
+      createAccount: "Create",
       account_emphasis: "Account",
       fullName: "Full Name",
       confirmPassword: "Confirm Password",
       alreadyHaveAccount: "Already have an account?",
       login: "Login",
-      welcomeBack: "Welcome Back",
+      welcomeBack: "Welcome",
       welcomeBackEmphasis: "Back",
       emailAddress: "Email Address",
       password: "Password",
