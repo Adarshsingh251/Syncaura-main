@@ -24,31 +24,31 @@ import { useTranslation } from "react-i18next";
 
 const menuItems = [
   {
-    labelKey: "dashboard",
+    labelKey: "Dashboard",
     icon: LayoutDashboard,
     path: "/user-dashboard",
     count: 0,
   },
-  { labelKey: "projects", icon: Folder, path: "/projects", count: 0 },
-  { labelKey: "chat", icon: MessageCircle, path: "/chat", count: 10 },
-  { labelKey: "meetings", icon: Calendar, path: "/meetings", count: 2 },
+  { labelKey: "Projects", icon: Folder, path: "/projects", count: 0 },
+  { labelKey: "Chat", icon: MessageCircle, path: "/chat", count: 10 },
+  { labelKey: "Meetings", icon: Calendar, path: "/meetings", count: 2 },
   { labelKey: "sidebar_tasks", icon: CheckSquare, path: "/tasks", count: 0 },
-  { labelKey: "notice", icon: Megaphone, path: "/notice", count: 0 },
-  { labelKey: "documents", icon: FileText, path: "/documents", count: 0 },
-  { labelKey: "complaints", icon: AlertTriangle, path: "/complaints", count: 0 },
+  { labelKey: "Notice", icon: Megaphone, path: "/notice", count: 0 },
+  { labelKey: "Documents", icon: FileText, path: "/documents", count: 0 },
+  { labelKey: "Complaints", icon: AlertTriangle, path: "/complaints", count: 0 },
   {
-    labelKey: "attendance",
+    labelKey: "Attendance and Leave",
     icon: Clock,
     path: "/attendance-leave",
     count: 0,
   },
   {
-    label: "My Attendance",
+    labelKey: "My Attendance",
     icon: UserCheck,
     path: "/my-attendance",
     count: 0,
   },
-  { label: "Settings", icon: Settings, path: "/settings", count: 0 },
+  { labelKey: "Settings", icon: Settings, path: "/settings", count: 0 },
 ];
 
 export default function MobileSidebar({ open, setOpen }) {
