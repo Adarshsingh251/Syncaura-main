@@ -2,11 +2,9 @@ import { X, Upload, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { useTranslation } from "react-i18next";
 import MotionSelect from "../projects/Model/MotionSelect";
 
 export default function DocumentModal({ onClose, addReport }) {
-  const { t } = useTranslation();
   const { register, handleSubmit,control, setValue, watch, formState: { errors }, } = useForm();
   const [isDragging, setIsDragging] = useState(false);
   const noticeCategories = [
@@ -90,7 +88,7 @@ export default function DocumentModal({ onClose, addReport }) {
 
           <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
             <h2 className="text-lg font-semibold text-black dark:text-white">
-              {t("newDocumentsAndReports")}
+              New Documents And Reports
             </h2>
 
             {/* Category */}
@@ -98,7 +96,7 @@ export default function DocumentModal({ onClose, addReport }) {
 
               <div className="relative mt-1">
                <h1 className="text-base font-medium w-full text-[#000000] dark:text-[#F8F8F8]">
-                                {t("documents_name")}
+                                Name
                             </h1>
                             <div className="flex w-full rounded-xl px-1 md:px-3 py-1 dark:bg-[#2E2F2F] ">
                                 <Controller
@@ -106,7 +104,7 @@ export default function DocumentModal({ onClose, addReport }) {
                                     control={control}
                                     rules={{ required: true }}
                                     render={({ field }) => (
-                                        <MotionSelect {...field} startVal={t("selectCategory")} options={noticeCategories} />
+                                        <MotionSelect {...field} startVal="Select category" options={noticeCategories} />
                                     )}
                                 />
                             </div>
@@ -117,11 +115,11 @@ export default function DocumentModal({ onClose, addReport }) {
 
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                {t("documents_type")}
+                Type
               </label>
               <input
                 {...register("type", { required: true })}
-                placeholder={t("document_type_placeholder")}
+                placeholder="Notice issued on"
                 className="
                   mt-1 w-full rounded-full px-4 py-2 text-sm outline-none
                   bg-white dark:bg-[#1f1f1f]
@@ -135,12 +133,12 @@ export default function DocumentModal({ onClose, addReport }) {
 
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                {t("description")}
+                Description
               </label>
               <textarea
                 {...register("description", { required: true })}
                 rows={3}
-                placeholder={t("complaint_description_placeholder")}
+                placeholder="Describe the issue in detail..."
                 className="
                   mt-1 w-full rounded-xl px-4 py-2 text-sm resize-none outline-none
                   bg-white dark:bg-[#1f1f1f]
@@ -155,7 +153,7 @@ export default function DocumentModal({ onClose, addReport }) {
             {/* Attachment */}
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                {t("attachments")}
+                Attachments
               </label>
 
               <motion.div
@@ -181,7 +179,7 @@ export default function DocumentModal({ onClose, addReport }) {
     `}
               >
                 <Upload size={18} />
-                <span>{t("complaint_upload_hint")}</span>
+                <span>Click to upload or drag & drop</span>
               </motion.div>
 
               <input
@@ -223,7 +221,7 @@ export default function DocumentModal({ onClose, addReport }) {
                 flex items-center justify-center
               "
             >
-              {t("submitReport")}
+              Submit Report
             </motion.button>
           </form>
         </motion.div>

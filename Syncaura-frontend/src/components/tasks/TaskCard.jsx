@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
 import { Calendar, CheckSquare, ChevronRight, Clock, Flag, Trash2 } from "lucide-react";
 
 const PRIORITY_CONFIG = {
@@ -32,9 +31,7 @@ const isOverdue = (dateStr) => {
 };
 
 const TaskCard = ({ task, onOpen, onDelete }) => {
-  const { t } = useTranslation();
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
-  const priorityLabel = t(`task_priority_${task.priority || "medium"}`);
   const completedSubtasks = task.subtasks?.filter((s) => s.status === "DONE").length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
   const deadline = task.deadline;
@@ -55,7 +52,7 @@ const TaskCard = ({ task, onOpen, onDelete }) => {
       <div className="flex items-center justify-between mb-3">
         <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${priority.className}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
-          {priorityLabel}
+          {priority.label}
         </span>
         <button
           onClick={(e) => {
@@ -63,7 +60,7 @@ const TaskCard = ({ task, onOpen, onDelete }) => {
             onDelete(task.id);
           }}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
-          aria-label={t("task_delete_task_action")}
+          aria-label="Delete task"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
@@ -87,7 +84,7 @@ const TaskCard = ({ task, onOpen, onDelete }) => {
           <div className="flex items-center justify-between mb-1">
             <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
               <CheckSquare className="w-3 h-3" />
-              {t("task_subtasks_count", { completed: completedSubtasks, total: totalSubtasks })}
+              {completedSubtasks}/{totalSubtasks} subtasks
             </span>
           </div>
           <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -106,7 +103,7 @@ const TaskCard = ({ task, onOpen, onDelete }) => {
         {deadline ? (
           <span className={`flex items-center gap-1 text-xs font-medium ${overdue ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>
             {overdue ? <Clock className="w-3 h-3" /> : <Calendar className="w-3 h-3" />}
-            {overdue ? `${t("task_overdue")} · ` : ""}{formatDate(deadline)}
+            {overdue ? "Overdue · " : ""}{formatDate(deadline)}
           </span>
         ) : (
           <span />

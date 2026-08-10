@@ -1,6 +1,5 @@
 import { Check, CircleAlert, ClipboardListIcon, EllipsisIcon } from 'lucide-react'
 import React from 'react'
-import { useTranslation } from 'react-i18next'
 import TopCard from '../TopCard'
 import CircularProgress from '../CircularProgress'
 import TaskStatusDistribution from '../TaskGraph/TaskStatusDistribution'
@@ -8,13 +7,12 @@ import { ANALYTICS_TASK_STATUS } from '../../../constant/constant'
 import TasksTable from './Analytics/TasksTable'
 
 const Analytics = () => {
-  const { t } = useTranslation();
   const cardData = [
-    { title: t("analytics_total_tasks"), count: 24, iconData: <ClipboardListIcon className='text-white dark:text-gray-900 fill-blue-600 size-10' /> },
-    { title: t("analytics_completed"), count: 12, iconData: <div className="flex items-center justify-center size-9 rounded-full bg-[#E9B000]" /> },
-    { title: t("analytics_in_progress"), count: 8, iconData: <div className="flex items-center justify-center p-1 rounded-full bg-[#137FEC]"><EllipsisIcon className='size-7 text-white dark:text-gray-900' /></div> },
-    { title: t("analytics_blocked"), count: 3, iconData: <CircleAlert className='size-10 text-white dark:text-gray-900 fill-[#EF4444]' /> },
-    { title: t("analytics_done"), count: 19, iconData: <div className="flex items-center justify-center p-2 rounded-full bg-[#1BC963]"><Check className='size-5 text-white dark:text-gray-900' /></div> },
+    { title: "Total Tasks", count: 24, iconData: <ClipboardListIcon className='text-white dark:text-gray-900 fill-blue-600 size-10' /> },
+    { title: "Completed", count: 12, iconData: <div className="flex items-center justify-center size-9 rounded-full bg-[#E9B000]" /> },
+    { title: "in Progress", count: 8, iconData: <div className="flex items-center justify-center p-1 rounded-full bg-[#137FEC]"><EllipsisIcon className='size-7 text-white dark:text-gray-900' /></div> },
+    { title: "Blocked", count: 3, iconData: <CircleAlert className='size-10 text-white dark:text-gray-900 fill-[#EF4444]' /> },
+    { title: "Done", count: 19, iconData: <div className="flex items-center justify-center p-2 rounded-full bg-[#1BC963]"><Check className='size-5 text-white dark:text-gray-900' /></div> },
   ]
 
   return (
@@ -41,7 +39,7 @@ const Analytics = () => {
       {/* Completion Progress Section */}
       <div className="flex flex-col w-full gap-6 bg-white dark:bg-[#1E1E1E] border border-gray-100 dark:border-none py-8 px-6 md:px-10 rounded-xl shadow-[0_4px_20px_0_#00000008]">
         <h1 className="text-[#000000] dark:text-white font-bold text-xl sm:text-2xl">
-          {t("analytics_my_completion_progress")}
+          My Completion Progress
         </h1>
 
         <div className="flex flex-col xsm:flex-row items-center justify-center md:justify-start w-full gap-6 md:gap-20 px-2 py-2">
@@ -52,7 +50,7 @@ const Analytics = () => {
               size={180}
               progressColor="#127FEC" 
               trackColor="#E5E7EB"
-              label={t("analytics_finished")}
+              label="FINISHED"
               data="75%"
               textColor="currentColor"
               labelColor="#94A3B8"
@@ -61,7 +59,7 @@ const Analytics = () => {
           </div>
           
           <h1 className='text-[#636679] dark:text-gray-400 font-bold text-xl'>
-            {t("analytics_completion_summary", { completed: 19, total: 25 })}
+            You’ve completed <span className='text-[#127FEC]'>19</span> of <span className='text-[#127FEC]'>25</span> tasks this sprint
           </h1>
         </div>
       </div>
@@ -72,7 +70,7 @@ const Analytics = () => {
           task={ANALYTICS_TASK_STATUS} 
           percentage={true} 
           showTotal={false} 
-          title={t("analytics_task_status_breakdown")} 
+          title="Task Status Breakdown" 
           titleColor="text-[#000000] dark:text-white"
         />
       </div>
