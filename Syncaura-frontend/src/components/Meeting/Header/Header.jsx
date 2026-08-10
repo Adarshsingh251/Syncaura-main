@@ -39,7 +39,11 @@ const Header = ({ setOpen }) => {
               <div className="flex gap-1 items-center text-black dark:text-white">
                 <h1 className="font-light text-base sm:text-lg">Hello!</h1>
                 <h1 className="font-semibold text-base sm:text-lg">
-                  {user?.name || "John Doe"}
+                  {/* {user?.name || "John Doe"} */}
+                  
+                   {user?.first_name
+    ? `${user.first_name} ${user.last_name || ""}`
+    : user?.name || "John Doe"}
                 </h1>
               </div>
 

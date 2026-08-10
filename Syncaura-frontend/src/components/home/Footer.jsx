@@ -75,6 +75,7 @@ const Footer = () => {
 
   return (
     <footer
+    id="contact"
       className="w-full relative overflow-hidden"
       style={{ backgroundColor: 'var(--bg-primary)', borderTop: '1px solid var(--border-color)' }}
     >
