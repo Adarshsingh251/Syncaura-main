@@ -1,25 +1,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useTranslation } from "react-i18next";
 import dashboardPreview from "../../assets/Imageto.PNG";
 import { Zap, CheckCircle2, Layers, MessageSquare, BarChart3, Users, Clock, ShieldCheck } from 'lucide-react';
 
+const stats = [
+  { val: '10+',   label: 'Modules',  icon: Layers,     color: '#3b82f6' },
+  { val: '99.9%', label: 'Uptime',   icon: ShieldCheck, color: '#22c55e' },
+  { val: '50K+',  label: 'Users',    icon: Users,      color: '#8b5cf6' },
+  { val: '<2min', label: 'Setup',    icon: Clock,      color: '#f59e0b' },
+];
+
+const featureList = [
+  { icon: Layers,        color: '#3b82f6', text: 'Unified project & task management' },
+  { icon: MessageSquare, color: '#8b5cf6', text: 'Real-time team chat & threads'     },
+  { icon: BarChart3,     color: '#06b6d4', text: 'Live performance dashboards'       },
+  { icon: ShieldCheck,   color: '#22c55e', text: 'Enterprise-grade security & uptime'},
+];
+
 const FeatureShowcase = () => {
-  const { t } = useTranslation();
-
-  const stats = [
-    { val: '10+',   label: t("showcase_stat_modules"),  icon: Layers,     color: '#3b82f6' },
-    { val: '99.9%', label: t("showcase_stat_uptime"),   icon: ShieldCheck, color: '#22c55e' },
-    { val: '50K+',  label: t("showcase_stat_users"),    icon: Users,      color: '#8b5cf6' },
-    { val: '<2min', label: t("showcase_stat_setup"),    icon: Clock,      color: '#f59e0b' },
-  ];
-
-  const featureList = [
-    { icon: Layers,        color: '#3b82f6', text: t("showcase_feature_projects") },
-    { icon: MessageSquare, color: '#8b5cf6', text: t("showcase_feature_chat") },
-    { icon: BarChart3,     color: '#06b6d4', text: t("showcase_feature_dashboards") },
-    { icon: ShieldCheck,   color: '#22c55e', text: t("showcase_feature_security") },
-  ];
   return (
     <section
       id="showcase"
@@ -63,7 +61,7 @@ const FeatureShowcase = () => {
             }}
           >
             <Zap size={12} className="animate-pulse" />
-            {t("cta_badge")}
+            All-in-one platform
           </motion.div>
 
           <motion.h2
@@ -74,14 +72,14 @@ const FeatureShowcase = () => {
             className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08]"
             style={{ color: 'var(--text-primary)' }}
           >
-            {t("showcase_title_line1")}{' '}
+            Work Smarter.{' '}
             <span
               className="text-transparent bg-clip-text"
               style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%)' }}
             >
-              {t("showcase_title_line2")}
+              Collaborate Faster.
             </span>
-            <br />{t("showcase_title_line3")}
+            <br />Grow Together.
           </motion.h2>
 
           <motion.p
@@ -92,7 +90,8 @@ const FeatureShowcase = () => {
             className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed"
             style={{ color: 'var(--text-secondary)' }}
           >
-            {t("showcase_description")}
+            From planning and collaboration to deployment and performance tracking —
+            everything in one platform.
           </motion.p>
         </div>
 
@@ -136,19 +135,21 @@ const FeatureShowcase = () => {
                   className="text-3xl md:text-4xl font-black leading-tight"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  {t("showcase_subtitle_line1")}{' '}
+                  From Start to Success —{' '}
                   <span
                     className="text-transparent bg-clip-text"
                     style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}
                   >
-                    {t("showcase_subtitle_line2")}
+                    All in One Workspace
                   </span>
                 </h3>
                 <p
                   className="text-sm md:text-base leading-relaxed"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  {t("showcase_body")}
+                  FlowBit streamlines your workflow from planning to execution. Manage projects,
+                  tasks, chats, meetings, documents, attendance, and performance — all inside one
+                  seamless and modern platform built to scale with your team.
                 </p>
               </motion.div>
 

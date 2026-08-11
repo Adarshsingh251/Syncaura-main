@@ -1,44 +1,42 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Check, GitPullRequest, MessageSquareText } from "lucide-react";
 
-const RecentActivityCard = () => {
-  const { t } = useTranslation();
-
-  const activities = [
+const activities = [
   {
     icon: <GitPullRequest className="w-5 h-5" />,
     title: (
       <>
-        <span className="font-semibold">{t("recent_activity_pr_merged")}</span>
+        <span className="font-semibold">Merged PR #452</span> into{" "}
+        <span className="text-blue-600 dark:text-blue-400">main</span>
       </>
     ),
-    time: t("recent_activity_time_2h"),
+    time: "2 hours ago",
     color: "bg-blue-500",
   },
   {
     icon: <Check className="w-5 h-5" />,
     title: (
       <>
-        <span className="font-semibold">{t("recent_activity_completed_task")}</span>
+        <span className="font-semibold">Completed Task:</span> Finalize documentation
       </>
     ),
-    time: t("recent_activity_time_5h"),
+    time: "5 hours ago",
     color: "bg-green-500",
   },
   {
     icon: <MessageSquareText className="w-5 h-5" />,
     title: (
       <>
-        <span className="font-semibold">{t("recent_activity_sarah_commented")}</span>
+        <span className="font-semibold">Sarah Chen</span> commented on Login Refactor
       </>
     ),
-    time: t("recent_activity_time_yesterday"),
+    time: "Yesterday",
     color: "bg-gray-400",
   },
 ];
 
+const RecentActivityCard = () => {
   return (
     <div
       className="
@@ -53,7 +51,7 @@ const RecentActivityCard = () => {
     >
       {/* Title */}
       <h2 className="text-[#64748B] dark:text-gray-200 font-bold text-xl sm:text-2xl mb-6">
-        {t("recent_activity_title")}
+        Recent Activity
       </h2>
 
       <div className="relative flex flex-col gap-6">

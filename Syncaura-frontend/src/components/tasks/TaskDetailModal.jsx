@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Calendar, User, Flag, CheckCircle2, Circle,
@@ -15,9 +14,9 @@ const PRIORITY_COLORS = {
 };
 
 const STATUS_OPTIONS = [
-  { value: "TODO", labelKey: "task_status_todo", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
-  { value: "IN_PROGRESS", labelKey: "task_status_in_progress", color: "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300" },
-  { value: "DONE", labelKey: "task_status_done", color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  { value: "TODO", label: "To Do", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
+  { value: "IN_PROGRESS", label: "In Progress", color: "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300" },
+  { value: "DONE", label: "Done", color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
 ];
 
 const formatDate = (dateStr) => {
@@ -26,7 +25,6 @@ const formatDate = (dateStr) => {
 };
 
 const TaskDetailModal = ({ task, onClose, onDeleted }) => {
-  const { t } = useTranslation();
   const dispatch = useDispatch();
   const [subtaskInput, setSubtaskInput] = useState("");
   const [addingSubtask, setAddingSubtask] = useState(false);
@@ -80,7 +78,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
           <div className="flex-1 pr-4">
             <div className="flex items-center gap-2 mb-1">
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium}`}>
-                {t("task_priority_label", { priority: t(`task_priority_${task.priority || "medium"}`) })}
+                {task.priority || "medium"} priority
               </span>
             </div>
             <h2 className="text-lg font-bold text-[#0A0A0A] dark:text-white leading-snug">
@@ -100,7 +98,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
           {/* Description */}
           {task.description && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t("task_description_label")}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Description</p>
               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{task.description}</p>
             </div>
           )}
@@ -108,24 +106,24 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
           {/* Meta */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{t("task_deadline_label")}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Deadline</p>
               <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                 <Calendar className="w-3.5 h-3.5 text-gray-400" />
                 {formatDate(task.deadline)}
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{t("task_assigned_to_label")}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Assigned To</p>
               <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                 <User className="w-3.5 h-3.5 text-gray-400" />
-                {task.assignedTo || t("task_unassigned")}
+                {task.assignedTo || "Unassigned"}
               </div>
             </div>
           </div>
 
           {/* Status Selector */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t("task_status_label")}</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Status</p>
             <div className="flex gap-2">
               {STATUS_OPTIONS.map((opt) => (
                 <button
@@ -138,7 +136,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
                       : "bg-gray-100 dark:bg-[#2d2f33] text-gray-400 dark:text-gray-500 hover:opacity-80"
                   } disabled:opacity-60`}
                 >
-                  {t(opt.labelKey)}
+                  {opt.label}
                 </button>
               ))}
             </div>
@@ -148,7 +146,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                {t("task_subtasks_label")} ({completedSubtasks}/{totalSubtasks})
+                Subtasks ({completedSubtasks}/{totalSubtasks})
               </p>
               {totalSubtasks > 0 && (
                 <div className="flex items-center gap-2">
@@ -192,7 +190,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
                 value={subtaskInput}
                 onChange={(e) => setSubtaskInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddSubtask()}
-                placeholder={t("task_subtask_placeholder")}
+                placeholder="Add a subtask…"
                 className="flex-1 px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
               />
               <button
@@ -214,23 +212,23 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
               className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors btn-hover"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              {t("task_delete_label")}
+              Delete Task
             </button>
           ) : (
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-              <span className="text-sm text-gray-600 dark:text-gray-400 flex-1">{t("task_delete_prompt")}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400 flex-1">Delete this task?</span>
               <button
                 onClick={() => setConfirmDelete(false)}
                 className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors btn-hover"
               >
-                {t("task_cancel")}
+                Cancel
               </button>
               <button
                 onClick={handleDelete}
                 className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors btn-hover"
               >
-                {t("task_delete")}
+                Delete
               </button>
             </div>
           )}

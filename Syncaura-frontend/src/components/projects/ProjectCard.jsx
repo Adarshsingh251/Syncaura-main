@@ -1,6 +1,5 @@
 import { Calendar, CheckCircle2, Ellipsis, Flag, Tally2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
 
 const ProjectCard = ({
   title,
@@ -10,7 +9,6 @@ const ProjectCard = ({
   avatars,
   dueDate,
 }) => {
-  const { t } = useTranslation();
   const formatDate = (iso) => {
     return new Date(iso).toLocaleDateString("en-US", {
       month: "short",
@@ -54,7 +52,7 @@ const ProjectCard = ({
       <div className="flex flex-col w-full gap-3">
         <div className="flex items-center justify-between w-full">
           <div className={`px-3 py-1 rounded-xl ${priorityColor[priority]}`}>
-            <p className=" text-xs font-semibold">{t(`project_priority_${priority?.toLowerCase().replace(/\s+/g, "")}`) || priority}</p>
+            <p className=" text-xs font-semibold">{priority}</p>
           </div>
           <Ellipsis className="size-5 text-[#989696]" />
         </div>
@@ -69,7 +67,7 @@ const ProjectCard = ({
       <div className="flex flex-col gap-4 w-full">
         <div className="flex flex-col gap-2">
           <div className="flex justify-between px-2">
-            <p className="text-sm font-semibold text-[#989696]">{t("project_progress_label")}</p>
+            <p className="text-sm font-semibold text-[#989696]">Progress</p>
             <p className="text-sm font-semibold text-[#989696]">{progress}%</p>
           </div>
 
@@ -111,9 +109,9 @@ const ProjectCard = ({
             {bottomIcon[priority]}
             <p className="text-xs font-semibold ">
               {priority === "Completed"
-                ? t("project_done_label")
-                : priority === "On Hold"
-                ? t("project_tbd_label")
+                ? "Done"
+                : priority === "on Hold"
+                ? "TBD"
                 : formatDate(dueDate)}
             </p>
           </div>

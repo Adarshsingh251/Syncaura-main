@@ -1,16 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Funnel, Search } from 'lucide-react'
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import ComplaintFilters from '../ComplaintFilters'
 
 const Complaintheader = ({ search, setSearch, onApplyFilters }) => {
-    const { t } = useTranslation()
     const [openFilter, setOpenFilter]=useState(false)
     return (
         <div className="flex transition-colors duration-500 flex-col md:flex-row px-6  items-center justify-between gap-4 mb-6">
             <h1 className=" text-2xl sm:text-3xl flex-5/9 font-semibold text-black dark:text-[#FFFFFF]">
-                {t('complaintsManagement')}
+                Complaints Management
             </h1>
 
             <div className="flex items-center justify-center sm:justify-end gap-3 flex-2/9   ">
@@ -25,7 +23,7 @@ const Complaintheader = ({ search, setSearch, onApplyFilters }) => {
           } `}
       >
         <Funnel className="size-4" />
-        <span>{t('filter')}</span>
+        <span>Filter</span>
       </button>
 
        <AnimatePresence mode="wait">
@@ -57,7 +55,7 @@ const Complaintheader = ({ search, setSearch, onApplyFilters }) => {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder={t('search')}
+                        placeholder="Search"
                         className="flex-1 min-w-0 text-lg outline-none 
                text-gray-700 dark:text-[#8A8A8A] font-semibold
                dark:placeholder:text-[#8A8A8A]

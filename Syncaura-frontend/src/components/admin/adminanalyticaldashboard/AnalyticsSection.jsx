@@ -1,5 +1,4 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import {
   LineChart,
   Line,
@@ -29,7 +28,7 @@ import {
 const topMetricsData = [
   {
     id: 1,
-    title: "admin_velocity",
+    title: "Velocity",
     value: "42 pts",
     change: "+12%",
     changeType: "increase",
@@ -46,7 +45,7 @@ const topMetricsData = [
   },
   {
     id: 2,
-    title: "admin_completion_rate",
+    title: "Completion Rate",
     value: "94%",
     change: "+2%",
     changeType: "increase",
@@ -63,7 +62,7 @@ const topMetricsData = [
   },
   {
     id: 3,
-    title: "admin_cycle_time",
+    title: "Cycle Time",
     value: "4.2 days",
     change: "-0.5%",
     changeType: "decrease",
@@ -80,7 +79,7 @@ const topMetricsData = [
   },
   {
     id: 4,
-    title: "admin_sla_compliance",
+    title: "SLA Compliance",
     value: "98.5%",
     change: "0%",
     changeType: "neutral",
@@ -98,10 +97,10 @@ const topMetricsData = [
 ];
 
 const productivityData = [
-  { team: "admin_team_a", delivered: 75, capacity: 90 },
-  { team: "admin_team_b", delivered: 110, capacity: 115 },
-  { team: "admin_team_c", delivered: 85, capacity: 80 },
-  { team: "admin_team_d", delivered: 60, capacity: 105 },
+  { team: "Team A", delivered: 75, capacity: 90 },
+  { team: "Team B", delivered: 110, capacity: 115 },
+  { team: "Team C", delivered: 85, capacity: 80 },
+  { team: "Team D", delivered: 60, capacity: 105 },
 ];
 
 const defectRateData = [
@@ -112,19 +111,19 @@ const defectRateData = [
 ];
 
 const sprintPerformanceData = [
-  { sprint: "admin_sprint_10", done: 40, inProgress: 20, todo: 10 },
-  { sprint: "admin_sprint_11", done: 35, inProgress: 30, todo: 15 },
-  { sprint: "admin_sprint_12", done: 45, inProgress: 12, todo: 8 },
-  { sprint: "admin_sprint_13", done: 30, inProgress: 35, todo: 20 },
+  { sprint: "Sprint 10", done: 40, inProgress: 20, todo: 10 },
+  { sprint: "Sprint 11", done: 35, inProgress: 30, todo: 15 },
+  { sprint: "Sprint 12", done: 45, inProgress: 12, todo: 8 },
+  { sprint: "Sprint 13", done: 30, inProgress: 35, todo: 20 },
 ];
 
 const projectTrendData = [
-  { month: "month_jan", value: 10, forecast: 25 },
-  { month: "month_feb", value: 25, forecast: 30 },
-  { month: "month_mar", value: 40, forecast: 40 },
-  { month: "month_apr", value: 55, forecast: 50 },
-  { month: "month_may", value: 75, forecast: 60 },
-  { month: "month_jun", value: 90, forecast: 70 },
+  { month: "Jan", value: 10, forecast: 25 },
+  { month: "Feb", value: 25, forecast: 30 },
+  { month: "Mar", value: 40, forecast: 40 },
+  { month: "Apr", value: 55, forecast: 50 },
+  { month: "May", value: 75, forecast: 60 },
+  { month: "Jun", value: 90, forecast: 70 },
 ];
 
 export const resourceUtilizationData = [
@@ -163,15 +162,14 @@ export const resourceUtilizationData = [
 ];
 
 export const bottleneckData = [
-  { stage:  "admin_backlog", value: 140, color: "#137FEC" },
-  { stage: "admin_analysis", value: 120, color: "#2A8CEE" },
-  { stage: "admin_development", value: 85, color: "#4498F3" },
-  { stage: "admin_qa_review", value: 35, color: "#FF726F", bottleneck: true },
-  { stage: "admin_deployed", value: 32, color: "#21C45E" },
+  { stage: "Backlog", value: 140, color: "#137FEC" },
+  { stage: "Analysis", value: 120, color: "#2A8CEE" },
+  { stage: "Development", value: 85, color: "#4498F3" },
+  { stage: "QA Review", value: 35, color: "#FF726F", bottleneck: true },
+  { stage: "Deployed", value: 32, color: "#21C45E" },
 ];
 
 const TopMetrics = () => {
-  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {topMetricsData.map((metric) => {
@@ -196,7 +194,7 @@ const TopMetrics = () => {
 
             {/* Title */}
             <p className="text-md text-gray-500 dark:text-gray-400 mb-3">
-              {t(metric.title)}
+              {metric.title}
             </p>
 
             {/* Value + Change */}
@@ -207,11 +205,12 @@ const TopMetrics = () => {
 
               <span
                 className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md
-                  ${metric.changeType === "increase"
-                    ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
-                    : metric.changeType === "decrease"
-                      ? "bg-blue-100 text-blue-700 dark:bg-cyan-500/20 dark:text-cyan-400"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400"
+                  ${
+                    metric.changeType === "increase"
+                      ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
+                      : metric.changeType === "decrease"
+                        ? "bg-blue-100 text-blue-700 dark:bg-cyan-500/20 dark:text-cyan-400"
+                        : "bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400"
                   }`}
               >
                 {metric.changeType === "increase" && <TrendingUp size={14} />}
@@ -262,11 +261,10 @@ const TopMetrics = () => {
 };
 
 const ProductivityQuality = () => {
-  const { t } = useTranslation();
   return (
     <div className="bg-white dark:bg-[#111111] rounded-xl">
       <h2 className="text-3xl sm:text-2xl font-semibold px-3 pt-4 pb-2 text-black dark:text-white">
-        {t("admin_productivity_quality")}
+        Productivity & Quality
       </h2>
 
       <div className="p-4 sm:p-6 dark:bg-[#1E1E1E] border-4 border-gray-100 dark:border-0">
@@ -274,21 +272,21 @@ const ProductivityQuality = () => {
         <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-4">
           <div>
             <h3 className="text-2xl sm:text-sm  font-semibold text-black dark:text-white">
-              {t("admin_team_productivity")}
+              Team Productivity
             </h3>
             <p className="text-md sm:text-xs text-gray-400">
-              {t("admin_team_productivity_desc")}
+              Story points delivered vs capacity
             </p>
           </div>
 
           <div className="flex gap-4 text-xs flex-wrap">
             <div className="flex items-center">
               <span className="w-3 h-3 rounded-full bg-blue-600 dark:bg-cyan-400" />
-              {t("admin_delivered")}
+              Delivered
             </div>
             <div className="flex items-center">
               <span className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600" />
-              {t("admin_capacity")}
+              Capacity
             </div>
           </div>
         </div>
@@ -300,9 +298,8 @@ const ProductivityQuality = () => {
               <XAxis
                 dataKey="team"
                 tick={{ fontSize: 15 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value) => t(value)}
+                axisLine={false} // remove the axis line
+                tickLine={false} // remove the small tick marks
               />
               <Tooltip />
               <Bar dataKey="capacity" fill="#E4E6E8" radius={[4, 4, 0, 0]} />
@@ -315,207 +312,190 @@ const ProductivityQuality = () => {
   );
 };
 
-const DefectRate = () => {
-  const { t } = useTranslation();
-  return (
-    <div className="bg-white dark:bg-[#1E1E1E] py-3 px-3 sm:p-6 rounded-xs border-4 border-gray-100 dark:border-0">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h4 className="text-2xl sm:text-sm  font-semibold">{t("admin_defect_rate")}</h4>
-          <p className="text-md sm:text-xs text-gray-400">
-            {t("admin_defect_rate_desc")}
-          </p>
+const DefectRate = () => (
+  <div className="bg-white dark:bg-[#1E1E1E] py-3 px-3 sm:p-6 rounded-xs border-4 border-gray-100 dark:border-0">
+    {/* Header */}
+    <div className="flex justify-between items-center mb-4">
+      <div>
+        <h4 className="text-2xl sm:text-sm  font-semibold">Defect Rate</h4>
+        <p className="text-md sm:text-xs text-gray-400">
+          Reported bugs per week
+        </p>
+      </div>
+      <span className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-red-100 text-red-500 dark:bg-[#341A27] dark:text-[#F87171]">
+        <TrendingDown size={14} />
+        -2%
+      </span>
+    </div>
+
+    {/* Chart */}
+    <div className="h-52 sm:h-64">
+      <ResponsiveContainer>
+        <AreaChart
+          data={defectRateData}
+          margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+        >
+          {/* 🔥 Gradient for smooth rounded feel */}
+          <defs>
+            <linearGradient id="defectGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
+              <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05} />
+            </linearGradient>
+          </defs>
+
+          {/* Smooth curved line */}
+          <XAxis
+            dataKey="week"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 10 }}
+          />
+
+          <YAxis hide />
+
+          <Tooltip
+            contentStyle={{
+              borderRadius: "8px",
+              border: "none",
+              fontSize: "12px",
+            }}
+          />
+
+          <Area
+            type="monotone"
+            dataKey="defects"
+            stroke="#3B82F6"
+            strokeWidth={2}
+            fill="url(#defectGradient)" // 🔥 gradient fill
+            dot={false}
+            activeDot={{
+              r: 5,
+              style: {
+                borderRadius: "50%",
+              },
+            }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
+const SprintPerformance = () => (
+  <div className="bg-white dark:bg-[#1E1E1E] p-5 sm:p-6 rounded-xs border-4 border-gray-100 dark:border-0">
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
+      {/* Left */}
+      <div>
+        <h4 className="font-semibold text-2xl sm:text-sm ">
+          Sprint Performance
+        </h4>
+        <p className="text-md sm:text-xs text-gray-400">
+          Task status distribution
+        </p>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-[#2563EB]"></span>
+          <span className="text-gray-600 dark:text-gray-300">Done</span>
         </div>
-        <span className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-red-100 text-red-500 dark:bg-[#341A27] dark:text-[#F87171]">
-          <TrendingDown size={14} />
-          -2%
+
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-[#93C5FD]"></span>
+          <span className="text-gray-600 dark:text-gray-300">In Prog</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-[#D1D5DB]"></span>
+          <span className="text-gray-600 dark:text-gray-300">Todo</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Chart */}
+    <div className="h-52 sm:h-64 md:h-72">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={sprintPerformanceData} barCategoryGap="25%">
+          <XAxis
+            dataKey="sprint"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 15 }}
+          />
+
+          <YAxis hide />
+
+          <Tooltip
+            contentStyle={{
+              borderRadius: "8px",
+              border: "none",
+              fontSize: "12px",
+            }}
+          />
+
+          {/* Responsive bars */}
+          <Bar dataKey="done" stackId="a" fill="#2563EB" maxBarSize={100} />
+          <Bar
+            dataKey="inProgress"
+            stackId="a"
+            fill="#93C5FD"
+            maxBarSize={100}
+          />
+          <Bar dataKey="todo" stackId="a" fill="#D1D5DB" maxBarSize={100} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
+const ProjectTrend = () => (
+  <div className="bg-white dark:bg-[#1E1E1E] px-5 sm-py-6 py-5 rounded-xs border-4 border-gray-100 dark:border-0">
+    <div className="flex justify-between items-center mb-4">
+      {/* Left Section */}
+      <div>
+        <h4 className="font-semibold text-2xl sm:text-sm mb-1">
+          Project Delivery Trends
+        </h4>
+        <p className="text-md sm:text-xs text-gray-400">
+          Cumulative value Delivery
+        </p>
+      </div>
+
+      {/* Right Section */}
+      <div>
+        <span className="flex items-center justify-center p-2 rounded-md text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 cursor-pointer">
+          <MoreHorizontal size={28} />
         </span>
       </div>
-
-      {/* Chart */}
-      <div className="h-52 sm:h-64">
-        <ResponsiveContainer>
-          <AreaChart
-            data={defectRateData}
-            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
-          >
-            {/* 🔥 Gradient for smooth rounded feel */}
-            <defs>
-              <linearGradient id="defectGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-
-            {/* Smooth curved line */}
-            <XAxis
-              dataKey="week"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10 }}
-            />
-
-            <YAxis hide />
-
-            <Tooltip
-              contentStyle={{
-                borderRadius: "8px",
-                border: "none",
-                fontSize: "12px",
-              }}
-            />
-
-            <Area
-              type="monotone"
-              dataKey="defects"
-              stroke="#3B82F6"
-              strokeWidth={2}
-              fill="url(#defectGradient)" // 🔥 gradient fill
-              dot={false}
-              activeDot={{
-                r: 5,
-                style: {
-                  borderRadius: "50%",
-                },
-              }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
     </div>
-  );
-};
 
-const SprintPerformance = () => {
-  const { t } = useTranslation();
-  return (
-    <div className="bg-white dark:bg-[#1E1E1E] p-5 sm:p-6 rounded-xs border-4 border-gray-100 dark:border-0">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
-        {/* Left */}
-        <div>
-          <h4 className="font-semibold text-2xl sm:text-sm ">
-            {t("admin_sprint_performance")}
-          </h4>
-          <p className="text-md sm:text-xs text-gray-400">
-            {t("admin_sprint_performance_desc")}
-          </p>
-        </div>
+    <div className="h-72">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={projectTrendData}
+          margin={{ top: 10, right: 20, left: 20, bottom: 0 }}
+        >
+          {/* Grid removed */}
 
-        {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#2563EB]"></span>
-            <span className="text-gray-600 dark:text-gray-300">{t("admin_done")}</span>
-          </div>
+          <XAxis dataKey="month" axisLine={false} tickLine={false} />
+          <YAxis hide domain={[0, "auto"]} />
+          <Tooltip />
 
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#93C5FD]"></span>
-            <span className="text-gray-600 dark:text-gray-300">{t("admin_in_progress_short")}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#D1D5DB]"></span>
-            <span className="text-gray-600 dark:text-gray-300">{t("admin_todo")}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div className="h-52 sm:h-64 md:h-72">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={sprintPerformanceData} barCategoryGap="25%">
-            <XAxis
-              dataKey="sprint"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 15 }}
-              tickFormatter={(value) => t(value)}
-            />
-
-            <YAxis hide />
-
-            <Tooltip
-              contentStyle={{
-                borderRadius: "8px",
-                border: "none",
-                fontSize: "12px",
-              }}
-            />
-
-            {/* Responsive bars */}
-            <Bar dataKey="done" stackId="a" fill="#2563EB" maxBarSize={100} />
-            <Bar
-              dataKey="inProgress"
-              stackId="a"
-              fill="#93C5FD"
-              maxBarSize={100}
-            />
-            <Bar dataKey="todo" stackId="a" fill="#D1D5DB" maxBarSize={100} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="#2563EB"
+            fill="#93C5FD"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
-  );
-};
-
-const ProjectTrend = () => {
-  const { t } = useTranslation();
-  return (
-    <div className="bg-white dark:bg-[#1E1E1E] px-5 sm-py-6 py-5 rounded-xs border-4 border-gray-100 dark:border-0">
-      <div className="flex justify-between items-center mb-4">
-        {/* Left Section */}
-        <div>
-          <h4 className="font-semibold text-2xl sm:text-sm mb-1">
-            {t("admin_project_delivery_trends")}
-          </h4>
-
-          <p className="text-md sm:text-xs text-gray-400">
-            {t("admin_project_delivery_desc")}
-          </p>
-        </div>
-
-        {/* Right Section */}
-        <div>
-          <span className="flex items-center justify-center p-2 rounded-md text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 cursor-pointer">
-            <MoreHorizontal size={28} />
-          </span>
-        </div>
-      </div>
-
-      <div className="h-72">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={projectTrendData}
-            margin={{ top: 10, right: 20, left: 20, bottom: 0 }}
-          >
-            {/* Grid removed */}
-
-            <XAxis
-              dataKey="month"
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(value) => t(value)}
-            />
-            <YAxis hide domain={[0, "auto"]} />
-            <Tooltip />
-
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke="#2563EB"
-              fill="#93C5FD"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-};
+  </div>
+);
 
 const ResourceUtilization = () => {
-  const { t } = useTranslation();
   const getColor = (v) => {
     if (v >= 90) return "bg-[#F87171]";
     if (v >= 70) return "bg-[#1D4ED8]";
@@ -528,28 +508,28 @@ const ResourceUtilization = () => {
     <>
       {/* Section Title */}
       <h2 className="text-2xl sm:text-2xl font-semibold px-3 my-2 text-black dark:text-white">
-        {t("admin_utilization_bottlenecks")}
+        Utilization & Bottlenecks
       </h2>
 
       {/* Container */}
       <div className="bg-white dark:bg-[#1E1E1E] px-5 sm-py-6 py-5 rounded-xs border-4 border-gray-100 dark:border-0">
         <div className="mb-4">
           <h4 className="font-semibold text-2xl sm:text-sm mb-1">
-            {t("admin_project_delivery_trends")}
+            Project Delivery Trends
           </h4>
           <p className="text-md sm:text-xs text-gray-400">
-            {t("admin_project_delivery_desc")}
+            Cumulative value Delivery
           </p>
         </div>
 
         {/* Header */}
         <div className="grid grid-cols-6 items-center text-[10px] sm:text-xs text-gray-400 mb-3">
-          <span className="font-medium">{t("admin_name")}</span>
-          <span className="text-center">{t("admin_mon")}</span>
-          <span className="text-center">{t("admin_tue")}</span>
-          <span className="text-center">{t("admin_wed")}</span>
-          <span className="text-center">{t("admin_thu")}</span>
-          <span className="text-center">{t("admin_fri")}</span>
+          <span className="font-medium">NAME</span>
+          <span className="text-center">MON</span>
+          <span className="text-center">TUE</span>
+          <span className="text-center">WED</span>
+          <span className="text-center">THU</span>
+          <span className="text-center">FRI</span>
         </div>
 
         {/* Rows */}
@@ -586,17 +566,16 @@ const ResourceUtilization = () => {
   );
 };
 const BottleneckDetection = () => {
-  const { t } = useTranslation();
   const maxValue = Math.max(...bottleneckData.map((i) => i.value));
 
   return (
     <div className="bg-white dark:bg-[#1E1E1E] px-6 sm-py-6 py-5  rounded-xs border-4 border-gray-100 dark:border-0">
       <div className="mb-5">
         <h4 className="font-semibold text-2xl sm:text-sm mb-1">
-          {t("admin_bottleneck_detection")}
+          Bottleneck Detection
         </h4>
         <p className="text-md sm:text-xs text-gray-400">
-          {t("admin_bottleneck_desc")}
+          Work item flow efficiency
         </p>
       </div>
 
@@ -606,7 +585,7 @@ const BottleneckDetection = () => {
         return (
           <div key={i} className="flex items-center sm-mb-4 mb-2 gap-1">
             {/* Stage Name */}
-            <div className="w-32 text-sm">{t(item.stage)}</div>
+            <div className="w-32 text-sm">{item.stage}</div>
 
             {/* Bar + Tag Container */}
             <div className="w-full relative">
@@ -634,7 +613,7 @@ const BottleneckDetection = () => {
                 >
                   <div className="bg-gray-200 text-xs px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap">
                     <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                    <span className="text-black font-semibold">{t("admin_bottleneck")}</span>
+                    <span className="text-black font-semibold">Bottleneck</span>
                   </div>
                 </div>
               )}

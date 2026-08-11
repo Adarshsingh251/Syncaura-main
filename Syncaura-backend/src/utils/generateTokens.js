@@ -6,17 +6,17 @@ export const someToken = uuidv4();
 
 export const generateAccessToken = (user) => {
   return jwt.sign(
-    { id: user.id, role: user.role },
-    process.env.ACCESS_TOKEN_SECRET || process.env.JWT_ACCESS_SECRET,
-    { expiresIn: '15m' }
+    { role: user.role },
+    process.env.JWT_ACCESS_SECRET,
+    { expiresIn: process.env.JWT_ACCESS_EXPIRES, subject: String(user.id || user._id) }
   );
 };
 
-export const generateRefreshToken = (user, rid) => {
+export const generateRefreshToken = (user, refreshId) => {
   return jwt.sign(
-    { id: user.id, rid },
-    process.env.REFRESH_TOKEN_SECRET || process.env.JWT_REFRESH_SECRET,
-    { expiresIn: '7d' }
+    { rid: refreshId },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: process.env.JWT_REFRESH_EXPIRES, subject: String(user.id || user._id) }
   );
 };
 

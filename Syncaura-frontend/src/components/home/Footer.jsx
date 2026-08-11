@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useTranslation } from "react-i18next";
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Facebook, Instagram, Linkedin, Youtube,
   Twitter, Send, Zap, ArrowRight,
@@ -29,66 +27,46 @@ const ColHeading = ({ children }) => (
   </div>
 );
 
-const NavLink = ({ children, href, to, onClick }) => (
+const NavLink = ({ children, href, onClick }) => (
   <li>
-    {to ? (
-      <Link to={to} onClick={onClick}>
-        <motion.span
-          whileHover={{ x: 4 }}
-          className="flex items-center gap-1.5 text-sm cursor-pointer group transition-colors duration-200"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#6366f1' }} />
-          <span className="group-hover:text-indigo-400 transition-colors">{children}</span>
-        </motion.span>
-      </Link>
-    ) : (
-      <a href={href} onClick={onClick}>
-        <motion.span
-          whileHover={{ x: 4 }}
-          className="flex items-center gap-1.5 text-sm cursor-pointer group transition-colors duration-200"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#6366f1' }} />
-          <span className="group-hover:text-indigo-400 transition-colors">{children}</span>
-        </motion.span>
-      </a>
-    )}
+    <a href={href} onClick={onClick}>
+      <motion.span
+        whileHover={{ x: 4 }}
+        className="flex items-center gap-1.5 text-sm cursor-pointer group transition-colors duration-200"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#6366f1' }} />
+        <span className="group-hover:text-indigo-400 transition-colors">{children}</span>
+      </motion.span>
+    </a>
   </li>
 );
 
 const Footer = () => {
-  const { t } = useTranslation();
-  const location = useLocation();
-  const navigate = useNavigate();
   const [email, setEmail] = useState(''); // Stores the user's email input
   const [status, setStatus] = useState(''); // Stores success or error messages
 
   const scrollToSection = (e, sectionId) => {
     if (!sectionId) return;
     e.preventDefault();
-    if (location.pathname !== "/") {
-      navigate(`/#${sectionId}`);
-    } else {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        window.scrollTo({
-          top: element.offsetTop - 80,
-          behavior: 'smooth',
-        });
-      }
+    const element = document.getElementById(sectionId);
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop - 80,
+        behavior: 'smooth',
+      });
     }
   };
 
   // Handles the newsletter form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email) return setStatus(t("newsletter_errorEmpty"));
+    if (!email) return setStatus('Enter an email address.');
     
     // Basic regex to check for valid email format (contains @ and .)
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus(t("newsletter_errorInvalid"));
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus('Invalid email address.');
     
-    setStatus(`✓ ${t("newsletter_success")}`);
+    setStatus('✓ Subscribed successfully!');
     setEmail('');
     
     // Clear the success message after 3 seconds
@@ -147,7 +125,7 @@ const Footer = () => {
             </div>
 
             <p className="text-sm leading-relaxed max-w-xs" style={{ color: 'var(--text-secondary)' }}>
-              {t("footer_tagline")}
+              The all-in-one platform that unifies your team's projects, chats, meetings, and performance — so you can focus on what matters.
             </p>
 
             {/* Contact info */}
@@ -167,12 +145,12 @@ const Footer = () => {
             {/* Newsletter */}
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>
-                {t("newsletter_title")}
+                Stay in the loop
               </p>
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <input
                   type="email"
-                  placeholder={t("footer_emailPlaceholder")}
+                  placeholder="your@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="flex-1 h-10 px-4 rounded-xl text-sm focus:outline-none"
@@ -198,21 +176,21 @@ const Footer = () => {
                 </p>
               )}
               <p className="text-[11px]" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
-                {t("newsletter_disclaimer")}
+                No spam. Unsubscribe anytime.
               </p>
             </div>
           </div>
 
           {/* ── Product ── */}
           <div>
-            <ColHeading>{t("footer_product")}</ColHeading>
+            <ColHeading>Product</ColHeading>
             <ul className="space-y-3">
               {[
-                { label: t("footer_features"), id: 'features' },
-                { label: t("footer_security") },
-                { label: t("footer_roadmap") },
-                { label: t("footer_blog") },
-                { label: t("footer_contact") }
+                { label: 'Features', id: 'features' },
+                { label: 'Security' },
+                { label: 'Roadmap' },
+                { label: 'Changelog' },
+                { label: 'Status' }
               ].map(item => (
                 <NavLink 
                   key={item.label} 
@@ -227,30 +205,17 @@ const Footer = () => {
 
           {/* ── Company ── */}
           <div>
-            <ColHeading>{t("footer_company")}</ColHeading>
+            <ColHeading>Company</ColHeading>
             <ul className="space-y-3">
-              <NavLink to="/about">{t("footer_about")}</NavLink>
-              <NavLink to="/learn-more">Learn More</NavLink>
-              {[
-                { label: t("footer_blog") },
-                { label: t("footer_careers") },
-                { label: t("footer_contact"), id: 'contact' },
-                { label: t("footer_social") }
-              ].map(item => (
-                <NavLink 
-                  key={item.label} 
-                  href={item.id ? `#${item.id}` : undefined}
-                  onClick={item.id ? (e) => scrollToSection(e, item.id) : undefined}
-                >
-                  {item.label}
-                </NavLink>
+              {['About us', 'Blog', 'Careers', 'Press kit', 'Contact', 'Partners'].map(item => (
+                <NavLink key={item}>{item}</NavLink>
               ))}
             </ul>
           </div>
 
           {/* ── Follow Us ── */}
           <div>
-            <ColHeading>{t("footer_followUs")}</ColHeading>
+            <ColHeading>Follow Us</ColHeading>
             <div className="space-y-3">
               {socials.map(({ icon: Icon, label, href, color }) => (
                 <motion.a
@@ -291,12 +256,12 @@ const Footer = () => {
           <p className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
             © 2025{' '}
             <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>FlowBit, Inc.</span>
-            {' '}{t("footer_copyright")}
+            {' '}All rights reserved.
           </p>
 
           {/* Legal links */}
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
-            {[t("footer_privacyPolicy"), t("footer_termsOfService"), t("footer_cookiesSettings"), t("footer_accessibility")].map((link, i, arr) => (
+            {['Privacy Policy', 'Terms of Service', 'Cookie Settings', 'Accessibility'].map((link, i, arr) => (
               <React.Fragment key={link}>
                 <span className="hover:text-indigo-400 cursor-pointer transition-colors">{link}</span>
                 {i < arr.length - 1 && <span className="opacity-30">·</span>}
