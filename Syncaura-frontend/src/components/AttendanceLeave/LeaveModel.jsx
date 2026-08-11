@@ -50,32 +50,40 @@ const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
     const startDate = watch("startDate");
     const today = new Date().toISOString().split("T")[0];
 
-    const onSubmit = (data) => {
-        const currData = {
-            startDate: new Date(`${data["startDate"]}T00:00:00Z`).toISOString(),
-            endDate: new Date(`${data["endDate"]}T00:00:00Z`).toISOString(),
-            type: data["leaveType"] || "Casual",
-            reason: data["reason"],
-            status: editingLeave ? editingLeave.status : "Pending"
-        }
-        if (typeof setLeaveData === "function") {
-            if (editingLeave) {
-                setLeaveData((prev) => prev.map((item) => item === editingLeave ? { ...item, ...currData } : item));
-            } else {
-                setLeaveData((prev) => [currData, ...prev]);
+    const onSubmit = async (data) => {
+        try {
+            const currData = {
+                startDate: new Date(`${data.startDate}T00:00:00Z`).toISOString(),
+                endDate: new Date(`${data.endDate}T00:00:00Z`).toISOString(),
+                type: data.leaveType || "Casual",
+                reason: data.reason,
+                status: editingLeave ? editingLeave.status : "Pending",
+            };
+
+            if (typeof setLeaveData === "function") {
+                if (editingLeave) {
+                    setLeaveData((prev) =>
+                        prev.map((item) =>
+                            item === editingLeave
+                                ? { ...item, ...currData }
+                                : item
+                        )
+                    );
+                } else {
+                    setLeaveData((prev) => [currData, ...prev]);
+                }
             }
+
+            // await fetchLeaves();
+
+            onClose();
+
+        } catch (error) {
+            console.error("Error applying leave:", error);
         }
+    };
+   
 
-
-
-        await fetchLeaves();
-
-        onClose();
-
-    } catch (error) {
-        console.error("Error applying leave:", error);
-    }
-};
 
 
     const onError = (err) => {
