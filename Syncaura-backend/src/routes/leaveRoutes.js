@@ -6,7 +6,7 @@ import {
   applyLeave,
   getMyLeaves,
   getAllLeaves,
-  approveLeave,
+  approveLeave, 
   rejectLeave
 } from '../controllers/leaveController.js';
 
