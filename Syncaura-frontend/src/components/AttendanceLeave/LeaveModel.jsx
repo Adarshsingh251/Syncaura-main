@@ -67,8 +67,16 @@ const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
         }
 
 
+
+        await fetchLeaves();
+
         onClose();
-    };
+
+    } catch (error) {
+        console.error("Error applying leave:", error);
+    }
+};
+
 
     const onError = (err) => {
         console.error("FORM ERRORS ", err);

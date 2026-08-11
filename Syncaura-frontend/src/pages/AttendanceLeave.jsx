@@ -1,4 +1,4 @@
-import {
+  import {
   Calendar,
   CircleCheckBig,
   Clock,
@@ -61,6 +61,7 @@ const getInitialAttendanceState = () => ({
 const AttendanceLeave = () => {
   const user = useSelector((state) => state.auth.user);
   const [selectedId, setSelectedId] = useState(0);
+  const user = useSelector((state) => state.auth.user);
   const [openModel, setOpenModel] = useState(false);
   const [leaveData, setLeaveData] = useState(leaveHistory);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
@@ -188,6 +189,74 @@ const AttendanceLeave = () => {
       setShowPopup(false);
     }, 1000);
   };
+
+
+
+
+
+
+const fetchLeaves = useCallback(async () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      throw new Error("Access token not found");
+    }
+
+    const isAdminOrCoAdmin =
+  user?.role === "admin" ||
+  user?.role === "co-admin";
+
+   const endpoint = isAdminOrCoAdmin
+  ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
+  : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
+
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch leaves: ${response.status}`);
+    }
+
+    const data = await response.json();
+   
+
+    setTotalPages(data.totalPages || 1);
+
+       
+
+    const formattedLeaves = (data.leaves || []).map((leave) => ({
+      ...leave,
+      startDate: leave.from_date,
+      endDate: leave.to_date,
+      type: leave.leave_type || "Leave",
+    }));
+
+     
+    console.log("Formatted Leaves:", formattedLeaves);
+    setLeaveData(formattedLeaves);
+  } catch (error) {
+    console.error("Error fetching leaves:", error);
+    toast.error("Failed to load leave requests");
+  }
+}, [user?.role,currentPage]);
+
+useEffect(() => {
+  fetchLeaves();
+}, [fetchLeaves,currentPage]);
+
+
+
+
+
+
+
+
 
   useEffect(() => {
     const timer = setTimeout(
@@ -517,6 +586,49 @@ const AttendanceLeave = () => {
           onEditLeave={handleOpenEditModal}
           onDeleteLeave={handleDeleteLeave}
         />
+
+
+
+                  <div className="flex items-center justify-center gap-2 mt-6 mb-6">
+
+                          <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((prev) => prev - 1)}
+                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+                          >
+                            Previous
+                          </button>
+
+                          {[...Array(totalPages)].map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentPage(index + 1)}
+                              className={`px-4 py-2 rounded font-medium ${
+                                currentPage === index + 1
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-gray-200 hover:bg-gray-300"
+                              }`}
+                            >
+                              {index + 1}
+                            </button>
+                          ))}
+
+                          <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage((prev) => prev + 1)}
+                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+                          >
+                            Next
+                          </button>
+
+                  </div>
+
+
+
+
+
+
+
       </div>
       <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5  w-full px-5 sm:px-10 ">
         <h1 className="flex items-center justify-center w-full text-2xl text-black dark:text-white font-bold">
