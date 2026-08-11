@@ -61,7 +61,6 @@ const getInitialAttendanceState = () => ({
 const AttendanceLeave = () => {
   const user = useSelector((state) => state.auth.user);
   const [selectedId, setSelectedId] = useState(0);
-  const user = useSelector((state) => state.auth.user);
   const [openModel, setOpenModel] = useState(false);
   const [leaveData, setLeaveData] = useState(leaveHistory);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
