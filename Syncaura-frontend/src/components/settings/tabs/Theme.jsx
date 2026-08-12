@@ -26,13 +26,29 @@ const Theme = () => {
   const dispatch = useDispatch();
 
   // Default values
-  const {
-    theme = "light",
-    font = "Arial",
-    fontSize = "medium",
-    zoom = 100,
-  } = useSelector((s) => s.ui || {});
+// <<<<<<< fix-settings-theme
+//   const { font = "Arial", fontSize = "medium", zoom = 100 } =
+//   useSelector((s) => s.ui || {});
 
+// const isDark = useSelector((s) => s.theme.isDark);
+// const theme = isDark ? "dark" : "light";
+// =======
+//   const {
+//     theme = "light",
+//     font = "Arial",
+//     fontSize = "medium",
+//     zoom = 100,
+//   } = useSelector((s) => s.ui || {});
+// >>>>>>> main
+
+  const {
+  font = "Arial",
+  fontSize = "medium",
+  zoom = 100,
+} = useSelector((s) => s.ui || {});
+
+const isDark = useSelector((s) => s.theme.isDark);
+const theme = isDark ? "dark" : "light";
   const [language, setLanguage] = useState(
     (localStorage.getItem("app_language") || i18n.language || "en").substring(
       0,
