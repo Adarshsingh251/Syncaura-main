@@ -49,6 +49,7 @@ export const register = async (req, res, next) => {
     const refreshToken = generateRefreshToken(user, rid);
 
     // 🔥 SMTP ALERT TRIGGER
+
     try {
       await sendEmail(
         email,
@@ -56,12 +57,19 @@ export const register = async (req, res, next) => {
         `<h2>Welcome ${name}</h2>`
       );
     } catch (err) {
-      next(err);
+      console.error("Welcome email failed:", err);
     }
+
+    res.cookie("refreshToken",refreshToken,{
+      httpOnly:true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
 
     res.status(201).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
-      tokens: { accessToken, refreshToken }
+      tokens: { accessToken}
     });
   } catch (err) { next(err); }
 };
@@ -85,17 +93,26 @@ export const login = async (req, res, next) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user, rid);
 
+    res.cookie("refreshToken",refreshToken,{
+      httpOnly:true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    }); 
+
     res.json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
-      tokens: { accessToken, refreshToken }
+      tokens: { accessToken }
     });
   } catch (err) { next(err); }
 };
 
 export const refresh = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(400).json({ message: 'Missing refreshToken' });
+    const refreshToken  = req.cookies.refreshToken;
+    if (!refreshToken){ 
+      return res.status(400).json({ message: 'Missing refreshToken' })
+    };
 
     const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const userId = payload.sub;
@@ -210,11 +227,23 @@ export const forgotPassword = async (req, res, next) => {
       'UPDATE users SET reset_token_hash = $1, reset_token_expires_at = $2 WHERE id = $3',
       [tokenHash, expiresAt, user.id]
     );
+console.log(user.email);
 
-    await sendResetEmail({ to: user.email, name: user.name, token });
-    // console.log("token",token)
+    try {
+      await sendResetEmail({
+        to: user.email,
+        name: user.name,
+        token
+      });
 
-    res.json({ message: 'If that email exists, a reset link has been sent' });
+      console.log("Reset email sent");
+    } catch (err) {
+      console.error("Reset email failed:", err.message);
+    }
+
+    res.json({
+      message: 'If that email exists, a reset link has been sent'
+    });
   } catch (err) { next(err); }
 };
 
@@ -279,4 +308,14 @@ export const changePassword = async (req, res, next) => {
 
 export const adminOnly = async (req, res) => {
   res.json({ message: 'Hello Admin!' });
+};
+
+//new changes,
+
+export const logout = async (req, res) => {
+  res.clearCookie("refreshToken");
+
+  res.json({
+    message: "Logged out successfully"
+  });
 };

@@ -7,6 +7,7 @@ import { Provider } from 'react-redux'
 import { store } from './redux/store.js'
 import { MediaProvider } from './context/MediaContext.jsx'
 
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
@@ -16,3 +17,4 @@ createRoot(document.getElementById('root')).render(
     </Provider>
   </StrictMode>,
 )
+

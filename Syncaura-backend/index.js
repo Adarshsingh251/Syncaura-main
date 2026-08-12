@@ -1,8 +1,9 @@
-require("dotenv").config();
-const express = require("express");
-const bodyParser = require("body-parser");
-const { google } = require("googleapis");
-const fs = require("fs"); // Added for Database storage
+import dotenv from 'dotenv'
+dotenv.config();
+import express from "express";
+import bodyParser from "body-parser";
+import { google } from "googleapis";
+import fs from "fs"; // Added for Database storage
 
 const app = express();
 app.use(bodyParser.json());
