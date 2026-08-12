@@ -4,6 +4,7 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import MainLayout from "./layouts/MainLayout";
 import { lazy, Suspense, useEffect } from "react";
 import LearnMore from "./pages/LearnMore";
+import NotFound from './pages/NotFound';
 
 const Projects = lazy(() => import("./pages/Projects"));
 const Tasks = lazy(() => import("./pages/Tasks"));
@@ -300,6 +301,7 @@ export default function App() {
                 }
               />
             </Route>
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
