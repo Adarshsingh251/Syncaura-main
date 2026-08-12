@@ -7,6 +7,8 @@
   XCircleIcon,
   Loader,
   UserCheck,
+  Laptop,
+  Plus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
@@ -14,7 +16,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
-import { leaveHistory } from "../constant/constant";
+
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
 import { toast } from "react-toastify";
@@ -22,13 +24,13 @@ import { toast } from "react-toastify";
 const initialAttendanceStats = [
   {
     title: "Present Days",
-    value: 13,
+    value: 0,
     borderColor: "border-[#29CC39]",
     icon: <CircleCheckBig className="size-3.5 text-[#29CC39]" />,
   },
   {
     title: "Absent Days",
-    value: 2,
+    value: 0,
     borderColor: "border-[#FF0000]",
     icon: (
       <div className="border border-[#FF0000] size-3.5">
@@ -38,13 +40,20 @@ const initialAttendanceStats = [
   },
   {
     title: "Leave Taken",
-    value: 4,
+    value: 0,
     borderColor: "border-[#FF9500]",
     icon: <Calendar className="size-3.5 text-[#FF9500]" />,
+  },
+  {
+    title: "Work From Home",
+    value: 3,
+    borderColor: "border-[#2461E6] dark:border-[#73FBFD]",
+    icon: <Laptop className="size-3.5 text-[#2461E6] dark:text-[#73FBFD]" />,
   },
 ];
 
 const ATTENDANCE_STORAGE_PREFIX = "syncaura:attendance:";
+const LEAVE_STORAGE_PREFIX = "syncaura:leaves:";
 
 const getToday = () => {
   const now = new Date();
@@ -61,9 +70,7 @@ const getInitialAttendanceState = () => ({
 const AttendanceLeave = () => {
   const user = useSelector((state) => state.auth.user);
   const [selectedId, setSelectedId] = useState(0);
-  const user = useSelector((state) => state.auth.user);
   const [openModel, setOpenModel] = useState(false);
-  const [leaveData, setLeaveData] = useState(leaveHistory);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
 
   const [showPopup, setShowPopup] = useState(false);
@@ -79,9 +86,35 @@ const AttendanceLeave = () => {
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const attendanceStateRef = useRef(getInitialAttendanceState());
   const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+  const leaveStorageKey = `${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+
+  // Load leave data from localStorage (persists across refreshes)
+  const [leaveData, setLeaveData] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persist leave data to localStorage whenever it changes
+  const syncLeavesToStorage = useCallback((updater) => {
+    setLeaveData((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      try {
+        localStorage.setItem(leaveStorageKey, JSON.stringify(next));
+      } catch {
+        // storage quota exceeded — silently ignore
+      }
+      return next;
+    });
+  }, [leaveStorageKey]);
 
   // Until an attendance API exists, this keeps a user's daily status stable across
   // refreshes, logins, and logouts. Replace this with a GET attendance-status call
@@ -156,7 +189,7 @@ const AttendanceLeave = () => {
       const now = new Date();
       const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
-      
+
       if (selectedTab === "Check-In") {
         setCheckInTime(timeString);
         const nextState = {
@@ -346,8 +379,7 @@ useEffect(() => {
     if (!window.confirm("Are you sure you want to delete this leave request?")) {
       return;
     }
-
-    setLeaveData((prev) => prev.filter((item) => item !== leave));
+    syncLeavesToStorage((prev) => prev.filter((item) => item !== leave));
     toast.success("Leave request deleted successfully.");
   };
 
@@ -409,30 +441,51 @@ useEffect(() => {
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 w-full"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 px-4 py-3 mt-2 w-full items-stretch"
       >
         {attendanceStats.map((item, index) => (
-          <AttendanceCard key={index} {...item} />
+          <div key={index} className="w-full flex justify-center">
+            <AttendanceCard {...item} />
+          </div>
         ))}
-       <div className="relative w-full flex justify-center mt-2">
-          {/* TOP CARD */}
+{/* 5th CARD: MARK THE PRESENCE */}
+<div className="relative w-full flex justify-center">
+  <motion.div
+    onClick={() => setShowPopup((prev) => !prev)}
+    ref={triggerRef}
+    whileTap={{ scale: 0.97 }}
+    className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED]"
+  >
+    <h1
+      className={`font-semibold text-xs sm:text-sm ${
+        checkInTime ? 'text-[#29C339]' : 'text-[#FF0000]'
+      }`}
+    >
+      {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
+    </h1>
+
+    <div className="flex items-center justify-between mt-2">
+      ...
+    </div>
+  </motion.div>
+</div>
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
             ref={triggerRef}
             whileTap={{ scale: 0.97 }}
-            className="cursor-pointer w-[220px] min-h-[90px] px-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
+            className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
           >
-            <h1 className={`font-medium text-lg ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
+            <h1 className={`font-semibold text-xs sm:text-sm ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
               {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
             </h1>
 
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-                In: {checkInTime || '-'}
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
+                In: <span className="font-semibold">{checkInTime || '-'}</span>
               </p>
 
-              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-                Out: {checkOutTime || '-'}
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
+                Out: <span className="font-semibold">{checkOutTime || '-'}</span>
               </p>
             </div>
           </motion.div>
@@ -447,9 +500,9 @@ useEffect(() => {
                 transition={{ duration: 0.25, ease: "easeOut" }}
                 className="
                     absolute 
-                    right-0
+                    right-0 sm:right-auto xl:right-0
                     top-full
-                    mt-2 md:mt-3
+                    mt-2
                     z-50
                     w-[90vw] sm:w-[380px] md:w-[400px] 
                   "
@@ -498,33 +551,31 @@ useEffect(() => {
                         const isDisabled = item === "Check-In" ? !canCheckIn : !canCheckOut;
 
                         return (
-                        <motion.div
-                          onClick={() => !isDisabled && setSelectedTab(item)}
-                          key={idx}
-                          whileTap={{ scale: 0.95 }}
-                          layout
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                          }}
-                          aria-disabled={isDisabled}
-                          className={`flex flex-1 items-center justify-center border ${
-                            selectedTab === item
-                              ? "border-[#2461E6] dark:border-[#73FBFD]"
-                              : "border-[#EDEDED] dark:border-[#575757]"
-                          } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
-                        >
-                          <p
-                            className={`font-bold text-xs ${
-                              selectedTab === item
-                                ? "text-[#2461E6] dark:text-[#73FBFD]"
-                                : "text-[#554d4d] dark:text-gray-400"
-                            }`}
+                          <motion.div
+                            onClick={() => !isDisabled && setSelectedTab(item)}
+                            key={idx}
+                            whileTap={{ scale: 0.95 }}
+                            layout
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 20,
+                            }}
+                            aria-disabled={isDisabled}
+                            className={`flex flex-1 items-center justify-center border ${selectedTab === item
+                                ? "border-[#2461E6] dark:border-[#73FBFD]"
+                                : "border-[#EDEDED] dark:border-[#575757]"
+                              } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
                           >
-                            {item}
-                          </p>
-                        </motion.div>
+                            <p
+                              className={`font-bold text-xs ${selectedTab === item
+                                  ? "text-[#2461E6] dark:text-[#73FBFD]"
+                                  : "text-[#554d4d] dark:text-gray-400"
+                                }`}
+                            >
+                              {item}
+                            </p>
+                          </motion.div>
                         );
                       })}
                     </div>
@@ -562,19 +613,19 @@ useEffect(() => {
           shadow-[0_4px_10px_0_rgba(0,0,0,0.25)]
           px-11 py-5"
         >
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-3/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[24%] text-center">
             Date Range
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[20%] text-center px-2">
             Type
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-3/9 w-full text-left">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[34%] text-left px-4">
             Reason
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
             Status
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
             Actions
           </h1>
         </div>
@@ -645,15 +696,16 @@ useEffect(() => {
 
       <button
         onClick={handleOpenCreateModal}
-        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-7 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover"
+        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-6 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover flex items-center gap-2 shadow-lg"
       >
-        <p>Apply Leave</p>
+        <Plus className="size-5 lg:size-6" />
+        <span>Apply Leave</span>
       </button>
 
       {openModel && (
         <LeaveModel
           onClose={handleCloseLeaveModal}
-          setLeaveData={setLeaveData}
+          setLeaveData={syncLeavesToStorage}
           editingLeave={leaveToEdit}
         />
       )}
