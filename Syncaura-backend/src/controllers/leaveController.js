@@ -50,28 +50,88 @@ export const applyLeave = async (req, res) => {
   }
 };
 
+
 export const getMyLeaves = async (req, res) => {
   try {
     const userId = req.user.id;
-    const result = await pool.query("SELECT * FROM leaves WHERE user_id = $1", [userId]);
 
-    res.status(200).json({ leaves: result.rows });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Total leave count
+    const totalResult = await pool.query(
+      "SELECT COUNT(*) FROM leaves WHERE user_id = $1",
+      [userId]
+    );
+
+    const totalLeaves = parseInt(totalResult.rows[0].count);
+
+   
+    const result = await pool.query(
+      `SELECT *
+       FROM leaves
+       WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    );
+
+    res.status(200).json({
+      leaves: result.rows,
+      currentPage: page,
+      totalPages: Math.ceil(totalLeaves / limit),
+      totalLeaves,
+    });
+
   } catch (error) {
     console.error("Error fetching leaves:", error);
     res.status(500).json({ message: "Error fetching leaves" });
   }
 };
 
+
+
+
+
 export const getAllLeaves = async (req, res) => {
   try {
-    const result = await pool.query("SELECT l.*, u.name as user_name FROM leaves l JOIN users u ON l.user_id = u.id ORDER BY l.created_at DESC");
 
-    res.status(200).json({ leaves: result.rows });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Total leave count
+    const totalResult = await pool.query(
+      "SELECT COUNT(*) FROM leaves"
+    );
+
+    const totalLeaves = parseInt(totalResult.rows[0].count);
+
+    // Fetch paginated leaves
+    const result = await pool.query(
+      `SELECT l.*, u.name AS user_name
+       FROM leaves l
+       JOIN users u ON l.user_id = u.id
+       ORDER BY l.created_at DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+
+    res.status(200).json({
+      leaves: result.rows,
+      currentPage: page,
+      totalPages: Math.ceil(totalLeaves / limit),
+      totalLeaves,
+    });
+
   } catch (error) {
     console.error("Error fetching all leaves:", error);
     res.status(500).json({ message: "Error fetching leaves" });
   }
 };
+
+
 
 export const approveLeave = async (req, res) => {
   try {

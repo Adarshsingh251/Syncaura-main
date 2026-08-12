@@ -9,7 +9,7 @@ import {
 /* ── Social links with brand colors ── */
 const socials = [
   { icon: Facebook,  label: 'Facebook',  href: '#', color: '#1877f2' },
-  { icon: Twitter,   label: 'X / Twitter', href: '#', color: '#000000' },
+  { icon: Twitter,   label: 'X / Twitter', href: '#', color: '#1DA1F2' },
   { icon: Instagram, label: 'Instagram', href: '#', color: '#e1306c' },
   { icon: Linkedin,  label: 'LinkedIn',  href: '#', color: '#0a66c2' },
   { icon: Youtube,   label: 'YouTube',   href: '#', color: '#ff0000' },
