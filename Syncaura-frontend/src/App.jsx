@@ -1,12 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider, useDispatch, useSelector } from "react-redux";
+import ScrollToTop from "./components/ScrollToTop";
 // import { store } from "./redux/store";
 import MainLayout from "./layouts/MainLayout";
 import { lazy, Suspense, useEffect } from "react";
 import LearnMore from "./pages/LearnMore";
-
 const Projects = lazy(() => import("./pages/Projects"));
 const Tasks = lazy(() => import("./pages/Tasks"));
+import AboutUs from "./pages/AboutUs";
 const CurrentMeet = lazy(() => import("./pages/CurrentMeet"));
 const Meetings = lazy(() => import("./pages/Meetings"));
 const Chat = lazy(() => import("./pages/Chat"));
@@ -146,7 +147,8 @@ export default function App() {
         transition={Bounce}
       />
 
-      <BrowserRouter>
+     <BrowserRouter>
+        <ScrollToTop />
         <Suspense
           fallback={
             <div className="w-full h-screen bg-white dark:bg-black flex items-center justify-center">
@@ -168,7 +170,8 @@ export default function App() {
                 element={<GithubCallback />}
               />
               <Route path="/learn-more" element={<LearnMore />} />
-            </Route>
+<Route path="/about-us" element={<AboutUs />} />
+</Route>
 
             <Route
               element={
