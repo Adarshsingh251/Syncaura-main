@@ -7,6 +7,8 @@
   XCircleIcon,
   Loader,
   UserCheck,
+  Laptop,
+  Plus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
@@ -41,6 +43,12 @@ const initialAttendanceStats = [
     value: 4,
     borderColor: "border-[#FF9500]",
     icon: <Calendar className="size-3.5 text-[#FF9500]" />,
+  },
+  {
+    title: "Work From Home",
+    value: 3,
+    borderColor: "border-[#2461E6] dark:border-[#73FBFD]",
+    icon: <Laptop className="size-3.5 text-[#2461E6] dark:text-[#73FBFD]" />,
   },
 ];
 
@@ -410,30 +418,33 @@ useEffect(() => {
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 w-full"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 px-4 py-3 mt-2 w-full items-stretch"
       >
         {attendanceStats.map((item, index) => (
-          <AttendanceCard key={index} {...item} />
+          <div key={index} className="w-full flex justify-center">
+            <AttendanceCard {...item} />
+          </div>
         ))}
-       <div className="relative w-full flex justify-center mt-2">
-          {/* TOP CARD */}
+        
+        {/* 5th CARD: MARK THE PRESENCE */}
+        <div className="relative w-full flex justify-center">
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
             ref={triggerRef}
             whileTap={{ scale: 0.97 }}
-            className="cursor-pointer w-[220px] min-h-[90px] px-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
+            className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
           >
-            <h1 className={`font-medium text-lg ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
+            <h1 className={`font-semibold text-xs sm:text-sm ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
               {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
             </h1>
 
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-                In: {checkInTime || '-'}
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
+                In: <span className="font-semibold">{checkInTime || '-'}</span>
               </p>
 
-              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-                Out: {checkOutTime || '-'}
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
+                Out: <span className="font-semibold">{checkOutTime || '-'}</span>
               </p>
             </div>
           </motion.div>
@@ -448,9 +459,9 @@ useEffect(() => {
                 transition={{ duration: 0.25, ease: "easeOut" }}
                 className="
                     absolute 
-                    right-0
+                    right-0 sm:right-auto xl:right-0
                     top-full
-                    mt-2 md:mt-3
+                    mt-2
                     z-50
                     w-[90vw] sm:w-[380px] md:w-[400px] 
                   "
@@ -563,19 +574,19 @@ useEffect(() => {
           shadow-[0_4px_10px_0_rgba(0,0,0,0.25)]
           px-11 py-5"
         >
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-3/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[24%] text-center">
             Date Range
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[20%] text-center px-2">
             Type
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-3/9 w-full text-left">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[34%] text-left px-4">
             Reason
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
             Status
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
             Actions
           </h1>
         </div>
@@ -646,9 +657,10 @@ useEffect(() => {
 
       <button
         onClick={handleOpenCreateModal}
-        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-7 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover"
+        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-6 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover flex items-center gap-2 shadow-lg"
       >
-        <p>Apply Leave</p>
+        <Plus className="size-5 lg:size-6" />
+        <span>Apply Leave</span>
       </button>
 
       {openModel && (
