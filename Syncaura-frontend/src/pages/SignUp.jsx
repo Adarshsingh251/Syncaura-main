@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { registerUser } from '../redux/features/authThunks'
+import { useTranslation } from 'react-i18next'
 import { UserRound, Mail, LockKeyhole, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { FaGithub, FaFacebookF } from 'react-icons/fa'
@@ -56,6 +57,11 @@ export default function SignUpPage() {
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const update = key => event => setForm({ ...form, [key]: event.target.value })
+  const [showStrength, setShowStrength] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const { t } = useTranslation();
+
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -68,6 +74,7 @@ export default function SignUpPage() {
       setMessage("Email is required.")
       return
     }
+    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(form.email.trim())) {
       setMessage("Invalid email address.")
@@ -142,7 +149,7 @@ export default function SignUpPage() {
                   required
                 />
               </label>
-              {nameError && <p className="field-error">{nameError}</p>}
+              {/* {nameError && <p className="field-error">{nameError}</p>} */}
 
               {/* Email Address Input Box Container */}
               <label className="field">
@@ -155,7 +162,7 @@ export default function SignUpPage() {
                   required
                 />
               </label>
-              {emailError && <p className="field-error">{emailError}</p>}
+              {/* {emailError && <p className="field-error">{emailError}</p>} */}
 
               {/* Password Component */}
               <PasswordField
@@ -169,13 +176,14 @@ export default function SignUpPage() {
                 onBlur={() => {
                   setShowStrength(false);
                 }}
-                onChange={(e) => {
-                  update("password")(e);
-                  checkPasswordStrength(e.target.value);
-                }}
+                // onChange={(e) => {
+                //   update("password")(e);
+                //   checkPasswordStrength(e.target.value);
+                // }}
+                onChange={update("password")}
               />
 
-              {showStrength && (
+              {/* {showStrength && (
                 <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
                   Password Strength: {passwordStrength}
                 </p>
@@ -187,7 +195,7 @@ export default function SignUpPage() {
                 </div>
               )}
 
-              {passwordError && <p className="field-error">{passwordError}</p>}
+              {passwordError && <p className="field-error">{passwordError}</p>} */}
 
               {/* Confirm Password Component */}
               <PasswordField

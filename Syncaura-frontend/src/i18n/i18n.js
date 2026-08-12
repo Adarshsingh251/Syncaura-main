@@ -163,7 +163,33 @@ const resources = {
       twoStepDesc: "We recommend requiring a verification code in addition to your password",
 
       // ✅ AUTH
+      // createAccount: "Create Account",
+      // fullName: "Full Name",
+      // confirmPassword: "Confirm Password",
+      // alreadyHaveAccount: "Already have an account?",
+      // login: "Login",
+      // welcomeBack: "Welcome Back",
+      // emailAddress: "Email Address",
+      // password: "Password",
+      // forgotPassword: "Forgot Password?",
+      // signIn: "Sign In",
+      // orContinueWith: "Or continue with",
+      // dontHaveAccount: "Don't have an account?",
+      // signUp: "Sign Up",
+
+      // ✅ AUTH
+      auth_logging_in: "Logging In...",
+      auth_signup_eyebrow: "WELCOME",
+      auth_signup_lead: "Create your account to get started.",
+      auth_creating_account: "Creating Account...",
+      auth_terms_intro: "I agree to the",
+      auth_terms_and: "and",
+      continue_with_google: "Continue with Google",
+      continue_with_github: "Continue with GitHub",
+      continue_with_facebook: "Continue with Facebook",
+
       createAccount: "Create Account",
+      account_emphasis: "Account",
       fullName: "Full Name",
       confirmPassword: "Confirm Password",
       alreadyHaveAccount: "Already have an account?",
@@ -176,6 +202,8 @@ const resources = {
       orContinueWith: "Or continue with",
       dontHaveAccount: "Don't have an account?",
       signUp: "Sign Up",
+
+
 
       // ✅ PASSWORD
       changePassword: "Change Password",

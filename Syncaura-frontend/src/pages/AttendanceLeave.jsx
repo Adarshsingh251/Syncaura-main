@@ -281,14 +281,7 @@ const fetchLeaves = useCallback(async () => {
 
 useEffect(() => {
   fetchLeaves();
-}, [fetchLeaves,currentPage]);
-
-
-
-
-
-
-
+}, [fetchLeaves,]);
 
 
   useEffect(() => {
@@ -449,7 +442,7 @@ useEffect(() => {
           </div>
         ))}
 {/* 5th CARD: MARK THE PRESENCE */}
-<div className="relative w-full flex justify-center">
+{/* <div className="relative w-full flex justify-center">
   <motion.div
     onClick={() => setShowPopup((prev) => !prev)}
     ref={triggerRef}
@@ -468,7 +461,8 @@ useEffect(() => {
       ...
     </div>
   </motion.div>
-</div>
+</div> */}
+        <div className="relative w-full flex justify-center">
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
             ref={triggerRef}
@@ -494,18 +488,30 @@ useEffect(() => {
           <AnimatePresence>
             {showPopup && (
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 8, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                // initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                // animate={{ opacity: 1, y: 8, scale: 1 }}
+                // exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                
+                initial={{ opacity: 0, x: 10, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 10, scale: 0.95 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
+                // className="
+                //     absolute 
+                //     right-0 sm:right-auto xl:right-0
+                //     top-full
+                //     mt-2
+                //     z-50
+                //     w-[90vw] sm:w-[380px] md:w-[400px] 
+                //   "
                 className="
-                    absolute 
-                    right-0 sm:right-auto xl:right-0
-                    top-full
-                    mt-2
-                    z-50
-                    w-[90vw] sm:w-[380px] md:w-[400px] 
-                  "
+                  absolute
+                  right-full
+                  top-0
+                  mr-3
+                  z-50
+                  w-[90vw] sm:w-[380px] md:w-[400px]
+              "
               >
                 <div
                   ref={popupRef}
