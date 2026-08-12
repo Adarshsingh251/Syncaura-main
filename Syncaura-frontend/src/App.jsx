@@ -67,7 +67,7 @@ export default function App() {
   //       return res.json();
   //     })
   //     .then((data) => {
-  //       console.log("✅ Backend Connected:", data);
+  //       console.log("✅ Backend Connected:",data);
   //     })
   //     .catch((err) => {
   //       console.error("❌ Backend Connection Error:", err.message);
