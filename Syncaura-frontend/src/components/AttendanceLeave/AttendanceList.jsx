@@ -1,7 +1,23 @@
-import { CircleAlert, CircleCheck, Clock, Edit3, Trash2 } from "lucide-react";
+import { CircleAlert, CircleCheck, Clock, Edit3, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+
+const ITEMS_PER_PAGE = 5;
 
 const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDeleteLeave }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 when data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [LeaveData]);
+
+  const totalPages = Math.max(1, Math.ceil(LeaveData.length / ITEMS_PER_PAGE));
+  const paginatedData = LeaveData.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const statusColor = {
     Pending: "text-[#C05328] bg-[#FEF2C2]",
     Approved: "text-[#29CC39] bg-[#D1FAE5]",
@@ -65,7 +81,7 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
         className="hidden md:flex flex-col w-full px-1 mt-2 "
       >
 
-        {LeaveData.map((item, idx) => {
+        {paginatedData.map((item, idx) => {
           const { startDate, endDate, type, reason, status } = item;
           const isSelected = currId === idx;
           return (
@@ -144,7 +160,7 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
         animate="show"
         className="flex md:hidden w-full flex-col items-center justify-center gap-5 px-2 py-1"
       >
-        {LeaveData.map((item, idx) => {
+        {paginatedData.map((item, idx) => {
           const { startDate, endDate, type, reason, status } = item;
           return (
             <motion.div
@@ -231,6 +247,50 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
           );
         })}
       </motion.div>
+
+      {/* Pagination */}
+      {totalPages >= 1 && (
+        <div className="flex items-center justify-center gap-2 py-5">
+          {/* Previous */}
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="flex items-center gap-1 px-4 py-1.5 rounded-md border border-[#EDEDED] dark:border-[#3A3A3A] bg-white dark:bg-[#2E2F2F] text-[#575757] dark:text-[#B2B2B2] hover:bg-[#f0f0f0] dark:hover:bg-[#3A3B3C] disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="size-4" />
+            Previous
+          </button>
+
+          {/* Page Numbers */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`w-8 h-8 rounded-md text-sm font-semibold transition-colors border ${
+                currentPage === page
+                  ? "bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black border-[#2461E6] dark:border-[#73FBFD]"
+                  : "bg-white dark:bg-[#2E2F2F] text-[#575757] dark:text-[#B2B2B2] border-[#EDEDED] dark:border-[#3A3A3A] hover:bg-[#f0f0f0] dark:hover:bg-[#3A3B3C]"
+              }`}
+              aria-label={`Page ${page}`}
+              aria-current={currentPage === page ? "page" : undefined}
+            >
+              {page}
+            </button>
+          ))}
+
+          {/* Next */}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="flex items-center gap-1 px-4 py-1.5 rounded-md border border-[#EDEDED] dark:border-[#3A3A3A] bg-white dark:bg-[#2E2F2F] text-[#575757] dark:text-[#B2B2B2] hover:bg-[#f0f0f0] dark:hover:bg-[#3A3B3C] disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+            aria-label="Next page"
+          >
+            Next
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
+      )}
     </>
   );
 };
