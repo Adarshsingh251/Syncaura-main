@@ -28,6 +28,8 @@ const RoleSelection = lazy(() => import("./pages/RoleSelection"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const GithubCallback = lazy(() => import("./pages/GithubCallback"));
 
+
+import NotFound from "./pages/NotFound";
 import Header from "./components/Meeting/Header/Header";
 import MobileSidebar from "./components/navigation/MobileSidebar";
 
