@@ -8,7 +8,7 @@ import {
   Loader,
 } from "lucide-react";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { leaveHistory } from "../constant/constant";
@@ -62,43 +62,64 @@ const AttendanceLeave = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
 
-  const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In" && checkInTime) {
+const handleConfirmAttendance = () => {
+  if (selectedTab === "Check-In") {
+    if (checkInTime) {
       toast.info(`You have already checked in today at ${checkInTime}`);
       setShowPopup(false);
       return;
     }
-    if (selectedTab === "CheckOut" && !checkInTime) {
+
+    setIsSubmitting(true);
+
+    setTimeout(() => {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      setCheckInTime(timeString);
+
+      toast.success(`Attendance marked successfully for ${attendanceDate}`);
+
+      setIsSubmitting(false);
+      setShowPopup(false);
+    }, 1000);
+
+    return;
+  }
+
+  if (selectedTab === "Check-Out") {
+    if (!checkInTime) {
       toast.error("Please check in before checking out!");
       return;
     }
-    if (selectedTab === "CheckOut" && checkOutTime) {
+
+    if (checkOutTime) {
       toast.info(`You have already checked out today at ${checkOutTime}`);
       setShowPopup(false);
       return;
     }
 
     setIsSubmitting(true);
-    // Simulate API delay
+
     setTimeout(() => {
       const now = new Date();
-      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
-      if (selectedTab === "Check-In") {
-        setCheckInTime(timeString);
-        // Increment present days dynamically
-        setAttendanceStats(prev => prev.map(stat => 
-          stat.title === "Present Days" ? { ...stat, value: stat.value + 1 } : stat
-        ));
-        toast.success(`Attendance marked successfully for ${attendanceDate}!`);
-      } else if (selectedTab === "CheckOut") {
-        setCheckOutTime(timeString);
-        toast.success("Check-out recorded successfully!");
-      }
+      const timeString = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      setCheckOutTime(timeString);
+
+      toast.success("Check-out recorded successfully!");
+
       setIsSubmitting(false);
       setShowPopup(false);
     }, 1000);
-  };
+  }
+};
 
   useEffect(() => {
     const timer = setTimeout(
@@ -113,11 +134,11 @@ const AttendanceLeave = () => {
 
     if (debouncedValue) {
       result = result.filter(
-        (item) =>
-          item.reason.toLowerCase().includes(debouncedValue) ||
-          item.status.toLowerCase().includes(debouncedValue) ||
-          item.type.toLowerCase().includes(debouncedValue),
-      );
+      (item) =>
+            (item.reason || "").toLowerCase().includes(debouncedValue) ||
+            (item.status || "").toLowerCase().includes(debouncedValue) ||
+            (item.type || "").toLowerCase().includes(debouncedValue),
+        );
     }
 
     if (appliedFilters) {
@@ -135,8 +156,11 @@ const AttendanceLeave = () => {
           const startStr = item.startDate ? item.startDate.split("T")[0] : "";
           const endStr = item.endDate ? item.endDate.split("T")[0] : "";
           if (!startStr) return false;
-          if (!endStr) return selectedDateStr >= startStr;
-          return selectedDateStr >= startStr && selectedDateStr <= endStr;
+          return (
+            selectedDateStr >= startStr &&
+            (!endStr || selectedDateStr <= endStr)
+            );
+          
         });
       }
     }
@@ -165,9 +189,9 @@ const AttendanceLeave = () => {
     };
   }, [showPopup]);
 
-  const handleApplyFilters = useCallback((newFilters) => {
-    setAppliedFilters(newFilters);
-  }, []);
+  const handleApplyFilters = (newFilters) => {
+  setAppliedFilters(newFilters);
+};
 
   return (
     <div className="relative w-full min-h-[calc(92vh)] flex flex-col bg-[#FFFFFF] dark:bg-[#000000]">
@@ -304,10 +328,10 @@ const AttendanceLeave = () => {
                     </div>
 
                     <div className="flex items-center justify-between gap-2">
-                      {["Check-In", "CheckOut"].map((item, idx) => (
+                      {["Check-In", "Check-Out"].map((item) => (
                         <motion.div
                           onClick={() => setSelectedTab(item)}
-                          key={idx}
+                          key={item}
                           whileTap={{ scale: 0.95 }}
                           layout
                           transition={{
