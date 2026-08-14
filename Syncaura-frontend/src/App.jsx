@@ -28,7 +28,7 @@ const RoleSelection = lazy(() => import("./pages/RoleSelection"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const GithubCallback = lazy(() => import("./pages/GithubCallback"));
 
-
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Meeting/Header/Header";
 import MobileSidebar from "./components/navigation/MobileSidebar";
@@ -259,7 +259,14 @@ export default function App() {
                   </MainLayout>
                 }
               />
-
+<Route
+            path="/profile"
+            element={
+              <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
+                <Profile />
+              </MainLayout>
+            }
+          />
               <Route
                 path="/chat"
                 element={
