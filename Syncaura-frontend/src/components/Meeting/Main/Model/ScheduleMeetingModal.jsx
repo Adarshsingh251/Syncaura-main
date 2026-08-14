@@ -111,7 +111,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
 
           <div className="w-full h-px bg-[#C7C5C5] dark:bg-[#616161]" />
 
-          <form onSubmit={handleSubmit(onSubmit, onError)} className="w-full">
+          <form onSubmit={handleSubmit(onSubmit)} className="w-full">
             <div className="flex flex-col gap-5 mt-4">
 
               {/* Title */}

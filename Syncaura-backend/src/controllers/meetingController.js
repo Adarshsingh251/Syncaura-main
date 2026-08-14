@@ -191,9 +191,10 @@ export const deleteMeeting = async (req, res) => {
     if (googleEventId) {
       try {
         await deleteCalendarEvent(
-  meeting.google_event_id,
-  req.googleTokens
-);
+          googleEventId,
+          req.googleTokens
+        );
+        
       } catch (err) {
         console.warn("Google Calendar delete failed:", err.message);
         // continue even if Google fails

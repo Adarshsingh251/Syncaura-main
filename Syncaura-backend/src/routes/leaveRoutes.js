@@ -6,13 +6,13 @@ import {
   applyLeave,
   getMyLeaves,
   getAllLeaves,
-  approveLeave,
+  approveLeave, 
   rejectLeave
 } from '../controllers/leaveController.js';
 
 const router = express.Router();
 
-router.post('/applyleave', auth, permit(ROLES.USER), applyLeave);
+router.post('/applyleave', auth, permit(ROLES.USER, ROLES.ADMIN, ROLES.CO_ADMIN, 'coadmin'), applyLeave);
 router.get('/myleaves', auth, getMyLeaves);
 router.get('/allleaves', auth, permit(ROLES.ADMIN, ROLES.CO_ADMIN, 'coadmin'), getAllLeaves);
 router.put('/:id/approve', auth, permit(ROLES.ADMIN, ROLES.CO_ADMIN, 'coadmin'), approveLeave);

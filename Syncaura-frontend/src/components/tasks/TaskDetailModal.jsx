@@ -35,7 +35,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
     if (newStatus === task.status) return;
     setStatusLoading(true);
     try {
-      await dispatch(updateTaskStatus({ id: task._id, status: newStatus })).unwrap();
+      await dispatch(updateTaskStatus({ id: task.id, status: newStatus })).unwrap();
     } finally {
       setStatusLoading(false);
     }
@@ -45,7 +45,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
     if (!subtaskInput.trim()) return;
     setAddingSubtask(true);
     try {
-      await dispatch(addSubtask({ taskId: task._id, title: subtaskInput.trim() })).unwrap();
+      await dispatch(addSubtask({ taskId: task.id, title: subtaskInput.trim() })).unwrap();
       setSubtaskInput("");
     } finally {
       setAddingSubtask(false);
@@ -53,7 +53,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
   };
 
   const handleDelete = async () => {
-    await dispatch(deleteTask(task._id)).unwrap();
+    await dispatch(deleteTask(task.id)).unwrap();
     onDeleted();
     onClose();
   };
@@ -167,7 +167,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
             <AnimatePresence>
               {task.subtasks?.map((subtask) => (
                 <motion.div
-                  key={subtask._id}
+                  key={subtask.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="flex items-center gap-2.5 py-2 border-b border-gray-50 dark:border-[#2d2f33] last:border-0"

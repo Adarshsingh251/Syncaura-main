@@ -5,9 +5,9 @@ export const addNote = async (req, res) => {
     const { meetingId, content } = req.body;
 
     // validate both
-if (!meetingId || !content) {
-  return res.status(400).json({ message: "meetingId and content are required" });
-}
+  if (!meetingId || !content) {
+    return res.status(400).json({ message: "meetingId and content are required" });
+  }
 
     // Check if meeting exists
     const meetingCheck = await pool.query("SELECT id FROM meetings WHERE id = $1", [meetingId]);

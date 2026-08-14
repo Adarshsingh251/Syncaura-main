@@ -57,7 +57,7 @@ const TaskCard = ({ task, onOpen, onDelete }) => {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onDelete(task._id);
+            onDelete(task.id);
           }}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
           aria-label="Delete task"

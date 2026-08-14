@@ -2,15 +2,14 @@ import { AnimatePresence, motion } from "framer-motion"
 import { FileText, X } from "lucide-react"
 import MotionSelect from "../projects/Model/MotionSelect"
 import { Controller, useForm } from "react-hook-form"
+import { useEffect } from "react"
 
-const LeaveModel = ({ onClose, setHistory }) => {
+const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
 
     const leaveTypes = [
         "Casual",
         "Sick",
         "Earned",
-        "Paid",
-        "Unpaid",
         "Maternity",
         "Paternity",
         "Marriage",
@@ -28,25 +27,64 @@ const LeaveModel = ({ onClose, setHistory }) => {
         handleSubmit,
         control,
         watch,
+        reset,
         formState: { errors },
     } = useForm({
+        defaultValues: {
+            leaveType: editingLeave?.type || "Casual",
+            startDate: editingLeave?.startDate ? new Date(editingLeave.startDate).toISOString().split("T")[0] : "",
+            endDate: editingLeave?.endDate ? new Date(editingLeave.endDate).toISOString().split("T")[0] : "",
+            reason: editingLeave?.reason || "",
+        },
     });
+
+    useEffect(() => {
+        reset({
+            leaveType: editingLeave?.type || "Casual",
+            startDate: editingLeave?.startDate ? new Date(editingLeave.startDate).toISOString().split("T")[0] : "",
+            endDate: editingLeave?.endDate ? new Date(editingLeave.endDate).toISOString().split("T")[0] : "",
+            reason: editingLeave?.reason || "",
+        });
+    }, [editingLeave, reset]);
+
     const startDate = watch("startDate");
     const today = new Date().toISOString().split("T")[0];
 
-    const onSubmit = (data) => {
-        const currData = {
-            startDate: new Date(`${data["startDate"]}T00:00:00Z`).toISOString(),
-            endDate: new Date(`${data["endDate"]}T00:00:00Z`).toISOString(),
-            type: data["leaveType"],
-            reason: data["reason"],
-            status: "Pending"
+    const onSubmit = async (data) => {
+        try {
+            const currData = {
+                startDate: new Date(`${data.startDate}T00:00:00Z`).toISOString(),
+                endDate: new Date(`${data.endDate}T00:00:00Z`).toISOString(),
+                type: data.leaveType || "Casual",
+                reason: data.reason,
+                status: editingLeave ? editingLeave.status : "Pending",
+            };
+
+            if (typeof setLeaveData === "function") {
+                if (editingLeave) {
+                    setLeaveData((prev) =>
+                        prev.map((item) =>
+                            item === editingLeave
+                                ? { ...item, ...currData }
+                                : item
+                        )
+                    );
+                } else {
+                    setLeaveData((prev) => [currData, ...prev]);
+                }
+            }
+
+            // await fetchLeaves();
+
+            onClose();
+
+        } catch (error) {
+            console.error("Error applying leave:", error);
         }
-        setHistory((prev)=>[currData, ...prev])
-
-
-        onClose();
     };
+   
+
+
 
     const onError = (err) => {
         console.error("FORM ERRORS ", err);
@@ -84,7 +122,7 @@ const LeaveModel = ({ onClose, setHistory }) => {
                     <div className="flex items-center justify-between w-full ">
                         <div className="flex items-center justify-center gap-3  ">
                             <FileText className="size-6 text-[#000000] dark:text-[#FFFFFF]" />
-                            <h1 className="text-2xl font-medium text-[#000000] dark:text-[#F8F8F8]" >Apply Leave</h1>
+                            <h1 className="text-2xl font-medium text-[#000000] dark:text-[#F8F8F8]" >{editingLeave ? "Edit Leave" : "Apply Leave"}</h1>
                         </div>
                         <button
                             onClick={onClose}
@@ -104,7 +142,7 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                     control={control}
                                     rules={{ required: "Leave type is required" }}
                                     render={({ field }) => (
-                                        <MotionSelect {...field} startVal="Casual Leave" options={leaveTypes} />
+                                        <MotionSelect {...field} startVal="Casual" options={leaveTypes} />
                                     )}
                                 />
                                 {errors.leaveType && (
@@ -120,7 +158,7 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                 <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-2 px-5 rounded-xl">
                                     <input
                                         type="date"
-                                        min={today}
+                                        min={editingLeave ? undefined : today}
                                         {...register("startDate", { required: "Start date is required" })}
 
                                         className="bg-transparent w-full date-input font-semibold outline-none text-[#898888] text-sm placeholder:text-[#898888]"
@@ -138,11 +176,11 @@ const LeaveModel = ({ onClose, setHistory }) => {
                                 <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-2 px-5 rounded-xl">
                                     <input
                                         type="date"
-                                        min={startDate || today}
+                                        min={startDate || (editingLeave ? undefined : today)}
                                         {...register("endDate", {
                                             required: "End date is required",
                                             validate: (value) =>
-                                                !startDate || value > startDate || "End date must be after start date",
+                                                !startDate || value >= startDate || "End date must be on or after start date",
                                         })}
 
 
@@ -187,7 +225,7 @@ const LeaveModel = ({ onClose, setHistory }) => {
                         </div>
                         <div className="flex items-center justify-center mt-5 w-full">
                             <button type="submit" className="flex cursor-pointer items-center justify-center bg-[#2461E6] dark:bg-[#73FBFD] px-7 py-2 rounded-4xl btn-hover">
-                                <p className="dark:text-[#2E2F2F] text-[#FFFFFF] text-lg font-medium" >Apply Leave</p>
+                                <p className="dark:text-[#2E2F2F] text-[#FFFFFF] text-lg font-medium" >{editingLeave ? "Update Leave" : "Apply Leave"}</p>
                             </button>
                         </div>
 

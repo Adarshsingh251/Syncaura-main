@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import FilterDropdown from "../FilterDropdown";
+import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
 

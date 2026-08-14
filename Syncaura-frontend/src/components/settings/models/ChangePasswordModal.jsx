@@ -1,10 +1,17 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect } from "react"; // for resetting error on modal close
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { changePassword } from "../../../redux/features/authThunks";
 
 const ChangePasswordModal = ({ onClose }) => {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const { isLoading } = useSelector((state) => state.auth);
+
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -15,8 +22,13 @@ const ChangePasswordModal = ({ onClose }) => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [error, setError] = useState("");
+  // Reset error when modal is closed
+  useEffect(() => {
+    if (!onClose) return;
+    return () => setError("");
+  }, [onClose]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -35,17 +47,31 @@ const ChangePasswordModal = ({ onClose }) => {
       return;
     }
 
-    alert(t("passwordChangedSuccess"));
+    // Simple strength check
+    const strength = /[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword) && /[!@#$%^&*]/.test(newPassword);
+    if (!strength) {
+      setError(t("passwordWeak"));
+      return;
+    }
 
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    onClose();
+    try {
+      await dispatch(changePassword({ currentPassword, newPassword })).unwrap();
+      toast.success(t("passwordChangedSuccess"));
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      onClose();
+    } catch (requestError) {
+      setError(requestError || "Unable to change password");
+    }
   };
 
   return (
     <AnimatePresence>
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="change-password-title"
         className="fixed inset-0 z-50 flex items-center justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -65,7 +91,7 @@ const ChangePasswordModal = ({ onClose }) => {
           transition={{ duration: 0.25 }}
           className="relative w-full max-w-xl rounded-[26px] bg-white dark:bg-[#181919] px-10 py-9 shadow-2xl"
         >
-          <h2 className="text-2xl font-bold mb-2 text-black dark:text-white">
+          <h2 id="change-password-title" className="text-2xl font-bold mb-2 text-black dark:text-white">
             {t("changePassword")}
           </h2>
 
@@ -117,9 +143,11 @@ const ChangePasswordModal = ({ onClose }) => {
 
               <button
                 type="submit"
+                disabled={isLoading}
+                aria-disabled={isLoading}
                 className="flex-1 py-2.5 rounded-2xl bg-[#2461E6] text-lg text-white font-medium border border-[#2461E6] hover:bg-blue-100 hover:text-[#2461E6] dark:bg-[#73FBFD] dark:text-black dark:border-[#73FBFD] dark:hover:bg-gray-800 transition shadow-sm btn-hover"
               >
-                {t("saveChanges")}
+                {isLoading ? "Saving..." : t("saveChanges")}
               </button>
             </div>
           </form>
@@ -130,6 +158,9 @@ const ChangePasswordModal = ({ onClose }) => {
 };
 
 const PasswordField = ({ label, value, setValue, show, toggle }) => (
+  // Simple password strength indicator displayed below the input
+  <div className="flex flex-col">
+
   <div className="flex items-center justify-between">
     <label className="w-[210px] text-lg font-semibold text-black dark:text-white">
       {label}
@@ -151,6 +182,7 @@ const PasswordField = ({ label, value, setValue, show, toggle }) => (
         {show ? <Eye size={22} /> : <EyeOff size={22} />}
       </button>
     </div>
+  </div>
   </div>
 );
 

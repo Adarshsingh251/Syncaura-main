@@ -323,33 +323,6 @@ const ControlBar = ({
             </AnimatePresence>
           </div>
 
-          {/* EMOJI PICKER MOBILE */}
-          <AnimatePresence>
-            {Object.entries(emojiReactions).map(([id, emoji]) => (
-              <motion.div
-                key={id}
-                initial={{ y: 0, opacity: 0, scale: 0.8 }}
-                animate={{ y: -250, opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.8, ease: "easeOut" }}
-                className="absolute text-5xl mb-24"
-              >
-                {emojiList.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => {
-                      sendEmojiReaction(emoji);
-                      setShowEmojiPicker(false);
-                    }}
-                    className="text-2xl hover:scale-125 transition btn-hover"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
 
         {/* EMOJI PICKER MOBILE */}
         <AnimatePresence>
@@ -358,9 +331,9 @@ const ControlBar = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-16 left-1/2 -translate-x-1/2
+              className={`absolute bottom-16 left-1/2 -translate-x-1/2
           bg-white dark:bg-[#2a2a2a] shadow-lg rounded-full px-4 py-2
-          flex gap-3 z-30"
+          flex gap-3 z-30`}
             >
               {emojiList.map((emoji) => (
                 <button

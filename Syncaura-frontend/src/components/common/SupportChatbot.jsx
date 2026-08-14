@@ -15,6 +15,84 @@ import {
     Dot,
     Minus,
 } from "lucide-react";
+import api from "../../config/axios";
+
+const renderMessageText = (text) => {
+    if (!text) return "";
+    
+    const lines = text.split("\n");
+    return lines.map((line, idx) => {
+        let content = line;
+        let isH3 = false;
+        let isH2 = false;
+        let isBullet = false;
+        let isBlockquote = false;
+
+        if (line.startsWith("### ")) {
+            content = line.substring(4);
+            isH3 = true;
+        } else if (line.startsWith("## ")) {
+            content = line.substring(3);
+            isH2 = true;
+        } else if (line.startsWith("- ")) {
+            content = line.substring(2);
+            isBullet = true;
+        } else if (line.startsWith("> ")) {
+            content = line.substring(2);
+            isBlockquote = true;
+        }
+        
+        const bRegex = /\*\*(.*?)\*\*/g;
+        let match;
+        const parts = [];
+        let lastIndex = 0;
+        
+        while ((match = bRegex.exec(content)) !== null) {
+            if (match.index > lastIndex) {
+                parts.push(content.substring(lastIndex, match.index));
+            }
+            parts.push(<strong key={match.index} className="font-bold text-gray-900 dark:text-white">{match[1]}</strong>);
+            lastIndex = bRegex.lastIndex;
+        }
+        if (lastIndex < content.length) {
+            parts.push(content.substring(lastIndex));
+        }
+
+        const processedLine = parts.length > 0 ? parts : content;
+
+        if (isH3) {
+            return (
+                <h3 key={idx} className="text-sm font-bold mt-2 mb-1 dark:text-white text-gray-900">
+                    {processedLine}
+                </h3>
+            );
+        }
+        if (isH2) {
+            return (
+                <h2 key={idx} className="text-base font-bold mt-3 mb-1 dark:text-white text-gray-900">
+                    {processedLine}
+                </h2>
+            );
+        }
+        if (isBullet) {
+            return (
+                <div key={idx} className="flex items-start gap-1.5 ml-2 my-0.5 text-gray-800 dark:text-gray-200">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span className="flex-1">{processedLine}</span>
+                </div>
+            );
+        }
+        if (isBlockquote) {
+            return (
+                <blockquote key={idx} className="border-l-4 border-blue-400 pl-2 py-1 my-2 bg-gray-50 dark:bg-gray-800 italic text-xs rounded text-gray-600 dark:text-gray-300">
+                    {processedLine}
+                </blockquote>
+            );
+        }
+        
+        return <p key={idx} className="min-h-[1.2em]">{processedLine}</p>;
+    });
+};
 
 const quickActions = [
     { id: 1, title: "Projects", desc: "Find projects", icon: Briefcase },
@@ -34,6 +112,7 @@ export default function SupportChatbot() {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [micError, setMicError] = useState("");
+    const [isHovered, setIsHovered] = useState(false);
 
     const chatRef = useRef(null);
     const bottomRef = useRef(null);
@@ -110,7 +189,7 @@ export default function SupportChatbot() {
         setLoading(false);
     };
 
-    const sendMessage = (voiceText) => {
+    const sendMessage = async (voiceText) => {
         const text = voiceText ?? input;
         if (!text.trim()) return;
 
@@ -123,11 +202,15 @@ export default function SupportChatbot() {
         setInput("");
         setLoading(true);
 
-        setTimeout(() => {
-            streamBotMessage(
-                "Sure! I can help you with projects, meetings, and support queries."
-            );
-        }, 400);
+        try {
+            const response = await api.post("/chatbot", { message: text });
+            const replyText = response.data?.reply || "I'm sorry, I couldn't get a response. Please try again.";
+            streamBotMessage(replyText);
+        } catch (error) {
+            setLoading(false);
+            const errMsg = error.response?.data?.message || "Oops! Something went wrong. Please check your connection and try again.";
+            setMessages((p) => [...p, { from: "bot", text: errMsg }]);
+        }
     };
 
     const startVoice = async () => {
@@ -146,28 +229,34 @@ export default function SupportChatbot() {
 
     return (
         <>
-            <div className="fixed bottom-28 right-10 z-30 flex items-center gap-3">
+            <div 
+                className="fixed bottom-28 right-10 z-[9999] flex items-center gap-3"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
 
                 {/* Tooltip bubble */}
-                <motion.div
-                    initial={{ opacity: 0, x: 20, scale: 0.8 }}
-                    animate={{
-                        opacity: 1,
-                        x: 0,
-                        scale: [1, 1.05, 1],
-                        y: [0, -4, 0],
-                    }}
-                    transition={{
-                        duration: 0.6,
-                        delay: 0.3,
-                        ease: "easeOut",
-                        repeat: Infinity,
-                        repeatDelay: 3,
-                    }}
-                    className="bg-blue-500 text-white absolute -top-9 rounded-br-none right-10 w-40 text-xs px-3 py-2 rounded-full shadow-md"
-                >
-                    Need help? ask me!
-                </motion.div>
+                {isHovered && !open && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20, scale: 0.8 }}
+                        animate={{
+                            opacity: 1,
+                            x: 0,
+                            scale: [1, 1.05, 1],
+                            y: [0, -4, 0],
+                        }}
+                        transition={{
+                            duration: 0.6,
+                            delay: 0.3,
+                            ease: "easeOut",
+                            repeat: Infinity,
+                            repeatDelay: 3,
+                        }}
+                        className="bg-blue-500 text-white absolute -top-9 rounded-br-none right-10 w-40 text-xs px-3 py-2 rounded-full shadow-md"
+                    >
+                        Need help? ask me!
+                    </motion.div>
+                )}
 
 
                 {/* Button with pulse + float */}
@@ -197,7 +286,7 @@ export default function SupportChatbot() {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 30 }}
-                        className="fixed bottom-24 right-4 z-50 w-[96vw] sm:w-96 max-h-[85vh] bg-white dark:bg-[#111111] rounded-2xl shadow-xl dark:shadow-gray-800 dark:shadow-2xl overflow-y-hidden flex flex-col"
+                        className="fixed bottom-24 right-4 z-[99999] w-[96vw] sm:w-96 max-h-[85vh] bg-white dark:bg-[#111111] rounded-2xl shadow-xl dark:shadow-gray-800 dark:shadow-2xl overflow-y-hidden flex flex-col"
                     >
                         {/* Header */}
                         <div className="flex items-center rounded-t-2xl justify-between py-5 px-6 bg-[#2A8BEE] border-b border-[#53A2F1]  ">
@@ -216,7 +305,9 @@ export default function SupportChatbot() {
 
                             </div>
                             <div className="flex items-center gap-5 ">
-                                <Minus className="text-white size-6" />
+                                <button className="btn-hover" onClick={() => setOpen(false)} >
+                                    <Minus className="text-white size-6" />
+                                </button>
                                 <button className="btn-hover" onClick={() => setOpen(false)} >
                                     <X className="text-white size-6" />
                                 </button>
@@ -238,7 +329,8 @@ export default function SupportChatbot() {
                                 {quickActions.map((q) => (
                                     <div
                                         key={q.id}
-                                        className="border border-gray-200 dark:bg-[#1A222C] dark:border-[#000000] pb-4 rounded-xl p-2 text-xs flex items-center gap-2 shadow-[1px_4px_5px_0_rgba(0,0,0,0.1)]"
+                                        onClick={() => sendMessage(`Show me my ${q.title.toLowerCase()}`)}
+                                        className="border border-gray-200 dark:bg-[#1A222C] dark:border-[#000000] pb-4 rounded-xl p-2 text-xs flex items-center gap-2 shadow-[1px_4px_5px_0_rgba(0,0,0,0.1)] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#222c39] transition-all"
                                     >
                                         <q.icon className="text-[#000000] size-5 dark:text-gray-300" />
                                         <div>
@@ -273,7 +365,7 @@ export default function SupportChatbot() {
                                                 : "bg-[#F3F4F6] dark:bg-[#283039] dark:text-[#D0D4DB] text-gray-800 rounded-tl-none"
                                                 }`}
                                         >
-                                            {m.text}
+                                            {m.from === "bot" ? renderMessageText(m.text) : m.text}
                                         </div>
 
                                         {m.from === "user" && (
@@ -301,7 +393,7 @@ export default function SupportChatbot() {
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                                    className="flex-1 text-sm outline-none placeholder:text-[#9CA3AF] text-[#9CA3AF]"
+                                    className="flex-1 text-sm outline-none placeholder:text-[#9CA3AF] text-gray-800 dark:text-gray-200 bg-transparent"
                                     placeholder="Type or speak..."
                                 />
                                 <button

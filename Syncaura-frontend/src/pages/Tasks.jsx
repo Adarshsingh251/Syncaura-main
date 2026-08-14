@@ -89,7 +89,7 @@ const ListRow = ({ task, onOpen, onDelete }) => {
       </td>
       <td className="py-3 px-3">
         <button
-          onClick={(e) => { e.stopPropagation(); onDelete(task._id); }}
+          onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -129,7 +129,7 @@ const Tasks = () => {
   // Live-update selectedTask when store changes
   useEffect(() => {
     if (!selectedTask) return;
-    const updated = tasks.find((t) => t._id === selectedTask._id);
+    const updated = tasks.find((t) => t.id === selectedTask.id);
     if (updated) setSelectedTask(updated);
   }, [tasks]);
 
@@ -386,7 +386,7 @@ const Tasks = () => {
                       <tbody>
                         {filtered.map((task) => (
                           <ListRow
-                            key={task._id}
+                            key={task.id}
                             task={task}
                             onOpen={setSelectedTask}
                             onDelete={handleDelete}

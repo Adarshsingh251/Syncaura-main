@@ -136,6 +136,12 @@ const menuItems = [
     path: "/attendance-leave",
     badge: null,
   },
+  {
+    icon: ClockIcon,
+    label: "My Attendance",
+    path: "/my-attendance",
+    badge: null,
+  },
   { icon: SettingsIcon, label: "Settings", path: "/settings", badge: null },
 ];
 

@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Analytics from "../components/userdashboard/subpages/Analytics";
 import Projects from "../components/userdashboard/subpages/Projects";
 import Dashboard from "../components/userdashboard/subpages/Dashboard";
@@ -9,6 +10,14 @@ const TABS = ["Dashboard", "Projects", "Analytics"];
 
 const UserDashboard = () => {
   const isDark = useSelector((state) => state.theme.isDark);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/signin', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const [selectedTab, setSelectedTab] = useState(TABS[0]);
   const [direction, setDirection] = useState(0);
@@ -25,7 +34,7 @@ const UserDashboard = () => {
     <div className="relative w-full min-h-[calc(100vh-80px)] flex flex-col transition-colors duration-500 border-t dark:border-black bg-white dark:bg-black">
       
       {/* Header & Tab Switcher */}
-      <div className="flex flex-col sm:flex-row items-center justify-between lg:justify-start px-5 md:px-10 gap-10 gap-y-3 pt-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between lg:justify-start px-4 md:px-6 gap-10 gap-y-3 pt-6">
         <h1 className="text-2xl font-medium text-black dark:text-white">
           Dashboard
         </h1>
@@ -62,7 +71,7 @@ const UserDashboard = () => {
       </div>
 
       {/* Page Content */}
-      <div className="relative w-full flex-1 px-5 md:px-10 pt-6 pb-24">
+      <div className="relative w-full flex-1 px-4 md:px-6 pt-6 pb-24">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={selectedTab}

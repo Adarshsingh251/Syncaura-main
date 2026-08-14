@@ -1,23 +1,31 @@
 import { Router } from 'express';
-// import {
-//   register, login, refresh, changePassword,
-//   forgotPassword, resetPassword, adminOnly,
-//   requestPasswordOtp, changePasswordWithOtp
-// } from '../controllers/authController.js';
-import  {auth}  from '../middlewares/auth.js';
-import  {permit}  from '../middlewares/role.js';
-import {
-  registerValidator, loginValidator, changePasswordValidator,
-  forgotPasswordValidator, resetPasswordValidator,
-  requestPasswordOtpValidator, changePasswordWithOtpValidator
-} from '../validators/authValidators.js';
 
 import {
-  register, login, refresh, changePassword,
-  forgotPassword, resetPassword, adminOnly,
-  requestPasswordOtp, changePasswordWithOtp,
-  getProfile
+  register,
+  login,
+  refresh,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+  adminOnly,
+  requestPasswordOtp,
+  changePasswordWithOtp,
+  getProfile,
+  logout
 } from '../controllers/authController.js';
+
+import { auth } from '../middlewares/auth.js';
+import { permit } from '../middlewares/role.js';
+
+import {
+  registerValidator,
+  loginValidator,
+  changePasswordValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
+  requestPasswordOtpValidator,
+  changePasswordWithOtpValidator
+} from '../validators/authValidators.js';
 
 const router = Router();
 
@@ -28,17 +36,31 @@ router.post('/refresh', refresh);
 router.get('/me', auth, getProfile);
 
 // OTP change password flow
-router.post('/request-password-otp', auth, requestPasswordOtpValidator, requestPasswordOtp);
-router.post('/change-password-otp', auth, changePasswordWithOtpValidator, changePasswordWithOtp);
+router.post(
+  '/request-password-otp',
+  auth,
+  requestPasswordOtpValidator,
+  requestPasswordOtp
+);
+
+router.post(
+  '/change-password-otp',
+  auth,
+  changePasswordWithOtpValidator,
+  changePasswordWithOtp
+);
 
 // Email reset flow
 router.post('/forgot-password', forgotPasswordValidator, forgotPassword);
 router.post('/reset-password', resetPasswordValidator, resetPassword);
 
-// Traditional change password (with current password)
-router.post('/change-password', auth, changePasswordValidator, changePassword);
+// Traditional change password
+router.put('/change-password', auth, changePasswordValidator, changePassword);
 
-// Example role-based route
+// Role-based route
 router.get('/admin', auth, permit('admin'), adminOnly);
+
+// Logout
+router.post('/logout', logout);
 
 export default router;
