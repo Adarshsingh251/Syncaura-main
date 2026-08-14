@@ -11,7 +11,7 @@ import {
  */
 export const createComplaint = async (req, res, next) => {
   try {
-    const { title, description, category, severity, priority, isAnonymous, attachments } = req.body;
+    const { title, description, category, severity, priority, isAnonymous, attachments = [] } = req.body || {};
 
     if (!title || !description || !category) {
       return res.status(400).json({
@@ -38,14 +38,17 @@ export const createComplaint = async (req, res, next) => {
     const complaint = result.rows[0];
 
     // Handle attachments
-    if (attachments && Array.isArray(attachments)) {
-      for (const url of attachments) {
+    const attachmentUrls = req.files?.map((file) => `/uploads/${file.filename}`)
+      || (Array.isArray(attachments) ? attachments : []);
+
+    if (attachmentUrls.length) {
+      for (const url of attachmentUrls) {
         await pool.query(
           "INSERT INTO complaint_attachments (complaint_id, file_url) VALUES ($1, $2)",
           [complaint.id, url]
         );
       }
-      complaint.attachments = attachments;
+      complaint.attachments = attachmentUrls;
     }
 
     // Notify admins about new complaint
@@ -183,7 +186,7 @@ export const getComplaintById = async (req, res, next) => {
     const complaint = result.rows[0];
 
     // Authorization
-    if (req.user.role !== ROLES.ADMIN && req.user.role !== ROLES.CO_ADMIN) {
+    if (req.user.role !== ROLES.ADMIN) {
       if (complaint.filed_by !== req.user.id) {
         return res.status(403).json({
           success: false,
@@ -317,7 +320,7 @@ export const addComment = async (req, res, next) => {
     const complaint = complaintResult.rows[0];
 
     // Authorization
-    const isAdmin = req.user.role === ROLES.ADMIN || req.user.role === ROLES.CO_ADMIN;
+    const isAdmin = req.user.role === ROLES.ADMIN;
     const isFiler = complaint.filed_by === req.user.id;
 
     if (!isAdmin && !isFiler) {
@@ -332,7 +335,7 @@ export const addComment = async (req, res, next) => {
     // Notify
     try {
       if (isFiler && !isAdmin) {
-        const adminsResult = await pool.query("SELECT id FROM users WHERE role IN ('admin', 'co-admin')");
+        const adminsResult = await pool.query("SELECT id FROM users WHERE role = 'admin'");
         const adminIds = adminsResult.rows.map(a => a.id);
         
         await createNotification({
@@ -377,10 +380,10 @@ export const updateComplaint = async (req, res, next) => {
         category = COALESCE($3, category),
         severity = COALESCE($4, severity),
         priority = COALESCE($5, priority),
-        status = CASE WHEN $7 IN ('admin', 'co-admin') AND $6 IS NOT NULL THEN $6 ELSE status END,
+        status = COALESCE($6, status),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $8 RETURNING *`,
-      [title, description, category, severity, priority, status, req.user.role, req.params.id]
+      WHERE id = $7 RETURNING *`,
+      [title, description, category, severity, priority, status, req.params.id]
     );
 
     if (result.rowCount === 0) {
