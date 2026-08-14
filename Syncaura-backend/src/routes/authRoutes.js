@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import {
-  register, login, refresh, changePassword,
-  forgotPassword, resetPassword, adminOnly,
-  requestPasswordOtp, changePasswordWithOtp
-} from '../controllers/authController.js';
+// import {
+//   register, login, refresh, changePassword,
+//   forgotPassword, resetPassword, adminOnly,
+//   requestPasswordOtp, changePasswordWithOtp
+// } from '../controllers/authController.js';
 import  {auth}  from '../middlewares/auth.js';
 import  {permit}  from '../middlewares/role.js';
 import {
@@ -12,11 +12,20 @@ import {
   requestPasswordOtpValidator, changePasswordWithOtpValidator
 } from '../validators/authValidators.js';
 
+import {
+  register, login, refresh, changePassword,
+  forgotPassword, resetPassword, adminOnly,
+  requestPasswordOtp, changePasswordWithOtp,
+  getProfile
+} from '../controllers/authController.js';
+
 const router = Router();
 
 router.post('/register', registerValidator, register);
 router.post('/login', loginValidator, login);
 router.post('/refresh', refresh);
+
+router.get('/me', auth, getProfile);
 
 // OTP change password flow
 router.post('/request-password-otp', auth, requestPasswordOtpValidator, requestPasswordOtp);
