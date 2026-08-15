@@ -2,10 +2,8 @@ import { X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import FileUploadBox from "../FileHandle/FileUploadBox";
-import { useTranslation } from "react-i18next";
 
 export default function ScheduleMeetingModal({ onClose, onSave }) {
-  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -45,7 +43,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
     today.setHours(0, 0, 0, 0);
 
     if (selectedDate < today) {
-      alert(t('schedule_date_error', 'Date must be today or a future date'));
+      alert("Date must be today or a future date");
       return;
     }
 
@@ -54,13 +52,13 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
 
     if (selectedDate.getTime() === today.getTime()) {
       if (startDateTime <= now) {
-        alert(t('schedule_start_error', 'Start time must be later than current time'));
+        alert("Start time must be later than current time");
         return;
       }
     }
 
     if (endDateTime <= startDateTime) {
-      alert(t('schedule_end_error', 'End time must be after start time'));
+      alert("End time must be after start time");
       return;
     }
 
@@ -108,7 +106,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
           </button>
 
           <h2 className="text-xl sm:text-[28px] font-semibold mb-4 text-black dark:text-white">
-            {t('schedule_title', 'Schedule New Meeting')}
+            Schedule New Meeting
           </h2>
 
           <div className="w-full h-px bg-[#C7C5C5] dark:bg-[#616161]" />
@@ -119,11 +117,11 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
               {/* Title */}
               <div>
                 <label className="block text-sm sm:text-lg font-medium mb-2 text-black dark:text-white">
-                  {t('schedule_meeting_title_label', 'Meeting Title')}
+                  Meeting Title
                 </label>
                 <input
                   {...register("title", { required: true })}
-                  placeholder={t('schedule_meeting_title_placeholder', 'eg: my first meeting')}
+                  placeholder="eg: my first meeting"
                   className="w-full h-11 rounded-full px-4
                   bg-white text-[#898888] dark:bg-[#2E2F2F]
                   dark:text-gray-200 outline-none"
@@ -133,9 +131,9 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
               {/* Date & Time */}
               <div className="flex flex-col sm:flex-row gap-4">
                 {[
-                  { type: "date", name: "date", label: t('schedule_date_label', 'Date') },
-                  { type: "time", name: "start", label: t('schedule_start_time_label', 'Start Time') },
-                  { type: "time", name: "end", label: t('schedule_end_time_label', 'End Time') },
+                  { type: "date", name: "date", label: "Date" },
+                  { type: "time", name: "start", label: "Start Time" },
+                  { type: "time", name: "end", label: "End Time" },
                 ].map((item, i) => (
                   <div key={i} className="flex-1 flex flex-col gap-1">
                     <label className="text-sm font-medium text-black dark:text-white">
@@ -160,7 +158,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
               <div>
                 <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2">
                   <label className="text-sm font-medium text-black dark:text-white">
-                    {t('schedule_platform_label', 'Platform')}
+                    Platform
                   </label>
 
                   <label className="flex items-center gap-2 cursor-pointer text-xs">
@@ -190,7 +188,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
                       )}
                     </span>
                     <span className="text-black dark:text-white">
-                      {t('schedule_auto_link_label', 'Auto-generate meeting link')}
+                      Auto-generate meeting link
                     </span>
                   </label>
                 </div>
@@ -215,11 +213,11 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
               {/* Participants */}
               <div>
                 <label className="text-sm font-medium text-black dark:text-white mb-2 block">
-                  {t('schedule_participants_label', 'Participants')}
+                  Participants
                 </label>
                 <input
                   {...register("participants")}
-                  placeholder={t('schedule_participants_placeholder', 'Enter emails separated by commas')}
+                  placeholder="Enter emails separated by commas"
                   className="w-full h-11 rounded-full px-4
                   bg-white dark:bg-[#2E2F2F]
                   text-[#898888] dark:text-gray-200 outline-none"
@@ -252,7 +250,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
                     )}
                   </span>
                   <span className="text-black dark:text-white">
-                    {t('schedule_auto_members_label', 'Auto add default members')}
+                    Auto add default members
                   </span>
                 </label>
               </div>
@@ -260,7 +258,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
               {/* Notes */}
               <div>
                 <label className="text-sm font-medium text-black dark:text-white mb-2 block">
-                  {t('schedule_initial_notes_label', 'Initial Notes')}
+                  Initial Notes
                 </label>
                 <FileUploadBox
                   register={register}
@@ -276,14 +274,14 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
                 onClick={onClose}
                 className="text-sm text-black dark:text-white btn-hover"
               >
-                {t('schedule_cancel_button', 'Cancel')}
+                Cancel
               </button>
 
               <button
                 type="submit"
                 className="w-full sm:w-40 h-10 rounded-full bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black text-sm font-semibold btn-hover"
               >
-                {t('schedule_submit_button', 'Schedule Meeting')}
+                Schedule Meeting
               </button>
             </div>
           </form>

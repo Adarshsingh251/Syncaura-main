@@ -2,19 +2,13 @@ import { motion } from "framer-motion";
 import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export default function ProjectFilter({ onClose, onApply }) {
-  const { t } = useTranslation();
-  const items = [
-    t("projectFilter_priorityLow", "Low"),
-    t("projectFilter_priorityMedium", "Medium"),
-    t("projectFilter_priorityHigh", "High"),
-    t("projectFilter_priorityCritical", "Critical")
-  ];
-  const [priority, setPriority] = useState(items[0]);
-  const [team, setTeam] = useState(t("projectFilter_allMembers", "All Members"));
+  const [priority, setPriority] = useState("Low");
+  const [team, setTeam] = useState("All Members");
   const [date, setDate] = useState("");
+
+  const items = ["Low", "Medium", "High", "Critical"];
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10 relative">
       <motion.button
@@ -61,7 +55,7 @@ export default function ProjectFilter({ onClose, onApply }) {
             {/* Date */}
             <div className="flex flex-col gap-2 w-full">
               <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
-                {t("projectFilter_dateRange", "Date Range")}
+                Date Range
               </label>
 
               <input
@@ -80,9 +74,9 @@ export default function ProjectFilter({ onClose, onApply }) {
 
             {/* Team */}
             <FilterDropdown
-              options={[t("projectFilter_allMembers", "All Members"), ""]}
+              options={["All Members", ""]}
               startVal={team}
-              label={t("projectFilter_teamMembers", "TEAM / MEMBERS")}
+              label="TEAM / MEMBERS"
               onChange={setTeam}
             />
           </div>
@@ -90,7 +84,7 @@ export default function ProjectFilter({ onClose, onApply }) {
           {/* Priority */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
-              {t("projectFilter_priority", "Priority")}
+              Priority
             </label>
 
             <div className="flex flex-wrap gap-2">
@@ -128,7 +122,7 @@ export default function ProjectFilter({ onClose, onApply }) {
         rounded-full shadow-sm text-sm
       "
             >
-              {t("projectFilter_applyFilters", "Apply Filters")}
+              Apply Filters
             </motion.button>
           </div>
         </div>

@@ -2,22 +2,12 @@ import { motion } from "framer-motion";
 import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export default function ComplaintFilters({ onClose, onApply }) {
-  const { t } = useTranslation();
-  const items = [
-    t("complaintFilters_statusResolved", "Resolved"),
-    t("complaintFilters_statusInProgress", "In Progress"),
-    t("complaintFilters_statusOpen", "Open")
-  ];
-  const orderOptions = [
-    t("complaintFilters_orderAscending", "Ascending"),
-    t("complaintFilters_orderDescending", "Descending")
-  ];
-  const [status, setStatus] = useState(items[0]);
-  const [order, setOrder] = useState(orderOptions[0]);
+  const [status, setStatus] = useState("Resolved");
+  const [order, setOrder] = useState("Ascending");
   const [date, setDate] = useState("");
+  const items = ["Resolved", "In Progress", "Open"];
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10">
@@ -46,9 +36,9 @@ export default function ComplaintFilters({ onClose, onApply }) {
         {/* Complaint ID Order */}
         <div className="flex flex-col gap-2 w-full lg:w-1/4">
           <FilterDropdown
-            options={orderOptions}
+            options={["Ascending", "Descending"]}
             startVal={order}
-            label={t("complaintFilters_complaintIdOrder", "Complaint Id Order")}
+            label="Complaint Id Order"
             onChange={setOrder}
           />
         </div>
@@ -56,7 +46,7 @@ export default function ComplaintFilters({ onClose, onApply }) {
         {/* Date Range */}
         <div className="flex flex-col items-center justify-center gap-2 w-full lg:w-1/4">
           <label className="text-sm font-semibold w-full text-gray-700 dark:text-gray-300">
-            {t("complaintFilters_dateRange", "Date Range")}
+            Date Range
           </label>
           <input
             type="date"
@@ -71,7 +61,7 @@ export default function ComplaintFilters({ onClose, onApply }) {
         {/* Status */}
         <div className="flex flex-col gap-2 w-full lg:w-1/4">
           <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {t("complaintFilters_status", "Status")}
+            Status
           </label>
           <div className="flex flex-wrap gap-2">
             {items.map((item) => (
@@ -101,7 +91,7 @@ export default function ComplaintFilters({ onClose, onApply }) {
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             className="w-full lg:w-auto bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium px-5 py-3 rounded-full shadow-sm text-sm"
           >
-            {t("complaintFilters_applyFilters", "Apply Filters")}
+            Apply Filters
           </motion.button>
         </div>
       </motion.div>

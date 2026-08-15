@@ -1,5 +1,4 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Check, GitPullRequest, MessageSquareText } from "lucide-react";
 
@@ -38,7 +37,6 @@ const activities = [
 ];
 
 const RecentActivityCard = () => {
-  const { t } = useTranslation();
   return (
     <div
       className="
@@ -53,7 +51,7 @@ const RecentActivityCard = () => {
     >
       {/* Title */}
       <h2 className="text-[#64748B] dark:text-gray-200 font-bold text-xl sm:text-2xl mb-6">
-        {t("recent_activity_title", { defaultValue: "Recent Activity" })}
+        Recent Activity
       </h2>
 
       <div className="relative flex flex-col gap-6">

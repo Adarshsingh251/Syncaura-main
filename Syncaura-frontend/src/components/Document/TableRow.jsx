@@ -1,8 +1,6 @@
 import { FileText } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 const TableRow = ({ name, type, version, date, status, docColor }) => {
-  const { t } = useTranslation();
   function formatDateYYYYMMDD(isoDate) {
     return new Date(isoDate).toISOString().split("T")[0];
   }
@@ -39,13 +37,13 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
           <div
             className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium  ${statusColor[status]}`}
           >
-            {t(`status_${status.toLowerCase()}`, status)}
+            {status}
           </div>
         </div>
 
         <div className="flex-1/13 w-full flex justify-end">
           <button className="text-[#2461E6] hover:underline font-medium btn-hover">
-            {t("edit", "Edit")}
+            Edit
           </button>
         </div>
       </div>
@@ -62,35 +60,35 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-gray-500">{t("documents_type")}</p>
+              <p className="text-gray-500">Type</p>
               <p className="font-medium uppercase text-black dark:text-white">{type}</p>
             </div>
 
             <div>
-              <p className="text-gray-500">{t("documents_version")}</p>
+              <p className="text-gray-500">Version</p>
               <p className="font-medium text-black dark:text-white">{version}</p>
             </div>
 
             <div>
-              <p className="text-gray-500">{t("documents_lastModified")}</p>
+              <p className="text-gray-500">Last Modified</p>
               <p className="font-medium text-black dark:text-white">
                 {formatDateYYYYMMDD(date)}
               </p>
             </div>
 
             <div>
-              <p className="text-gray-500">{t("status")}</p>
+              <p className="text-gray-500">Status</p>
               <span
                 className={`inline-block px-5 py-1 mt-2 rounded-md text-xs font-medium ${statusColor[status]}`}
               >
-                {t(`status_${status.toLowerCase()}`, status)}
+                {status}
               </span>
             </div>
           </div>
 
           <div className="flex justify-end pt-2">
             <button className="text-sm font-medium text-[#2461E6] hover:underline btn-hover">
-              {t("edit", "Edit")}
+              Edit
             </button>
           </div>
         </div>

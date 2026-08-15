@@ -1,4 +1,4 @@
-import {
+  import {
   Calendar,
   CircleCheckBig,
   Clock,
@@ -6,27 +6,32 @@ import {
   Search,
   XCircleIcon,
   Loader,
+  UserCheck,
+  Laptop,
+  Plus,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
-import { leaveHistory } from "../constant/constant";
+import { useSelector } from "react-redux";
+import api from "../config/axios";
+
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
-import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 const initialAttendanceStats = [
   {
     title: "Present Days",
-    value: 13,
+    value: 0,
     borderColor: "border-[#29CC39]",
     icon: <CircleCheckBig className="size-3.5 text-[#29CC39]" />,
   },
   {
     title: "Absent Days",
-    value: 2,
+    value: 0,
     borderColor: "border-[#FF0000]",
     icon: (
       <div className="border border-[#FF0000] size-3.5">
@@ -36,19 +41,31 @@ const initialAttendanceStats = [
   },
   {
     title: "Leave Taken",
-    value: 4,
+    value: 0,
     borderColor: "border-[#FF9500]",
     icon: <Calendar className="size-3.5 text-[#FF9500]" />,
   },
+  {
+    title: "Work From Home",
+    value: 3,
+    borderColor: "border-[#2461E6] dark:border-[#73FBFD]",
+    icon: <Laptop className="size-3.5 text-[#2461E6] dark:text-[#73FBFD]" />,
+  },
 ];
 
+const getToday = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offset).toISOString().split("T")[0];
+};
+
 const AttendanceLeave = () => {
-  const { t } = useTranslation();
+  const user = useSelector((state) => state.auth.user);
+  const authChecking = useSelector((state) => state.auth.authChecking);
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
-  const [leaveData, setLeaveData] = useState(leaveHistory);
+  const [leaveToEdit, setLeaveToEdit] = useState(null);
   const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
-
   const [showPopup, setShowPopup] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Check-In");
   const popupRef = useRef(null);
@@ -58,49 +75,270 @@ const AttendanceLeave = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
 
-  const [attendanceDate, setAttendanceDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [attendanceDate] = useState(getToday);
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingRecords, setIsLoadingRecords] = useState(true);
+  const [leaveError, setLeaveError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
+  const [leaveData, setLeaveData] = useState([]);
+
+  // Kept for legacy edit flows; displayed leave data is always replaced by the API response.
+  const syncLeavesToStorage = useCallback((updater) => {
+    setLeaveData((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      try {
+        // Leave records are persisted by the API, never by this page.
+      } catch {
+        // storage quota exceeded — silently ignore
+      }
+      return next;
+    });
+  }, []);
+
+  // Until an attendance API exists, this keeps a user's daily status stable across
+  // refreshes, logins, and logouts. Replace this with a GET attendance-status call
+  // when the backend endpoint is available.
+  /* Legacy localStorage attendance implementation intentionally disabled.
+  useEffect(() => {
+    // Server data is authoritative; never initialize the display from localStorage.
+    if (authChecking || user) return undefined;
+    const emptyState = getInitialAttendanceState();
+
+    try {
+      const storedValue = localStorage.getItem(attendanceStorageKey);
+      const storedState = storedValue ? JSON.parse(storedValue) : emptyState;
+      attendanceStateRef.current = {
+        presentDays: Number.isFinite(storedState.presentDays)
+          ? storedState.presentDays
+          : emptyState.presentDays,
+        records: storedState.records && typeof storedState.records === "object"
+          ? storedState.records
+          : {},
+      };
+    } catch {
+      attendanceStateRef.current = emptyState;
+    }
+
+    const todayRecord = attendanceStateRef.current.records[getToday()] || {};
+    let isCurrent = true;
+
+    queueMicrotask(() => {
+      if (!isCurrent) return;
+
+      setCheckInTime(todayRecord.checkInTime || null);
+      setCheckOutTime(todayRecord.checkOutTime || null);
+      setAttendanceStats((previousStats) =>
+        previousStats.map((stat) =>
+          stat.title === "Present Days"
+            ? { ...stat, value: attendanceStateRef.current.presentDays }
+            : stat,
+        ),
+      );
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [attendanceStorageKey]);
+
+  const saveAttendanceState = (nextState) => {
+    attendanceStateRef.current = nextState;
+    localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
+  };
+
+  */
+
+  const canCheckIn = !checkInTime && !checkOutTime;
+  const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In" && checkInTime) {
-      toast.info(t("attendance_already_checked_in", { time: checkInTime }));
-      setShowPopup(false);
-      return;
-    }
-    if (selectedTab === "CheckOut" && !checkInTime) {
-      toast.error(t("attendance_check_in_required"));
-      return;
-    }
-    if (selectedTab === "CheckOut" && checkOutTime) {
-      toast.info(t("attendance_already_checked_out", { time: checkOutTime }));
-      setShowPopup(false);
-      return;
+    void (async () => {
+      setIsSubmitting(true);
+      try {
+        const response = await api.post(
+          selectedTab === "Check-In" ? "/attendance/check-in" : "/attendance/check-out",
+        );
+        const record = response.data?.data;
+        if (selectedTab === "Check-In") {
+          setCheckInTime(record?.check_in_time || null);
+          setSelectedTab("CheckOut");
+        } else {
+          setCheckOutTime(record?.check_out_time || null);
+        }
+        toast.success(response.data?.message || "Attendance updated successfully.");
+      } catch (error) {
+        console.error("Attendance update failed:", error.response?.data || error);
+        toast.error(error.response?.data?.message || "Unable to update attendance.");
+      } finally {
+        setIsSubmitting(false);
+        setShowPopup(false);
+      }
+    })();
+    return;
+
+    if (selectedTab === "Check-In") {
+      const nextState = {
+        presentDays: attendanceStateRef.current.presentDays + 1,
+        records: {
+          ...attendanceStateRef.current.records,
+          [attendanceDate]: { ...currentRecord, checkInTime: timeString },
+        },
+      };
+
+      saveAttendanceState(nextState);
+
+      setAttendanceStats((previousStats) =>
+        previousStats.map((stat) =>
+          stat.title === "Present Days"
+            ? { ...stat, value: nextState.presentDays }
+            : stat,
+        ),
+      );
+
+      setSelectedTab("CheckOut");
+
+      toast.success(t("attendance_marked_success", { date: attendanceDate }));
+    } else if (selectedTab === "CheckOut") {
+      setCheckOutTime(timeString);
+
+      saveAttendanceState({
+        ...attendanceStateRef.current,
+        records: {
+          ...attendanceStateRef.current.records,
+          [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
+        },
+      });
+
+      toast.success(t("attendance_checkout_success"));
     }
 
     setIsSubmitting(true);
-    // Simulate API delay
+    // This is UI-only until the backend provides attendance endpoints.
     setTimeout(() => {
       const now = new Date();
       const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
+      const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
+
       if (selectedTab === "Check-In") {
         setCheckInTime(timeString);
-        // Increment present days dynamically
-        setAttendanceStats(prev => prev.map(stat => 
-          stat.title === "Present Days" ? { ...stat, value: stat.value + 1 } : stat
-        ));
+        const nextState = {
+          presentDays: attendanceStateRef.current.presentDays + 1,
+          records: {
+            ...attendanceStateRef.current.records,
+            [attendanceDate]: {
+              ...currentRecord,
+              checkInTime: timeString,
+            },
+          },
+        };
+
+        saveAttendanceState(nextState);
+
+        setAttendanceStats((previousStats) =>
+          previousStats.map((stat) =>
+            stat.title === "Present Days"
+              ? { ...stat, value: nextState.presentDays }
+              : stat,
+          ),
+        );
+
+        setSelectedTab("CheckOut");
+
         toast.success(t("attendance_marked_success", { date: attendanceDate }));
+
       } else if (selectedTab === "CheckOut") {
         setCheckOutTime(timeString);
+
+        saveAttendanceState({
+          ...attendanceStateRef.current,
+          records: {
+            ...attendanceStateRef.current.records,
+            [attendanceDate]: {
+              ...currentRecord,
+              checkOutTime: timeString,
+            },
+          },
+        });
+
         toast.success(t("attendance_checkout_success"));
       }
       setIsSubmitting(false);
       setShowPopup(false);
     }, 1000);
   };
+
+
+const fetchAttendance = useCallback(async () => {
+  if (authChecking || !user) return;
+
+  try {
+    console.log("Attendance/Leave fetch started", user);
+    const response = await api.get("/attendance/my-attendance");
+    console.log("Attendance/Leave API response:", response);
+    const attendanceRecords = response.data?.records || [];
+    const todayRecord = attendanceRecords.find((record) => record.date === getToday());
+    console.log("Attendance records:", attendanceRecords);
+    setCheckInTime(todayRecord?.check_in_time || null);
+    setCheckOutTime(todayRecord?.check_out_time || null);
+    setAttendanceStats((previousStats) => previousStats.map((stat) => {
+      if (stat.title === "Present Days") return { ...stat, value: response.data?.summary?.totalPresentDays || 0 };
+      if (stat.title === "Absent Days") return { ...stat, value: response.data?.summary?.totalAbsentDays || 0 };
+      if (stat.title === "Leave Taken") return { ...stat, value: response.data?.summary?.totalLeaveDays || 0 };
+      return stat;
+    }));
+  } catch (error) {
+    console.error("Attendance/Leave fetch failed:", error.response?.data || error);
+  }
+}, [authChecking, user]);
+
+const fetchLeaves = useCallback(async () => {
+  if (authChecking || !user) return;
+  setLeaveError(null);
+  setIsLoadingRecords(true);
+
+  try {
+    const isAdmin = user?.role === "admin";
+    const endpoint = isAdmin ? "/leave/allleaves" : "/leave/myleaves";
+    console.log("Attendance/Leave fetch started", user);
+    const response = await api.get(endpoint, { params: { page: currentPage, limit: 5 } });
+    console.log("Attendance/Leave API response:", response);
+    const data = response.data;
+
+    setTotalPages(data.totalPages || 1);
+
+    const formattedLeaves = (data.leaves || []).map((leave) => ({
+      ...leave,
+      startDate: leave.from_date,
+      endDate: leave.to_date,
+      type: leave.leave_type || "Leave",
+      status: leave.status ? `${leave.status.charAt(0).toUpperCase()}${leave.status.slice(1)}` : "Pending",
+    }));
+
+    console.log("Leave records:", formattedLeaves);
+    setLeaveData(formattedLeaves);
+    setLeaveError(null);
+  } catch (error) {
+    console.error("Attendance/Leave fetch failed:", error.response?.data || error);
+    const message = error.response?.data?.message || error.message || "Failed to load leave requests";
+    setLeaveError(message);
+    toast.error(message);
+  } finally {
+    setIsLoadingRecords(false);
+  }
+}, [authChecking, currentPage, user]);
+
+useEffect(() => {
+  fetchAttendance();
+}, [fetchAttendance]);
+
+useEffect(() => {
+  fetchLeaves();
+}, [fetchLeaves,]);
+
 
   useEffect(() => {
     const timer = setTimeout(
@@ -171,13 +409,43 @@ const AttendanceLeave = () => {
     setAppliedFilters(newFilters);
   }, []);
 
+  const handleOpenCreateModal = () => {
+    setLeaveToEdit(null);
+    setOpenModel(true);
+  };
+
+  const handleOpenEditModal = (leave) => {
+    setLeaveToEdit(leave);
+    setOpenModel(true);
+  };
+
+  const handleCloseLeaveModal = () => {
+    setOpenModel(false);
+    setLeaveToEdit(null);
+  };
+
+  const handleDeleteLeave = (leave) => {
+    if (!window.confirm("Are you sure you want to delete this leave request?")) {
+      return;
+    }
+    syncLeavesToStorage((prev) => prev.filter((item) => item !== leave));
+    toast.success("Leave request deleted successfully.");
+  };
+
   return (
     <div className="relative w-full min-h-[calc(92vh)] flex flex-col bg-[#FFFFFF] dark:bg-[#000000]">
       <div className="flex flex-col sm:flex-row gap-y-3 items-center justify-between px-5 py-5 border-b border-[#EDEDED]">
         <h1 className="text-2xl flex-2/5 xl:flex-3/5 font-medium text-[#000000] dark:text-[#FFFFFF]">
-          {t("attendanceAndLeaveManagement")}
+          Attendance And Leave Management
         </h1>
         <div className="flex w-full flex-3/5 md:flex-2/5 2xl:flex-1/5 items-center justify-center gap-2 ">
+          <Link
+            to="/my-attendance"
+            className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-4xl font-semibold text-sm transition-transform active:scale-95 shadow-sm"
+          >
+            <UserCheck className="size-4" />
+            <span>My Attendance</span>
+          </Link>
           <button
             onClick={() => setShowFilter((prev) => !prev)}
             className={`btn-hover px-4 py-2 bg-white dark:bg-[#000000] flex items-center gap-2 border rounded-4xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#989696] dark:border-[#989696]"} `}
@@ -188,7 +456,7 @@ const AttendanceLeave = () => {
             <h1
               className={`text-base ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#575757] dark:text-[#8f8e8e]"}  font-semibold`}
             >
-              {t("filter")}
+              Filter
             </h1>
           </button>
           <AnimatePresence mode="wait">
@@ -212,7 +480,7 @@ const AttendanceLeave = () => {
             <input
               onChange={(e) => setSearch(e.target.value)}
               value={search}
-              placeholder={t("search")}
+              placeholder="Search"
               className="bg-transparent  dark:text-[#A19C9C] dark:placeholder:text-[#A19C9C] text-[#5C5C5C] placeholder:text-[#5C5C5C] outline-none text-sm w-full"
             />
           </div>
@@ -222,30 +490,32 @@ const AttendanceLeave = () => {
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 ml-2 sm:ml-4 max-w-full lg:max-w-[1200px]"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 px-4 py-3 mt-2 w-full items-stretch"
       >
         {attendanceStats.map((item, index) => (
-          <AttendanceCard key={index} {...item} />
+          <div key={index} className="w-full flex justify-center">
+            <AttendanceCard {...item} />
+          </div>
         ))}
-        <div className="relative inline-block ml-0 lg:ml-auto">
+        <div className="relative w-full flex justify-center mt-2">
           {/* TOP CARD */}
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
             ref={triggerRef}
             whileTap={{ scale: 0.97 }}
-            className="cursor-pointer w-[220px] h-[65px] px-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
+            className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
           >
-            <h1 className={`font-medium text-lg ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
-              {checkInTime ? t("attendance_presence_marked") : t("attendance_mark_presence")}
+            <h1 className={`font-semibold text-xs sm:text-sm ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
+              {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
             </h1>
 
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-                {t("attendance_in")}: {checkInTime || '-'}
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
+                In: <span className="font-semibold">{checkInTime || '-'}</span>
               </p>
 
-              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-                {t("attendance_out")}: {checkOutTime || '-'}
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
+                Out: <span className="font-semibold">{checkOutTime || '-'}</span>
               </p>
             </div>
           </motion.div>
@@ -254,18 +524,30 @@ const AttendanceLeave = () => {
           <AnimatePresence>
             {showPopup && (
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 8, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                // initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                // animate={{ opacity: 1, y: 8, scale: 1 }}
+                // exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                
+                initial={{ opacity: 0, x: 10, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 10, scale: 0.95 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
+                // className="
+                //     absolute 
+                //     right-0 sm:right-auto xl:right-0
+                //     top-full
+                //     mt-2
+                //     z-50
+                //     w-[90vw] sm:w-[380px] md:w-[400px] 
+                //   "
                 className="
-                    absolute 
-                    right-0
-                    top-full
-                    mt-2 md:mt-3
-                    z-50
-                    w-[90vw] sm:w-[380px] md:w-[400px] 
-                  "
+                  absolute
+                  right-full
+                  top-0
+                  mr-3
+                  z-50
+                  w-[90vw] sm:w-[380px] md:w-[400px]
+              "
               >
                 <div
                   ref={popupRef}
@@ -284,13 +566,13 @@ const AttendanceLeave = () => {
                     <div className="flex items-center gap-2">
                       <Clock className="size-5 text-[#000000] dark:text-[#F8F8F8]" />
                       <h1 className="font-medium text-xl text-[#000000] dark:text-[#F8F8F8]">
-                        {t("dailyAttendance")}
+                        Daily Attendance
                       </h1>
                     </div>
 
                     <div className={`flex items-center justify-center px-3 py-1 rounded-2xl ${checkInTime ? 'bg-[#D1FAE5]' : 'bg-[#FFE2E2D1]'}`}>
                       <p className={`text-sm font-normal ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
-                        {checkInTime ? t("present") : t("absent")}
+                        {checkInTime ? 'Present' : 'Absent'}
                       </p>
                     </div>
                   </div>
@@ -300,54 +582,66 @@ const AttendanceLeave = () => {
                       <input
                         type="date"
                         value={attendanceDate}
-                        onChange={(e) => setAttendanceDate(e.target.value)}
-                        className="w-full h-full text-[#898888] px-3 py-1 bg-white dark:bg-[#000000] dark:text-gray-200 outline-none date-input"
+                        disabled
+                        aria-label="Attendance date"
+                        className="w-full h-full text-[#898888] px-3 py-1 bg-white dark:bg-[#000000] dark:text-gray-200 outline-none date-input disabled:cursor-not-allowed disabled:opacity-80"
                       />
                     </div>
 
                     <div className="flex items-center justify-between gap-2">
-                      {["Check-In", "CheckOut"].map((item, idx) => (
-                        <motion.div
-                          onClick={() => setSelectedTab(item)}
-                          key={idx}
-                          whileTap={{ scale: 0.95 }}
-                          layout
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                          }}
-                          className={`flex flex-1 items-center justify-center border ${
-                            selectedTab === item
-                              ? "border-[#2461E6] dark:border-[#73FBFD]"
-                              : "border-[#EDEDED] dark:border-[#575757] cursor-pointer"
-                          } px-5 py-2 rounded-lg`}
-                        >
-                          <p
-                            className={`font-bold text-xs ${
-                              selectedTab === item
-                                ? "text-[#2461E6] dark:text-[#73FBFD]"
-                                : "text-[#554d4d] dark:text-gray-400"
-                            }`}
+                      {["Check-In", "CheckOut"].map((item, idx) => {
+                        const isDisabled = item === "Check-In" ? !canCheckIn : !canCheckOut;
+
+                        return (
+                          <motion.div
+                            onClick={() => !isDisabled && setSelectedTab(item)}
+                            key={idx}
+                            whileTap={{ scale: 0.95 }}
+                            layout
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 20,
+                            }}
+                            aria-disabled={isDisabled}
+                            className={`flex flex-1 items-center justify-center border ${selectedTab === item
+                                ? "border-[#2461E6] dark:border-[#73FBFD]"
+                                : "border-[#EDEDED] dark:border-[#575757]"
+                              } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
                           >
-                            {item}
-                          </p>
-                        </motion.div>
-                      ))}
+                            <p
+                              className={`font-bold text-xs ${selectedTab === item
+                                  ? "text-[#2461E6] dark:text-[#73FBFD]"
+                                  : "text-[#554d4d] dark:text-gray-400"
+                                }`}
+                            >
+                              {item}
+                            </p>
+                          </motion.div>
+                        );
+                      })}
                     </div>
 
                     <button
                       onClick={handleConfirmAttendance}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || (selectedTab === "Check-In" ? !canCheckIn : !canCheckOut)}
                       className="w-full mt-2 flex items-center justify-center gap-2 bg-[#2461E6] hover:bg-[#1a4bb3] text-white dark:bg-[#73FBFD] dark:hover:bg-[#5ce1e3] dark:text-black py-2 rounded-lg font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? (
                         <>
                           <Loader className="size-4 animate-spin" />
-                          {t("attendance_confirming")}
+                          Confirming...
                         </>
                       ) : (
-                        t("confirm")
+                        selectedTab === "Check-In"
+                          ? canCheckIn
+                            ? "Check In"
+                            : "Checked In"
+                          : canCheckOut
+                            ? "Check Out"
+                            : checkOutTime
+                              ? "Attendance Complete"
+                              : t("attendance_check_in_required")
                       )}
                     </button>
                   </div>
@@ -367,114 +661,124 @@ const AttendanceLeave = () => {
           shadow-[0_4px_10px_0_rgba(0,0,0,0.25)]
           px-11 py-5"
         >
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-3/9 w-full text-center">
-            {t("dateRange")}
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[24%] text-center">
+            Date Range
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
-            {t("type")}
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[20%] text-center px-2">
+            Type
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-3/9 w-full text-left">
-            {t("reason")}
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[34%] text-left px-4">
+            Reason
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
-            {t("status")}
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
+            Status
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
-            {t("actions")}
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
+            Actions
           </h1>
         </div>
 
-        <AttendanceList
-          LeaveData={filteredLeaveHistory}
-          currId={selectedId}
-          setCurrId={setSelectedId}
-          onViewDetail={(item) => setSelectedLeaveDetail(item)}
-        />
+        {isLoadingRecords ? (
+          <div className="flex flex-col items-center justify-center w-full py-16 px-4 text-center">
+            <Loader className="size-6 animate-spin text-[#2461E6] dark:text-[#73FBFD]" />
+            <p className="mt-3 text-lg font-medium text-gray-500 dark:text-gray-400">Loading leave records...</p>
+          </div>
+        ) : leaveError ? (
+          <div className="flex flex-col items-center justify-center w-full py-16 px-4 text-center">
+            <p className="text-lg font-medium text-red-500">{leaveError}</p>
+          </div>
+        ) : (
+          <AttendanceList
+            LeaveData={filteredLeaveHistory}
+            currId={selectedId}
+            setCurrId={setSelectedId}
+            onEditLeave={handleOpenEditModal}
+            onDeleteLeave={handleDeleteLeave}
+          />
+        )}
+
+
+
+                  <div className="flex items-center justify-center gap-2 mt-6 mb-6">
+
+                          <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((prev) => prev - 1)}
+                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+                          >
+                            Previous
+                          </button>
+
+                          {[...Array(totalPages)].map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentPage(index + 1)}
+                              className={`px-4 py-2 rounded font-medium ${
+                                currentPage === index + 1
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-gray-200 hover:bg-gray-300"
+                              }`}
+                            >
+                              {index + 1}
+                            </button>
+                          ))}
+
+                          <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage((prev) => prev + 1)}
+                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+                          >
+                            Next
+                          </button>
+
+                  </div>
+
+
+
+
+
+
+
       </div>
       <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5  w-full px-5 sm:px-10 ">
         <h1 className="flex items-center justify-center w-full text-2xl text-black dark:text-white font-bold">
-          {t("leaveList")}
+          Leave List
         </h1>
-        <AttendanceList
-          currId={selectedId}
-          setCurrId={setSelectedId}
-          LeaveData={filteredLeaveHistory}
-          onViewDetail={(item) => setSelectedLeaveDetail(item)}
-        />
+        {isLoadingRecords ? (
+          <div className="flex flex-col items-center justify-center w-full py-12 px-4 text-center">
+            <Loader className="size-6 animate-spin text-[#2461E6] dark:text-[#73FBFD]" />
+            <p className="mt-3 text-lg font-medium text-gray-500 dark:text-gray-400">Loading leave records...</p>
+          </div>
+        ) : leaveError ? (
+          <div className="flex flex-col items-center justify-center w-full py-12 px-4 text-center">
+            <p className="text-lg font-medium text-red-500">{leaveError}</p>
+          </div>
+        ) : (
+          <AttendanceList
+            currId={selectedId}
+            setCurrId={setSelectedId}
+            LeaveData={filteredLeaveHistory}
+            onEditLeave={handleOpenEditModal}
+            onDeleteLeave={handleDeleteLeave}
+          />
+        )}
       </div>
 
       <button
-        onClick={() => setOpenModel(true)}
-        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-7 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover"
+        onClick={handleOpenCreateModal}
+        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-6 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover flex items-center gap-2 shadow-lg"
       >
-        <p>{t("applyLeave")}</p>
+        <Plus className="size-5 lg:size-6" />
+        <span>Apply Leave</span>
       </button>
 
       {openModel && (
         <LeaveModel
-          onClose={() => setOpenModel(false)}
-          setLeaveData={setLeaveData}
+          onClose={handleCloseLeaveModal}
+          setLeaveData={syncLeavesToStorage}
+          editingLeave={leaveToEdit}
+          onSaved={fetchLeaves}
         />
-      )}
-
-      {selectedLeaveDetail && (
-        <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-xs"
-            onClick={() => setSelectedLeaveDetail(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-[#2E2F2F] rounded-2xl p-6 w-full max-w-md shadow-2xl relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4 border-b pb-3 dark:border-gray-700">
-                <h2 className="text-xl font-bold dark:text-white text-black">
-                  {t("leaveDetails")}
-                </h2>
-                <button
-                  onClick={() => setSelectedLeaveDetail(null)}
-                  className="text-gray-500 hover:text-black dark:hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex flex-col gap-3 text-sm dark:text-gray-200">
-                <div>
-                  <span className="font-semibold text-gray-500 dark:text-gray-400">{t("leaveTypeLabel")}</span>{" "}
-                  <span className="font-bold text-blue-600 dark:text-[#73FBFD]">{selectedLeaveDetail.type}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500 dark:text-gray-400">{t("status")}</span>{" "}
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${selectedLeaveDetail.status === 'Approved' ? 'bg-green-100 text-green-700' : selectedLeaveDetail.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                    {selectedLeaveDetail.status}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500 dark:text-gray-400">{t("duration")}</span>{" "}
-                  {new Date(selectedLeaveDetail.startDate).toLocaleDateString()} - {new Date(selectedLeaveDetail.endDate).toLocaleDateString()}
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500 dark:text-gray-400">{t("reason")}</span>
-                  <p className="mt-1 p-3 bg-gray-100 dark:bg-black/30 rounded-xl italic">
-                    "{selectedLeaveDetail.reason}"
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedLeaveDetail(null)}
-                className="mt-6 w-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white py-2 rounded-xl font-medium"
-              >
-                {t("close")}
-              </button>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
       )}
     </div>
   );

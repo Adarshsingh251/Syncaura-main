@@ -3,21 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import MotionSelect from "../projects/Model/MotionSelect";
-import { useTranslation } from "react-i18next";
 
 export default function NewNoticeModal({ onClose, addNotice }) {
-  const { t } = useTranslation();
   const { register, handleSubmit,control, setValue, watch, formState: { errors }, } = useForm();
   const [category, setCategory] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const noticeCategories = [
-  t("all_upper", "ALL"),
-  t("general_upper", "GENERAL"),
-  t("academic_upper", "ACADEMIC"),
-  t("it_upper", "IT"),
-  t("facility_upper", "FACILITY"),
-  t("event_upper", "EVENT"),
-  t("exam_upper", "EXAM"),
+  "ALL",
+  "GENERAL",
+  "ACADEMIC",
+  "IT",
+  "FACILITY",
+  "EVENT",
+  "EXAM",
 ];
 
 
@@ -91,7 +89,7 @@ export default function NewNoticeModal({ onClose, addNotice }) {
 
           <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
             <h2 className="text-lg font-semibold text-black dark:text-white">
-              {t("new_notice", "New Notice")}
+              New Notice
             </h2>
 
             {/* Category */}
@@ -99,7 +97,7 @@ export default function NewNoticeModal({ onClose, addNotice }) {
 
               <div className="relative mt-1">
                <h1 className="text-base font-medium w-full text-[#000000] dark:text-[#F8F8F8]">
-                                {t("category", "Category")}
+                                Category
                             </h1>
                             <div className="flex w-full rounded-xl px-1 md:px-3 py-1 dark:bg-[#2E2F2F] ">
                                 <Controller
@@ -107,7 +105,7 @@ export default function NewNoticeModal({ onClose, addNotice }) {
                                     control={control}
                                     rules={{ required: true }}
                                     render={({ field }) => (
-                                        <MotionSelect {...field} startVal={t("all_camel", "All")} options={noticeCategories} />
+                                        <MotionSelect {...field} startVal="All" options={noticeCategories} />
                                     )}
                                 />
                             </div>
@@ -119,11 +117,11 @@ export default function NewNoticeModal({ onClose, addNotice }) {
             {/* Subject */}
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                {t("date", "Date")}
+                Date
               </label>
               <input
                 {...register("date", { required: true })}
-                placeholder={t("notice_issued_on", "Notice issued on")}
+                placeholder="Notice issued on"
                 className="
                   mt-1 w-full rounded-full px-4 py-2 text-sm outline-none
                   bg-white dark:bg-[#1f1f1f]
@@ -137,12 +135,12 @@ export default function NewNoticeModal({ onClose, addNotice }) {
 
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                {t("description", "Description")}
+                Description
               </label>
               <textarea
                 {...register("description", { required: true })}
                 rows={3}
-                placeholder={t("describe_issue_in_detail", "Describe the issue in detail...")}
+                placeholder="Describe the issue in detail..."
                 className="
                   mt-1 w-full rounded-xl px-4 py-2 text-sm resize-none outline-none
                   bg-white dark:bg-[#1f1f1f]
@@ -157,7 +155,7 @@ export default function NewNoticeModal({ onClose, addNotice }) {
             {/* Attachment */}
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
-                {t("attachments", "Attachments")}
+                Attachments
               </label>
 
               <motion.div
@@ -183,7 +181,7 @@ export default function NewNoticeModal({ onClose, addNotice }) {
     `}
               >
                 <Upload size={18} />
-                <span>{t("click_to_upload_or_drag_drop", "Click to upload or drag & drop")}</span>
+                <span>Click to upload or drag & drop</span>
               </motion.div>
 
               <input
@@ -225,7 +223,7 @@ export default function NewNoticeModal({ onClose, addNotice }) {
                 flex items-center justify-center
               "
             >
-              {t("submit_notice", "Submit Notice")}
+              Submit Notice
             </motion.button>
           </form>
         </motion.div>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
 const data = [
@@ -12,7 +11,6 @@ const data = [
 ];
 
 const ProductivityTrend = () => {
-  const { t } = useTranslation();
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
@@ -28,10 +26,10 @@ const ProductivityTrend = () => {
   return (
     <div className="bg-white dark:bg-[#161616] p-4 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 mt-6 transition-colors duration-300">
       <div className="flex justify-between items-center mb-10 px-2">
-        <h2 className="text-2xl font-bold text-black dark:text-white">{t("admin_org_productivity_trend")}</h2>
+        <h2 className="text-2xl font-bold text-black dark:text-white">Org Productivity Trend</h2>
         
         <select className="text-xs bg-gray-50 dark:bg-[#1a1a1a] border dark:border-zinc-800 p-2 px-3 rounded-md text-black dark:text-gray-300 outline-none cursor-pointer">
-          <option>{t("admin_last_six_months")}</option>
+          <option>Last 6 months</option>
         </select>
       </div>
       <div className="h-64 w-full mx-10"> 

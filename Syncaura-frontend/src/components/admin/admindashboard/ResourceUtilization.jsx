@@ -1,8 +1,6 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 
 const ResourceUtilization = () => {
-  const { t } = useTranslation();
   const resourceData = [
     { 
       name: "Design", 
@@ -33,7 +31,7 @@ const ResourceUtilization = () => {
   return (
     <div className="bg-white dark:bg-[#161616] rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-4 mt-6 transition-colors duration-300">
       <h2 className="text-2xl font-bold  text-black dark:text-white mb-10 transition-colors">
-        {t("admin_resource_utilization")}
+        Resource Utilization
       </h2>
 
       <div className="space-y-4 px-10">

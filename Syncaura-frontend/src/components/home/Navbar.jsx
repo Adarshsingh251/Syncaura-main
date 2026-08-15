@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Sun, Moon, Home, Sparkles, CreditCard, Mail, LogIn, ArrowRight } from 'lucide-react';
-import { useNavigate, Link } from "react-router-dom";
+import { Sun, Moon, Home, Sparkles, CreditCard, Mail, LogIn, ArrowRight, Info, BookOpen } from 'lucide-react';
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useDarkMode } from "../../hooks/useDarkMode";
 
@@ -8,6 +8,9 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { theme, toggleTheme } = useDarkMode();
+  const location = useLocation();
+const isAboutActive = location.pathname === "/about-us";
+const isLearnMoreActive = location.pathname === "/learn-more";
   const [activeSection, setActiveSection] = useState('home');
 
   useEffect(() => {
@@ -33,9 +36,18 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
+useEffect(() => {
+    if (location.pathname !== "/") {
+      setActiveSection("");
+    }
+  }, [location.pathname]);
   const scrollToSection = (e, sectionId) => {
     e.preventDefault();
+    if (location.pathname !== "/") {
+      navigate(`/#${sectionId}`);
+      return;
+    }
+    setActiveSection(sectionId);
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -106,6 +118,28 @@ const Navbar = () => {
               <Mail className="w-4 h-4 transition-transform group-hover:scale-110" />
               {t("nav_contact")}
             </a>
+            <Link
+              to="/about-us"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 group hover:bg-black/5 dark:hover:bg-white/5"
+              style={{
+                backgroundColor: isAboutActive ? 'rgba(51, 102, 255, 0.1)' : '',
+                color: isAboutActive ? 'var(--accent-color)' : 'var(--text-secondary)',
+              }}
+            >
+              <Info className="w-4 h-4 transition-transform group-hover:scale-110" />
+              {t("nav_about")}
+            </Link>
+           <Link
+              to="/learn-more"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 group hover:bg-black/5 dark:hover:bg-white/5"
+              style={{
+                backgroundColor: isLearnMoreActive ? 'rgba(51, 102, 255, 0.1)' : '',
+                color: isLearnMoreActive ? 'var(--accent-color)' : 'var(--text-secondary)',
+              }}
+            >
+              <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
+              {t("nav_learn_more")}
+            </Link>
           </nav>
         </div>
 
@@ -210,6 +244,21 @@ const Navbar = () => {
             >
               Contact
             </a>
+            <Link
+              to="/about-us"
+              className="text-sm font-medium whitespace-nowrap"
+              style={{ color: isAboutActive ? 'var(--accent-color)' : 'var(--text-secondary)' }}
+            >
+              {t("nav_about")}
+            </Link>
+
+           <Link
+              to="/learn-more"
+              className="text-sm font-medium whitespace-nowrap"
+              style={{ color: isLearnMoreActive ? 'var(--accent-color)' : 'var(--text-secondary)' }}
+            >
+              {t("nav_learn_more")}
+            </Link>
           </nav>
         </div>
       </div>

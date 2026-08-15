@@ -97,18 +97,16 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
         state.isLoading = false;
-        const {  accessToken } = action.payload;
-        // state.user = user;
-        state.token = accessToken;
+        state.token = action.payload.accessToken;
         state.isAuthenticated = true;
-        state.authChecking=false
-        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("accessToken", action.payload.accessToken);
+        localStorage.setItem("token", action.payload.accessToken);
       })
       .addCase(refreshAccessToken.rejected, (state) => {
         state.authChecking = false;
-        state.isLoading=false
-        state.isAuthenticated=false
-        state.user=null
+        state.isLoading = false
+        state.isAuthenticated = false
+        state.user = null
       })
 
       // User Profile
@@ -117,14 +115,20 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
-        state.profileLoading = false;
-        const profile = action.payload?.user || action.payload?.data || action.payload;
-        state.user = profile;
-      })
-      .addCase(fetchUserProfile.rejected, (state, action) => {
-        state.profileLoading = false;
-        state.error = action.payload;
-      })
+    state.profileLoading = false;
+
+    const profile =
+      action.payload?.user ||
+      action.payload?.data ||
+      action.payload;
+
+    state.user = profile;
+    state.authChecking = false;   
+})
+     .addCase(fetchUserProfile.rejected, (state) => {
+    state.profileLoading = false;
+    state.authChecking = false;
+})
       .addCase(updateUserProfile.pending, (state) => {
         state.profileLoading = true;
         state.error = null;
@@ -142,7 +146,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-     
+
       // Change Password
       .addCase(changePassword.pending, (state) => {
         state.isLoading = true;

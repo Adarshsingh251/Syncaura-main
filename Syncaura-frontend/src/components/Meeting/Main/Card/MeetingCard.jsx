@@ -2,9 +2,8 @@ import { Video, Camera, Monitor, ArrowRight } from "lucide-react";
 import { TbBrandGoogleDrive, TbBrandTeams } from "react-icons/tb";
 import { useSelector } from "react-redux";
 import { memo } from "react";
-import { useTranslation } from "react-i18next";
 
-function getMeetingStatus(startTime, endTime, t) {
+function getMeetingStatus(startTime, endTime) {
   const now = new Date();
   const start = new Date(startTime);
   const end = endTime ? new Date(endTime) : null;
@@ -20,7 +19,7 @@ function getMeetingStatus(startTime, endTime, t) {
 
   if (isPast) {
     return {
-      label: t('meeting_status_completed', 'COMPLETED'),
+      label: "COMPLETED",
       textColor: "text-gray-500",
       bgColor: "bg-gray-100",
       dotColor: "bg-gray-400",
@@ -29,7 +28,7 @@ function getMeetingStatus(startTime, endTime, t) {
 
   if (isLive) {
     return {
-      label: t('meeting_status_live', 'LIVE NOW'),
+      label: "LIVE NOW",
       textColor: "text-[#C71212]",
       bgColor: "bg-[#FBB7B7]",
       dotColor: "bg-[#F35353]",
@@ -38,7 +37,7 @@ function getMeetingStatus(startTime, endTime, t) {
 
   if (isToday) {
     return {
-      label: t('meeting_status_today', 'TODAY'),
+      label: "TODAY",
       textColor: "text-[#2461E6]",
       bgColor: "bg-[#D5F7F7]",
       dotColor: "bg-[#2461E6]",
@@ -47,7 +46,7 @@ function getMeetingStatus(startTime, endTime, t) {
 
   if (start.toDateString() === tomorrow.toDateString()) {
     return {
-      label: t('meeting_status_tomorrow', 'TOMORROW'),
+      label: "TOMORROW",
       textColor: "text-[#2461E6]",
       bgColor: "bg-[#D5F7F7]",
       dotColor: "bg-[#2461E6]",
@@ -89,9 +88,8 @@ const MeetingCard = memo(function MeetingCard({
   avatarCount,
   isDoc
 }) {
-  const { t } = useTranslation();
   const isDark = useSelector((state) => state.theme.isDark);
-  const status = getMeetingStatus(startTime, endTime, t);
+  const status = getMeetingStatus(startTime, endTime);
 
   const MAX_VISIBLE = 3;
   const visibleAvatars = Math.min(avatarCount, MAX_VISIBLE);
@@ -126,7 +124,7 @@ const MeetingCard = memo(function MeetingCard({
             ) : (
               <TbBrandTeams className="size-3.5" />
             )}
-            {platform === "Google Meet" ? t('meeting_platform_meet', 'Meet') : platform}
+            {platform === "Google Meet" ? "Meet" : platform}
           </div>
 
           {/* Status moved to RIGHT (MOBILE ONLY) */}
@@ -232,13 +230,13 @@ const MeetingCard = memo(function MeetingCard({
                 } `}
             >
               {isCompleted
-                ? t('meeting_completed', 'Completed')
+                ? "Completed"
                 : isUpcoming
                   ? <div className="flex items-center justify-center gap-1">
                     <ArrowRight className="size-3 dark:text-[#73FBFD]" />
-                    <span className="whitespace-nowrap">{t('meeting_details', 'Details')}</span>
+                    <span className="whitespace-nowrap">Details</span>
                   </div>
-                  : t('meeting_join_now', 'Join Now')}
+                  : "Join Now"}
             </button>
           </div>
         </div>
@@ -281,7 +279,7 @@ dark:shadow-[0_0_25px_rgba(115,251,253,0.18)]
       ) : (
         <TbBrandTeams className="size-4" />
       )}
-      <span>{platform === "Google Meet" ? t('meeting_platform_meet', 'Meet') : platform}</span>
+      <span>{platform === "Google Meet" ? "Meet" : platform}</span>
     </div>
   </div>
 
@@ -346,16 +344,16 @@ dark:shadow-[0_0_25px_rgba(115,251,253,0.18)]
         } `}
     >
       {isCompleted ? (
-        t('meeting_completed', 'Completed')
+        "Completed"
       ) : isUpcoming ? (
         <>
           <ArrowRight className="size-4 text-[#4B5563] dark:text-[#73FBFD]" />
           <span className="text-[#4B5563] dark:text-[#73FBFD]">
-            {t('meeting_details', 'Details')}
+            Details
           </span>
         </>
       ) : (
-        t('meeting_join_now', 'Join Now')
+        "Join Now"
       )}
     </button>
 

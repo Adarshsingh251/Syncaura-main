@@ -1,22 +1,19 @@
 import ToggleSwitch from "../../dashboard/Header/ToggleSwitch";
 import { useSelector } from "react-redux";
 import { Menu } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 const Header = ({ setOpen }) => {
-  const { t, i18n } = useTranslation();
   const user = useSelector((state) => state.auth.user);
-  const displayName = user?.name || t("user_default_name");
 
   const today = new Date();
 
-  const formattedDate = today.toLocaleDateString(i18n.language || "en", {
+  const formattedDate = today.toLocaleDateString("en-US", {
     month: "short",
     day: "2-digit",
     year: "numeric",
   });
 
-  const dayName = today.toLocaleDateString(i18n.language || "en", {
+  const dayName = today.toLocaleDateString("en-US", {
     weekday: "long",
   });
 
@@ -40,16 +37,18 @@ const Header = ({ setOpen }) => {
             {/* Profile Text */}
             <div className="flex flex-col">
               <div className="flex gap-1 items-center text-black dark:text-white">
-                <h1 className="font-light text-base sm:text-lg">
-                  {t("hello")}
-                </h1>
+                <h1 className="font-light text-base sm:text-lg">Hello!</h1>
                 <h1 className="font-semibold text-base sm:text-lg">
-                  {displayName}
+                  {/* {user?.name || "John Doe"} */}
+                  
+                   {user?.first_name
+    ? `${user.first_name} ${user.last_name || ""}`
+    : user?.name || "John Doe"}
                 </h1>
               </div>
 
               <div className="text-[#989696] font-semibold text-xs sm:text-sm -mt-1">
-                {t("employee_label")}
+                Employee
               </div>
             </div>
           </div>
@@ -74,7 +73,7 @@ const Header = ({ setOpen }) => {
               type="button"
               onClick={() => setOpen?.(true)}
               className="inline-flex items-center justify-center rounded-full p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
-              aria-label={t("open_sidebar")}
+              aria-label="Open sidebar"
             >
               <Menu size={22} />
             </button>

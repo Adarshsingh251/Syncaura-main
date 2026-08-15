@@ -2,14 +2,12 @@ import { motion } from "framer-motion";
 import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export default function NoticeFilter({ onClose, onApply }) {
-  const { t } = useTranslation();
-  const [status, setStatus] = useState(t("yes", "Yes"));
-  const [type, setType] = useState(t("general_camel", "General"));
+  const [status, setStatus] = useState("Yes");
+  const [type, setType] = useState("General");
   const [date, setDate] = useState("");
-  const items = [t("yes", "Yes"), t("no", "No")];
+  const items = ["Yes", "No"];
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10">
@@ -38,7 +36,7 @@ export default function NoticeFilter({ onClose, onApply }) {
         {/* Date Range */}
         <div className="flex flex-col items-center justify-center gap-2 w-full lg:w-1/4">
           <label className="text-sm font-semibold w-full text-gray-700 dark:text-gray-300">
-            {t("date_range", "Date Range")}
+            Date Range
           </label>
           <input
             type="date"
@@ -53,9 +51,9 @@ export default function NoticeFilter({ onClose, onApply }) {
         {/* Type */}
         <div className="flex flex-col gap-2 w-full lg:w-1/4">
           <FilterDropdown
-            options={[t("general_camel", "General"), t("academic_camel", "Academic"), t("it_camel", "IT"), t("facility_camel", "Facility")]}
+            options={["General", "Academic", "IT", "Facility"]}
             startVal={type}
-            label={t("type", "Type")}
+            label="Type"
             onChange={setType}
           />
         </div>
@@ -63,7 +61,7 @@ export default function NoticeFilter({ onClose, onApply }) {
         {/* Status */}
         <div className="flex flex-col gap-2 w-full lg:w-1/4">
           <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {t("viewed", "Viewed")}
+            Viewed
           </label>
           <div className="flex flex-wrap gap-2">
             {items.map((item) => (
@@ -93,7 +91,7 @@ export default function NoticeFilter({ onClose, onApply }) {
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             className="w-full lg:w-auto bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium px-5 py-3 rounded-full shadow-sm text-sm"
           >
-            {t("apply_filters", "Apply Filters")}
+            Apply Filters
           </motion.button>
         </div>
       </motion.div>

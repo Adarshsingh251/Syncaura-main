@@ -57,9 +57,6 @@ const getRedirectPath = (role) => {
     case "Admin":
     case "admin":
       return "/admin";
-    case "Co-Admin":
-    case "co-admin":
-      return "/co-admin";
     default:
       return "/user-dashboard";
   }

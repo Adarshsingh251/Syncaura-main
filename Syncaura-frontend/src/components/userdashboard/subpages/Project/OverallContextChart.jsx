@@ -1,6 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 const data = [
@@ -13,7 +12,6 @@ const data = [
 const SUCCESS_RATE = 82;
 
 const OverallContextChart = () => {
-  const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(null);
 
   return (
@@ -24,7 +22,7 @@ const OverallContextChart = () => {
     >
       {/* Title */}
       <h2 className="text-2xl font-bold mb-6">
-        {t("project_overall_context")}
+        Overall Context
       </h2>
 
       <div className="flex flex-col md:flex-row items-center gap-12">
@@ -60,7 +58,7 @@ const OverallContextChart = () => {
               {SUCCESS_RATE}%
             </span>
             <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500 dark:text-[#94a3b8]">
-              {t("project_success_rate")}
+              Success Rate
             </span>
           </div>
         </div>

@@ -1,5 +1,4 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import {
   LineChart,
   Line,
@@ -29,7 +28,7 @@ import {
 const topMetricsData = [
   {
     id: 1,
-    title: t("admin_velocity"),
+    title: "Velocity",
     value: "42 pts",
     change: "+12%",
     changeType: "increase",
@@ -46,7 +45,7 @@ const topMetricsData = [
   },
   {
     id: 2,
-    title: t("admin_completion_rate"),
+    title: "Completion Rate",
     value: "94%",
     change: "+2%",
     changeType: "increase",
@@ -63,7 +62,7 @@ const topMetricsData = [
   },
   {
     id: 3,
-    title: t("admin_cycle_time"),
+    title: "Cycle Time",
     value: "4.2 days",
     change: "-0.5%",
     changeType: "decrease",
@@ -80,7 +79,7 @@ const topMetricsData = [
   },
   {
     id: 4,
-    title: t("admin_sla_compliance"),
+    title: "SLA Compliance",
     value: "98.5%",
     change: "0%",
     changeType: "neutral",
@@ -171,7 +170,6 @@ export const bottleneckData = [
 ];
 
 const TopMetrics = () => {
-  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {topMetricsData.map((metric) => {
@@ -263,11 +261,10 @@ const TopMetrics = () => {
 };
 
 const ProductivityQuality = () => {
-  const { t } = useTranslation();
   return (
     <div className="bg-white dark:bg-[#111111] rounded-xl">
       <h2 className="text-3xl sm:text-2xl font-semibold px-3 pt-4 pb-2 text-black dark:text-white">
-        {t("admin_productivity_quality")}
+        Productivity & Quality
       </h2>
 
       <div className="p-4 sm:p-6 dark:bg-[#1E1E1E] border-4 border-gray-100 dark:border-0">
@@ -275,21 +272,21 @@ const ProductivityQuality = () => {
         <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-4">
           <div>
             <h3 className="text-2xl sm:text-sm  font-semibold text-black dark:text-white">
-              {t("admin_team_productivity")}
+              Team Productivity
             </h3>
             <p className="text-md sm:text-xs text-gray-400">
-              {t("admin_team_productivity_desc")}
+              Story points delivered vs capacity
             </p>
           </div>
 
           <div className="flex gap-4 text-xs flex-wrap">
             <div className="flex items-center">
               <span className="w-3 h-3 rounded-full bg-blue-600 dark:bg-cyan-400" />
-              {t("admin_delivered")}
+              Delivered
             </div>
             <div className="flex items-center">
               <span className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600" />
-              {t("admin_capacity")}
+              Capacity
             </div>
           </div>
         </div>
@@ -315,16 +312,14 @@ const ProductivityQuality = () => {
   );
 };
 
-const DefectRate = () => {
-  const { t } = useTranslation();
-  return (
+const DefectRate = () => (
   <div className="bg-white dark:bg-[#1E1E1E] py-3 px-3 sm:p-6 rounded-xs border-4 border-gray-100 dark:border-0">
     {/* Header */}
     <div className="flex justify-between items-center mb-4">
       <div>
-        <h4 className="text-2xl sm:text-sm  font-semibold">{t("admin_defect_rate")}</h4>
+        <h4 className="text-2xl sm:text-sm  font-semibold">Defect Rate</h4>
         <p className="text-md sm:text-xs text-gray-400">
-          {t("admin_defect_rate_desc")}
+          Reported bugs per week
         </p>
       </div>
       <span className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-red-100 text-red-500 dark:bg-[#341A27] dark:text-[#F87171]">
@@ -384,21 +379,19 @@ const DefectRate = () => {
       </ResponsiveContainer>
     </div>
   </div>
-);};
+);
 
-const SprintPerformance = () => {
-  const { t } = useTranslation();
-  return (
+const SprintPerformance = () => (
   <div className="bg-white dark:bg-[#1E1E1E] p-5 sm:p-6 rounded-xs border-4 border-gray-100 dark:border-0">
     {/* Header */}
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
       {/* Left */}
       <div>
         <h4 className="font-semibold text-2xl sm:text-sm ">
-          {t("admin_sprint_performance")}
+          Sprint Performance
         </h4>
         <p className="text-md sm:text-xs text-gray-400">
-          {t("admin_sprint_performance_desc")}
+          Task status distribution
         </p>
       </div>
 
@@ -406,17 +399,17 @@ const SprintPerformance = () => {
       <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#2563EB]"></span>
-          <span className="text-gray-600 dark:text-gray-300">{t("admin_done")}</span>
+          <span className="text-gray-600 dark:text-gray-300">Done</span>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#93C5FD]"></span>
-          <span className="text-gray-600 dark:text-gray-300">{t("admin_in_progress_short")}</span>
+          <span className="text-gray-600 dark:text-gray-300">In Prog</span>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#D1D5DB]"></span>
-          <span className="text-gray-600 dark:text-gray-300">{t("admin_todo")}</span>
+          <span className="text-gray-600 dark:text-gray-300">Todo</span>
         </div>
       </div>
     </div>
@@ -455,11 +448,9 @@ const SprintPerformance = () => {
       </ResponsiveContainer>
     </div>
   </div>
-);};
+);
 
-const ProjectTrend = () => {
-  const { t } = useTranslation();
-  return (
+const ProjectTrend = () => (
   <div className="bg-white dark:bg-[#1E1E1E] px-5 sm-py-6 py-5 rounded-xs border-4 border-gray-100 dark:border-0">
     <div className="flex justify-between items-center mb-4">
       {/* Left Section */}
@@ -502,10 +493,9 @@ const ProjectTrend = () => {
       </ResponsiveContainer>
     </div>
   </div>
-);};
+);
 
 const ResourceUtilization = () => {
-  const { t } = useTranslation();
   const getColor = (v) => {
     if (v >= 90) return "bg-[#F87171]";
     if (v >= 70) return "bg-[#1D4ED8]";
@@ -518,17 +508,17 @@ const ResourceUtilization = () => {
     <>
       {/* Section Title */}
       <h2 className="text-2xl sm:text-2xl font-semibold px-3 my-2 text-black dark:text-white">
-        {t("admin_utilization_bottlenecks")}
+        Utilization & Bottlenecks
       </h2>
 
       {/* Container */}
       <div className="bg-white dark:bg-[#1E1E1E] px-5 sm-py-6 py-5 rounded-xs border-4 border-gray-100 dark:border-0">
         <div className="mb-4">
           <h4 className="font-semibold text-2xl sm:text-sm mb-1">
-            {t("admin_project_delivery_trends")}
+            Project Delivery Trends
           </h4>
           <p className="text-md sm:text-xs text-gray-400">
-            {t("admin_project_delivery_desc")}
+            Cumulative value Delivery
           </p>
         </div>
 
@@ -576,17 +566,16 @@ const ResourceUtilization = () => {
   );
 };
 const BottleneckDetection = () => {
-  const { t } = useTranslation();
   const maxValue = Math.max(...bottleneckData.map((i) => i.value));
 
   return (
     <div className="bg-white dark:bg-[#1E1E1E] px-6 sm-py-6 py-5  rounded-xs border-4 border-gray-100 dark:border-0">
       <div className="mb-5">
         <h4 className="font-semibold text-2xl sm:text-sm mb-1">
-          {t("admin_bottleneck_detection")}
+          Bottleneck Detection
         </h4>
         <p className="text-md sm:text-xs text-gray-400">
-          {t("admin_bottleneck_desc")}
+          Work item flow efficiency
         </p>
       </div>
 
@@ -624,7 +613,7 @@ const BottleneckDetection = () => {
                 >
                   <div className="bg-gray-200 text-xs px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap">
                     <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                    <span className="text-black font-semibold">{t("admin_bottleneck")}</span>
+                    <span className="text-black font-semibold">Bottleneck</span>
                   </div>
                 </div>
               )}

@@ -1,5 +1,4 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { GiCheckedShield } from "react-icons/gi";
 import { FiServer } from "react-icons/fi";
@@ -8,7 +7,6 @@ import { IoCloud } from "react-icons/io5";
 import { FiClock } from "react-icons/fi";
 
 const IssuesAndAlerts = () => {
-  const { t } = useTranslation();
 
   const alerts = [
     {
@@ -61,7 +59,7 @@ const IssuesAndAlerts = () => {
     >
 
       <h2 className="text-2xl font-bold text-zinc-500 dark:text-white mb-6 px-2">
-        {t("admin_issues_alerts_title")}
+        Issues & Alerts
       </h2>
 
       <motion.div
@@ -114,7 +112,7 @@ const IssuesAndAlerts = () => {
           whileTap={{ scale: 0.95 }}
           className="shrink-0 bg-gray-100 dark:bg-[#161b22] hover:bg-gray-200 dark:hover:bg-zinc-800 px-4 rounded-xl text-[13px] font-bold text-gray-500 dark:text-white border border-gray-200 dark:border-zinc-800 transition"
         >
-          {t("admin_view_all").split(" ").join("\n")}
+          View<br/>All
         </motion.button>
 
       </motion.div>

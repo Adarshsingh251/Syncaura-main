@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useTranslation } from "react-i18next";
 import { setCredentials } from "../redux/slices/authSlice";
 import { toast } from "react-toastify";
 import { Loader } from "lucide-react";
@@ -10,7 +9,6 @@ const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const isDark = useSelector((state) => state.theme.isDark);
 
   useEffect(() => {
@@ -21,7 +19,7 @@ const AuthCallback = () => {
     const userName = searchParams.get("name");
 
     if (error) {
-      toast.error(decodeURIComponent(error) || t("auth_google_auth_failed"));
+      toast.error(decodeURIComponent(error) || "Google authentication failed");
       navigate("/sign-in", { replace: true });
       return;
     }
@@ -38,33 +36,28 @@ const AuthCallback = () => {
         // Update auth state in Redux
         dispatch(
           setCredentials({
-            user: { name: userName || t("auth_default_user"), role: role || t("auth_default_role") },
+            user: { name: userName || "User", role: role || "user" },
             token,
           })
         );
 
-        toast.success(t("auth_welcome_back", { name: userName || t("auth_default_user") }));
+        toast.success(`Welcome Back ${userName || "User"}!!`);
 
         // Route to the appropriate dashboard based on user role
-        switch (role) {
-          case "Admin":
-            navigate("/admin", { replace: true });
-            break;
-          case "Co-Admin":
-            navigate("/co-admin", { replace: true });
-            break;
-          default:
-            navigate("/user-dashboard", { replace: true });
+        if (role === "Admin") {
+          navigate("/admin", { replace: true });
+        } else {
+          navigate("/user-dashboard", { replace: true });
         }
       } catch (err) {
         console.error("Error setting OAuth credentials:", err);
-        toast.error(t("auth_credentials_failed"));
+        toast.error("Failed to parse login credentials. Please try again.");
         navigate("/sign-in", { replace: true });
       }
     } else {
       // If landed on callback page without token or error, redirect to sign-in
       const timeout = setTimeout(() => {
-        toast.error(t("auth_oauth_expired"));
+        toast.error("OAuth session expired or invalid. Please login again.");
         navigate("/sign-in", { replace: true });
       }, 1500);
 
@@ -90,10 +83,10 @@ const AuthCallback = () => {
 
         {/* Text Details */}
         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">
-          {t("auth_callback_heading")}
+          Securing Connection
         </h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          {t("auth_callback_message")}
+          Authenticating with Google Services. Please do not close or refresh this window.
         </p>
       </div>
     </div>

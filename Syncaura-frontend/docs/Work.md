@@ -18,7 +18,7 @@ Unauthorized users are now redirected to the sign-in page when they try to acces
 Logged-in users are redirected away from public-only pages such as sign-in and sign-up.
 
 ### 5. Role-Based Protection
-Role-based access handling was added for different user types such as user, admin, and co-admin.
+Role-based access handling was added for different user types such as user and admin.
 
 ## Files Updated
 - src/RouteProtection/ProtectRoute.jsx
@@ -38,7 +38,6 @@ Role-based access handling was added for different user types such as user, admi
 - /complaints
 - /settings
 - /admin
-- /co-admin
 - /meet/:id
 
 ## Notes
