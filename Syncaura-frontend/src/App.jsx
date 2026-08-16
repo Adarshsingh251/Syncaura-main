@@ -149,7 +149,7 @@ export default function App() {
         transition={Bounce}
       />
 
-     <BrowserRouter>
+      <BrowserRouter>
         <ScrollToTop />
         <Suspense
           fallback={
@@ -172,8 +172,8 @@ export default function App() {
                 element={<GithubCallback />}
               />
               <Route path="/learn-more" element={<LearnMore />} />
-<Route path="/about-us" element={<AboutUs />} />
-</Route>
+              <Route path="/about-us" element={<AboutUs />} />
+            </Route>
 
             <Route
               element={
@@ -181,39 +181,6 @@ export default function App() {
               }
             >
               <Route path="/meet/:id" element={<CurrentMeet />} />
-            </Route>
-
-            <Route element={<ProtectRoute allowedRoles={["admin"]} />}>
-              <Route
-                path="/admin"
-                element={
-                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
-                    <Admin />
-                  </MainLayout>
-                }
-              />
-            </Route>
-
-            <Route element={<ProtectRoute allowedRoles={["co-admin"]} />}>
-              <Route
-                path="/co-admin"
-                element={
-                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
-                    <CoAdmin />
-                  </MainLayout>
-                }
-              />
-            </Route>
-
-            <Route element={<ProtectRoute allowedRoles={["user"]} />}>
-              <Route
-                path="/user-dashboard"
-                element={
-                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
-                    <UserDashboard />
-                  </MainLayout>
-                }
-              />
 
               <Route
                 path="/projects"
@@ -259,14 +226,14 @@ export default function App() {
                   </MainLayout>
                 }
               />
-<Route
-            path="/profile"
-            element={
-              <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
-                <Profile />
-              </MainLayout>
-            }
-          />
+              <Route
+                path="/profile"
+                element={
+                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
+                    <Profile />
+                  </MainLayout>
+                }
+              />
               <Route
                 path="/chat"
                 element={
@@ -308,6 +275,39 @@ export default function App() {
                 element={
                   <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
                     <Settings />
+                  </MainLayout>
+                }
+              />
+            </Route>
+
+            <Route element={<ProtectRoute allowedRoles={["admin"]} />}>
+              <Route
+                path="/admin"
+                element={
+                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
+                    <Admin />
+                  </MainLayout>
+                }
+              />
+            </Route>
+
+            <Route element={<ProtectRoute allowedRoles={["co-admin"]} />}>
+              <Route
+                path="/co-admin"
+                element={
+                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
+                    <CoAdmin />
+                  </MainLayout>
+                }
+              />
+            </Route>
+
+            <Route element={<ProtectRoute allowedRoles={["user"]} />}>
+              <Route
+                path="/user-dashboard"
+                element={
+                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
+                    <UserDashboard />
                   </MainLayout>
                 }
               />

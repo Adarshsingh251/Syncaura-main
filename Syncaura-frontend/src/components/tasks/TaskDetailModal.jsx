@@ -1,30 +1,60 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Calendar, User, Flag, CheckCircle2, Circle,
-  Trash2, Plus, ChevronRight, AlertTriangle,
+  X,
+  Calendar,
+  User,
+  Flag,
+  CheckCircle2,
+  Circle,
+  Trash2,
+  Plus,
+  ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { updateTaskStatus, addSubtask, deleteTask } from "../../redux/features/taskThunks";
+import {
+  updateTaskStatus,
+  addSubtask,
+  deleteTask,
+} from "../../redux/features/taskThunks";
 
 const PRIORITY_COLORS = {
   high: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
-  medium: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+  medium:
+    "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
   low: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
 };
 
 const STATUS_OPTIONS = [
-  { value: "TODO", label: "To Do", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
-  { value: "IN_PROGRESS", label: "In Progress", color: "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300" },
-  { value: "DONE", label: "Done", color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  {
+    value: "TODO",
+    label: "To Do",
+    color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+  },
+  {
+    value: "IN_PROGRESS",
+    label: "In Progress",
+    color: "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300",
+  },
+  {
+    value: "DONE",
+    label: "Done",
+    color:
+      "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+  },
 ];
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
-const TaskDetailModal = ({ task, onClose, onDeleted }) => {
+const TaskDetailModal = ({ task, onClose, onDeleted, canDelete }) => {
   const dispatch = useDispatch();
   const [subtaskInput, setSubtaskInput] = useState("");
   const [addingSubtask, setAddingSubtask] = useState(false);
@@ -35,7 +65,9 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
     if (newStatus === task.status) return;
     setStatusLoading(true);
     try {
-      await dispatch(updateTaskStatus({ id: task.id, status: newStatus })).unwrap();
+      await dispatch(
+        updateTaskStatus({ id: task.id, status: newStatus }),
+      ).unwrap();
     } finally {
       setStatusLoading(false);
     }
@@ -45,7 +77,9 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
     if (!subtaskInput.trim()) return;
     setAddingSubtask(true);
     try {
-      await dispatch(addSubtask({ taskId: task.id, title: subtaskInput.trim() })).unwrap();
+      await dispatch(
+        addSubtask({ taskId: task.id, title: subtaskInput.trim() }),
+      ).unwrap();
       setSubtaskInput("");
     } finally {
       setAddingSubtask(false);
@@ -53,12 +87,14 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
   };
 
   const handleDelete = async () => {
+    if (!canDelete) return;
     await dispatch(deleteTask(task.id)).unwrap();
     onDeleted();
     onClose();
   };
 
-  const completedSubtasks = task.subtasks?.filter((s) => s.status === "DONE").length || 0;
+  const completedSubtasks =
+    task.subtasks?.filter((s) => s.status === "DONE").length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
 
   return (
@@ -77,7 +113,9 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
         <div className="flex items-start justify-between px-6 py-4 border-b border-gray-100 dark:border-[#2d2f33]">
           <div className="flex-1 pr-4">
             <div className="flex items-center gap-2 mb-1">
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium}`}>
+              <span
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium}`}
+              >
                 {task.priority || "medium"} priority
               </span>
             </div>
@@ -98,22 +136,30 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
           {/* Description */}
           {task.description && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Description</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{task.description}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                Description
+              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {task.description}
+              </p>
             </div>
           )}
 
           {/* Meta */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Deadline</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                Deadline
+              </p>
               <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                 <Calendar className="w-3.5 h-3.5 text-gray-400" />
                 {formatDate(task.deadline)}
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Assigned To</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                Assigned To
+              </p>
               <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                 <User className="w-3.5 h-3.5 text-gray-400" />
                 {task.assignedTo || "Unassigned"}
@@ -123,7 +169,9 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
 
           {/* Status Selector */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Status</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+              Status
+            </p>
             <div className="flex gap-2">
               {STATUS_OPTIONS.map((opt) => (
                 <button
@@ -153,7 +201,9 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
                   <div className="w-20 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-blue-500 dark:bg-[#73FBFD] rounded-full transition-all"
-                      style={{ width: `${(completedSubtasks / totalSubtasks) * 100}%` }}
+                      style={{
+                        width: `${(completedSubtasks / totalSubtasks) * 100}%`,
+                      }}
                     />
                   </div>
                   <span className="text-xs text-gray-400">
@@ -177,7 +227,9 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
                   ) : (
                     <Circle className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
                   )}
-                  <span className={`text-sm ${subtask.status === "DONE" ? "line-through text-gray-400" : "text-gray-700 dark:text-gray-300"}`}>
+                  <span
+                    className={`text-sm ${subtask.status === "DONE" ? "line-through text-gray-400" : "text-gray-700 dark:text-gray-300"}`}
+                  >
                     {subtask.title}
                   </span>
                 </motion.div>
@@ -206,32 +258,36 @@ const TaskDetailModal = ({ task, onClose, onDeleted }) => {
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 dark:border-[#2d2f33]">
-          {!confirmDelete ? (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors btn-hover"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete Task
-            </button>
-          ) : (
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-              <span className="text-sm text-gray-600 dark:text-gray-400 flex-1">Delete this task?</span>
+          {canDelete ? (
+            !confirmDelete ? (
               <button
-                onClick={() => setConfirmDelete(false)}
-                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors btn-hover"
+                onClick={() => setConfirmDelete(true)}
+                className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors btn-hover"
               >
-                Cancel
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete Task
               </button>
-              <button
-                onClick={handleDelete}
-                className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors btn-hover"
-              >
-                Delete
-              </button>
-            </div>
-          )}
+            ) : (
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <span className="text-sm text-gray-600 dark:text-gray-400 flex-1">
+                  Delete this task?
+                </span>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors btn-hover"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors btn-hover"
+                >
+                  Delete
+                </button>
+              </div>
+            )
+          ) : null}
         </div>
       </motion.div>
     </div>
