@@ -363,12 +363,12 @@ const AttendanceLeave = () => {
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 w-full"
+        className="flex flex-wrap items-center justify-evenly gap-y-4 px-4 py-3 mt-2 w-full"
       >
         {attendanceStats.map((item, index) => (
           <AttendanceCard key={index} {...item} />
         ))}
-        <div className="relative w-full flex justify-center mt-2">
+        <div className="relative">
           {/* TOP CARD */}
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
@@ -401,7 +401,7 @@ const AttendanceLeave = () => {
                 transition={{ duration: 0.25, ease: "easeOut" }}
                 className="
                     absolute 
-                    right-0
+                    left-0
                     top-full
                     mt-2 md:mt-3
                     z-50

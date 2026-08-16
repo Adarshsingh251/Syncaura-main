@@ -7,8 +7,8 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
   const [status, setStatus] = useState("All");
   const [type, setType] = useState("All");
   const [date, setDate] = useState("");
-  
- 
+
+
   const items = ["All", "Approved", "Pending", "Rejected"];
   const typeOptions = [
     "All",
@@ -19,7 +19,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
     "Paternity",
     "Work From Home",
   ];
-   useEffect(() => {
+  useEffect(() => {
     onApply({
       status,
       type,
@@ -92,7 +92,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
               <button
                 key={item}
                 onClick={() => setStatus(item)}
-                
+
                 className={`btn-hover px-3 py-1.5 rounded-full text-xs sm:text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD] font-semibold" : "border-gray-300 text-gray-500"}`}
               >
                 {item}
@@ -110,7 +110,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
           >
             Reset
           </motion.button>
-          
+
         </div>
       </motion.div>
     </div>

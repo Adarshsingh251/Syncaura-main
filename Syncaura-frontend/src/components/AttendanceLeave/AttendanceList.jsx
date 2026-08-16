@@ -91,19 +91,17 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
                 setCurrId(idx);
               }}
               key={idx}
-              className={`flex  relative transition-all duration-300 items-center justify-between w-full bg-[#FFFFFF] dark:bg-[#000000]  px-10 py-6 ${
-                isSelected
+              className={`flex  relative transition-all duration-300 items-center justify-between w-full bg-[#FFFFFF] dark:bg-[#000000]  px-10 py-6 ${isSelected
                   ? "bg-blue-50 dark:bg-[#1C3939]"
                   : "hover:bg-[#d1d4db75] dark:hover:bg-gray-800 hover:scale-[1.005] cursor-pointer"
-              }`}
+                }`}
             >
               <span
                 className={`absolute  left-0 top-0 h-full w-1 bg-blue-500 dark:bg-gray-400 transition-transform duration-300
-                    ${
-                      isSelected
-                        ? "scale-y-100"
-                        : "scale-y-0 group-hover:scale-y-100"
-                    }`}
+                    ${isSelected
+                    ? "scale-y-100"
+                    : "scale-y-0 group-hover:scale-y-100"
+                  }`}
               />
               <div className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[24%] flex-wrap">
                 <h1>{formattedDate(startDate)}</h1>
@@ -267,11 +265,10 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`w-8 h-8 rounded-md text-sm font-semibold transition-colors border ${
-                currentPage === page
+              className={`w-8 h-8 rounded-md text-sm font-semibold transition-colors border ${currentPage === page
                   ? "bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black border-[#2461E6] dark:border-[#73FBFD]"
                   : "bg-white dark:bg-[#2E2F2F] text-[#575757] dark:text-[#B2B2B2] border-[#EDEDED] dark:border-[#3A3A3A] hover:bg-[#f0f0f0] dark:hover:bg-[#3A3B3C]"
-              }`}
+                }`}
               aria-label={`Page ${page}`}
               aria-current={currentPage === page ? "page" : undefined}
             >
