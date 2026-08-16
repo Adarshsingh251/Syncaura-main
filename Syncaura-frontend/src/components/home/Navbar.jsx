@@ -39,8 +39,9 @@ const isLearnMoreActive = location.pathname === "/learn-more";
       { threshold: [0.3, 0.5, 0.7], rootMargin: "-100px 0px -100px 0px" }
     );
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    elements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
   }, []);
 useEffect(() => {
     if (location.pathname !== "/") {
@@ -273,3 +274,4 @@ useEffect(() => {
 };
 
 export default Navbar;
+
