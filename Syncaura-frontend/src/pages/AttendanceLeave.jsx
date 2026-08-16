@@ -86,6 +86,15 @@ const AttendanceLeave = () => {
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const [leaveData, setLeaveData] = useState([]);
 
+  useEffect(() => {
+    setLeaveData([]);
+    setLeaveError(null);
+    setCheckInTime(null);
+    setCheckOutTime(null);
+    setSelectedTab("Check-In");
+    setAttendanceStats(initialAttendanceStats);
+  }, [user?.id]);
+
   // Kept for legacy edit flows; displayed leave data is always replaced by the API response.
   const syncLeavesToStorage = useCallback((updater) => {
     setLeaveData((prev) => {
@@ -98,59 +107,6 @@ const AttendanceLeave = () => {
       return next;
     });
   }, []);
-
-  // Until an attendance API exists, this keeps a user's daily status stable across
-  // refreshes, logins, and logouts. Replace this with a GET attendance-status call
-  // when the backend endpoint is available.
-  /* Legacy localStorage attendance implementation intentionally disabled.
-  useEffect(() => {
-    // Server data is authoritative; never initialize the display from localStorage.
-    if (authChecking || user) return undefined;
-    const emptyState = getInitialAttendanceState();
-
-    try {
-      const storedValue = localStorage.getItem(attendanceStorageKey);
-      const storedState = storedValue ? JSON.parse(storedValue) : emptyState;
-      attendanceStateRef.current = {
-        presentDays: Number.isFinite(storedState.presentDays)
-          ? storedState.presentDays
-          : emptyState.presentDays,
-        records: storedState.records && typeof storedState.records === "object"
-          ? storedState.records
-          : {},
-      };
-    } catch {
-      attendanceStateRef.current = emptyState;
-    }
-
-    const todayRecord = attendanceStateRef.current.records[getToday()] || {};
-    let isCurrent = true;
-
-    queueMicrotask(() => {
-      if (!isCurrent) return;
-
-      setCheckInTime(todayRecord.checkInTime || null);
-      setCheckOutTime(todayRecord.checkOutTime || null);
-      setAttendanceStats((previousStats) =>
-        previousStats.map((stat) =>
-          stat.title === "Present Days"
-            ? { ...stat, value: attendanceStateRef.current.presentDays }
-            : stat,
-        ),
-      );
-    });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [attendanceStorageKey]);
-
-  const saveAttendanceState = (nextState) => {
-    attendanceStateRef.current = nextState;
-    localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
-  };
-
-  */
 
   const canCheckIn = !checkInTime && !checkOutTime;
   const canCheckOut = Boolean(checkInTime) && !checkOutTime;
@@ -179,6 +135,8 @@ const AttendanceLeave = () => {
       }
     })();
     return;
+
+    /*
 
     if (selectedTab === "Check-In") {
       const nextState = {
@@ -271,6 +229,9 @@ const AttendanceLeave = () => {
     }, 1000);
   };
 
+
+    */
+  };
 
 const fetchAttendance = useCallback(async () => {
   if (authChecking || !user) return;
@@ -541,12 +502,13 @@ useEffect(() => {
                 //     w-[90vw] sm:w-[380px] md:w-[400px] 
                 //   "
                 className="
-                  absolute
-                  right-full
-                  top-0
-                  mr-3
-                  z-50
-                  w-[90vw] sm:w-[380px] md:w-[400px]
+                  fixed
+                  inset-0
+                  z-[100]
+                  flex
+                  items-center
+                  justify-center
+                  p-4
               "
               >
                 <div
@@ -641,7 +603,7 @@ useEffect(() => {
                             ? "Check Out"
                             : checkOutTime
                               ? "Attendance Complete"
-                              : t("attendance_check_in_required")
+                              : "Check in first"
                       )}
                     </button>
                   </div>
