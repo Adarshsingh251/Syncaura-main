@@ -14,6 +14,7 @@ import {
   Settings,
   X,
   LogOut,
+  User,
 } from "lucide-react";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -48,6 +49,7 @@ const menuItems = [
     count: 0,
   },
   { label: "Settings", icon: Settings, path: "/settings", count: 0 },
+  { label: "Profile", icon: User, path: "/profile", count: 0 },
 ];
 
 export default function MobileSidebar({ open, setOpen }) {

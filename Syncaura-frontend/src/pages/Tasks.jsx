@@ -2,10 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Plus, Search, LayoutGrid, List, Flag, Calendar,
-  CheckCircle2, Circle, Clock, Trash2, User, ChevronUp, ChevronDown, Loader2,
+  Plus,
+  Search,
+  LayoutGrid,
+  List,
+  Flag,
+  Calendar,
+  CheckCircle2,
+  Circle,
+  Clock,
+  Trash2,
+  User,
+  ChevronUp,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
-import { fetchTasks, createTask, deleteTask } from "../redux/features/taskThunks";
+import {
+  fetchTasks,
+  createTask,
+  deleteTask,
+} from "../redux/features/taskThunks";
 import KanbanColumn from "../components/tasks/KanbanColumn";
 import CreateTaskModal from "../components/tasks/CreateTaskModal";
 import TaskDetailModal from "../components/tasks/TaskDetailModal";
@@ -14,7 +30,8 @@ import { toast } from "react-toastify";
 // ── Priority config ──────────────────────────────────────────────────────────
 const PRIORITY_COLORS = {
   high: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
-  medium: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+  medium:
+    "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
   low: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
 };
 
@@ -26,7 +43,11 @@ const STATUS_LABELS = {
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 const isOverdue = (dateStr, status) => {
@@ -37,18 +58,22 @@ const isOverdue = (dateStr, status) => {
 // ── Stat Card ────────────────────────────────────────────────────────────────
 const StatCard = ({ label, value, icon: Icon, color }) => (
   <div className="flex items-center gap-3 bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl px-4 py-3">
-    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
+    <div
+      className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}
+    >
       <Icon className="w-4 h-4" />
     </div>
     <div>
-      <p className="text-xl font-bold text-[#0A0A0A] dark:text-white leading-none">{value}</p>
+      <p className="text-xl font-bold text-[#0A0A0A] dark:text-white leading-none">
+        {value}
+      </p>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
     </div>
   </div>
 );
 
 // ── List Row ─────────────────────────────────────────────────────────────────
-const ListRow = ({ task, onOpen, onDelete }) => {
+const ListRow = ({ task, onOpen, onDelete, canDelete }) => {
   const status = STATUS_LABELS[task.status] || STATUS_LABELS.TODO;
   const overdue = isOverdue(task.deadline, task.status);
 
@@ -62,22 +87,32 @@ const ListRow = ({ task, onOpen, onDelete }) => {
       className="border-b border-gray-50 dark:border-[#2d2f33] hover:bg-gray-50/80 dark:hover:bg-[#1e1f22] cursor-pointer group transition-colors"
     >
       <td className="py-3 px-4">
-        <span className="text-sm font-medium text-[#0A0A0A] dark:text-white line-clamp-1">{task.title}</span>
+        <span className="text-sm font-medium text-[#0A0A0A] dark:text-white line-clamp-1">
+          {task.title}
+        </span>
       </td>
       <td className="py-3 px-3 hidden md:table-cell">
-        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${task.priority === "high" ? "bg-red-500" : task.priority === "low" ? "bg-emerald-500" : "bg-amber-500"}`} />
+        <span
+          className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium}`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${task.priority === "high" ? "bg-red-500" : task.priority === "low" ? "bg-emerald-500" : "bg-amber-500"}`}
+          />
           {task.priority || "medium"}
         </span>
       </td>
       <td className="py-3 px-3">
         <span className="flex items-center gap-1.5 text-xs font-medium">
           <span className={`w-2 h-2 rounded-full ${status.dot}`} />
-          <span className="text-gray-600 dark:text-gray-400">{status.label}</span>
+          <span className="text-gray-600 dark:text-gray-400">
+            {status.label}
+          </span>
         </span>
       </td>
       <td className="py-3 px-3 hidden lg:table-cell">
-        <span className={`flex items-center gap-1 text-xs ${overdue ? "text-red-500" : "text-gray-500 dark:text-gray-400"}`}>
+        <span
+          className={`flex items-center gap-1 text-xs ${overdue ? "text-red-500" : "text-gray-500 dark:text-gray-400"}`}
+        >
           {overdue && <Clock className="w-3 h-3" />}
           {formatDate(task.deadline)}
         </span>
@@ -88,12 +123,17 @@ const ListRow = ({ task, onOpen, onDelete }) => {
         </span>
       </td>
       <td className="py-3 px-3">
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+        {canDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(task.id);
+            }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
       </td>
     </motion.tr>
   );
@@ -104,6 +144,14 @@ const Tasks = () => {
   const dispatch = useDispatch();
   const { tasks, isLoading } = useSelector((state) => state.tasks);
   const isDark = useSelector((state) => state.theme.isDark);
+  const userRole = useSelector((state) => state.auth?.user?.role);
+  const isAdmin = userRole === "admin";
+
+  const currentUser = useSelector((state) => state.auth?.user);
+
+  // helper: admin can delete anything, user only what they created
+  const canDeleteTask = (task) =>
+    isAdmin || task?.createdBy === currentUser?.id;
 
   const [view, setView] = useState("kanban"); // "kanban" | "list"
   const [search, setSearch] = useState("");
@@ -140,7 +188,7 @@ const Tasks = () => {
       result = result.filter(
         (t) =>
           t.title.toLowerCase().includes(debouncedSearch) ||
-          t.description?.toLowerCase().includes(debouncedSearch)
+          t.description?.toLowerCase().includes(debouncedSearch),
       );
     }
     if (priorityFilter !== "all") {
@@ -166,16 +214,19 @@ const Tasks = () => {
       IN_PROGRESS: filtered.filter((t) => t.status === "IN_PROGRESS"),
       DONE: filtered.filter((t) => t.status === "DONE"),
     }),
-    [filtered]
+    [filtered],
   );
 
   // Stats
-  const stats = useMemo(() => ({
-    total: tasks.length,
-    todo: tasks.filter((t) => t.status === "TODO").length,
-    inProgress: tasks.filter((t) => t.status === "IN_PROGRESS").length,
-    done: tasks.filter((t) => t.status === "DONE").length,
-  }), [tasks]);
+  const stats = useMemo(
+    () => ({
+      total: tasks.length,
+      todo: tasks.filter((t) => t.status === "TODO").length,
+      inProgress: tasks.filter((t) => t.status === "IN_PROGRESS").length,
+      done: tasks.filter((t) => t.status === "DONE").length,
+    }),
+    [tasks],
+  );
 
   const handleCreate = async (data) => {
     setCreateLoading(true);
@@ -191,6 +242,11 @@ const Tasks = () => {
   };
 
   const handleDelete = async (id) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!canDeleteTask(task)) {
+      toast.error("You don't have permission to delete this task");
+      return;
+    }
     await dispatch(deleteTask(id)).unwrap();
     toast.success("Task deleted");
   };
@@ -206,7 +262,11 @@ const Tasks = () => {
 
   const SortIcon = ({ field }) => {
     if (sortField !== field) return null;
-    return sortDir === "asc" ? <ChevronUp className="w-3 h-3 inline" /> : <ChevronDown className="w-3 h-3 inline" />;
+    return sortDir === "asc" ? (
+      <ChevronUp className="w-3 h-3 inline" />
+    ) : (
+      <ChevronDown className="w-3 h-3 inline" />
+    );
   };
 
   return (
@@ -218,11 +278,14 @@ const Tasks = () => {
         {/* ── Page Header ─────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-[#0A0A0A] dark:text-white">Tasks</h1>
+            <h1 className="text-2xl font-bold text-[#0A0A0A] dark:text-white">
+              Tasks
+            </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               Manage and track your team's tasks
             </p>
           </div>
+
           <button
             id="create-task-btn"
             onClick={() => setShowCreate(true)}
@@ -235,10 +298,30 @@ const Tasks = () => {
 
         {/* ── Stat Cards ───────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <StatCard label="Total Tasks" value={stats.total} icon={Flag} color="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" />
-          <StatCard label="To Do" value={stats.todo} icon={Circle} color="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300" />
-          <StatCard label="In Progress" value={stats.inProgress} icon={Clock} color="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" />
-          <StatCard label="Completed" value={stats.done} icon={CheckCircle2} color="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" />
+          <StatCard
+            label="Total Tasks"
+            value={stats.total}
+            icon={Flag}
+            color="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+          />
+          <StatCard
+            label="To Do"
+            value={stats.todo}
+            icon={Circle}
+            color="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"
+          />
+          <StatCard
+            label="In Progress"
+            value={stats.inProgress}
+            icon={Clock}
+            color="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+          />
+          <StatCard
+            label="Completed"
+            value={stats.done}
+            icon={CheckCircle2}
+            color="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+          />
         </div>
 
         {/* ── Toolbar ─────────────────────────────────────────────── */}
@@ -329,6 +412,7 @@ const Tasks = () => {
                     tasks={tasksByStatus[status]}
                     onOpenTask={setSelectedTask}
                     onDeleteTask={handleDelete}
+                    canDeleteTask={canDeleteTask}
                   />
                 ))}
               </motion.div>
@@ -349,7 +433,9 @@ const Tasks = () => {
                     <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-[#2d2f33] flex items-center justify-center">
                       <Flag className="w-7 h-7 text-gray-300 dark:text-gray-600" />
                     </div>
-                    <p className="text-gray-400 dark:text-gray-500 text-sm">No tasks found</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm">
+                      No tasks found
+                    </p>
                   </div>
                 ) : (
                   <table className="w-full">
@@ -390,6 +476,7 @@ const Tasks = () => {
                             task={task}
                             onOpen={setSelectedTask}
                             onDelete={handleDelete}
+                            canDelete={canDeleteTask(task)}
                           />
                         ))}
                       </tbody>
@@ -418,6 +505,7 @@ const Tasks = () => {
             task={selectedTask}
             onClose={() => setSelectedTask(null)}
             onDeleted={() => setSelectedTask(null)}
+            canDelete={canDeleteTask(selectedTask)}
           />
         )}
       </AnimatePresence>

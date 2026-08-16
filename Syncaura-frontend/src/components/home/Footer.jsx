@@ -289,7 +289,7 @@ const Footer = () => {
         >
           {/* Copyright */}
           <p className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
-            © 2025{' '}
+            © 2026{' '}
             <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>FlowBit, Inc.</span>
             {' '}{t("footer_copyright")}
           </p>

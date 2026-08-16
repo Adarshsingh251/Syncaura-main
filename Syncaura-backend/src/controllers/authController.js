@@ -311,7 +311,6 @@ export const changePassword = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-
 export const adminOnly = async (req, res) => {
   res.json({ message: 'Hello Admin!' });
 };

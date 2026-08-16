@@ -45,7 +45,6 @@ export default function SignIn() {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
     if (!emailRegex.test(email.trim())) {
       setMessage(t('auth_invalid_email'))
       return
@@ -91,7 +90,6 @@ export default function SignIn() {
           ? error
           : error?.message || t('auth_login_error')
       )
-
       console.log(error)
     } finally {
       setIsLoading(false)

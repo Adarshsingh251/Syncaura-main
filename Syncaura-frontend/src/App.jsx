@@ -27,7 +27,6 @@ const RoleSelection = lazy(() => import("./pages/RoleSelection"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const GithubCallback = lazy(() => import("./pages/GithubCallback"));
 
-
 import NotFound from "./pages/NotFound";
 import Header from "./components/Meeting/Header/Header";
 import MobileSidebar from "./components/navigation/MobileSidebar";
@@ -247,7 +246,14 @@ export default function App() {
                   </MainLayout>
                 }
               />
-
+              <Route
+                path="/profile"
+                element={
+                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
+                    <Profile />
+                  </MainLayout>
+                }
+              />
               <Route
                 path="/chat"
                 element={
@@ -289,6 +295,39 @@ export default function App() {
                 element={
                   <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
                     <Settings />
+                  </MainLayout>
+                }
+              />
+            </Route>
+
+            <Route element={<ProtectRoute allowedRoles={["admin"]} />}>
+              <Route
+                path="/admin"
+                element={
+                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
+                    <Admin />
+                  </MainLayout>
+                }
+              />
+            </Route>
+
+            <Route element={<ProtectRoute allowedRoles={["co-admin"]} />}>
+              <Route
+                path="/co-admin"
+                element={
+                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
+                    <CoAdmin />
+                  </MainLayout>
+                }
+              />
+            </Route>
+
+            <Route element={<ProtectRoute allowedRoles={["user"]} />}>
+              <Route
+                path="/user-dashboard"
+                element={
+                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
+                    <UserDashboard />
                   </MainLayout>
                 }
               />
