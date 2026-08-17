@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-const rolesEnum = ['user', 'admin'];
+const rolesEnum = ['user', 'admin', 'co-admin'];
 
 const userSchema = new mongoose.Schema({
   name: { type: String, trim: true, required: true, minlength: 2, maxlength: 80 },

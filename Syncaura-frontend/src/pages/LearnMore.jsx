@@ -25,7 +25,7 @@ export default function LearnMore() {
     {
       step: '01',
       title: 'Initialize Workspace',
-      description: 'Set up your organization, customize preferences, and configure roles for Admin and standard User accounts.'
+      description: 'Set up your organization, customize preferences, and configure roles (Admin, Co-Admin, and standard User accounts).'
     },
     {
       step: '02',
@@ -73,7 +73,7 @@ export default function LearnMore() {
     {
       icon: <Terminal className="w-6 h-6 text-blue-600 dark:text-[#73FBFD]" />,
       title: 'Role-Based Dashboards',
-      description: 'Separate interfaces customized for Admins (organizational overview) and Users (task-focused view).'
+      description: 'Separate interfaces customized for Admins (organizational overview), Co-Admins (operational management), and Users (task-focused view).'
     }
   ];
 

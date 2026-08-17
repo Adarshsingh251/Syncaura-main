@@ -22,11 +22,13 @@ const MyAttendance = lazy(() => import("./pages/MyAttendance"));
 const Notice = lazy(() => import("./pages/Notice"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Admin = lazy(() => import("./pages/Admin"));
+const CoAdmin = lazy(() => import("./pages/CoAdmin"));
 const Home = lazy(() => import("./pages/Home"));
 const RoleSelection = lazy(() => import("./pages/RoleSelection"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const GithubCallback = lazy(() => import("./pages/GithubCallback"));
 
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Meeting/Header/Header";
 import MobileSidebar from "./components/navigation/MobileSidebar";
@@ -147,7 +149,7 @@ export default function App() {
         transition={Bounce}
       />
 
-     <BrowserRouter>
+      <BrowserRouter>
         <ScrollToTop />
         <Suspense
           fallback={
@@ -170,37 +172,15 @@ export default function App() {
                 element={<GithubCallback />}
               />
               <Route path="/learn-more" element={<LearnMore />} />
-<Route path="/about-us" element={<AboutUs />} />
-</Route>
+              <Route path="/about-us" element={<AboutUs />} />
+            </Route>
 
             <Route
               element={
-                <ProtectRoute allowedRoles={["user", "admin"]} />
+                <ProtectRoute allowedRoles={["user", "admin", "co-admin"]} />
               }
             >
               <Route path="/meet/:id" element={<CurrentMeet />} />
-            </Route>
-
-            <Route element={<ProtectRoute allowedRoles={["admin"]} />}>
-              <Route
-                path="/admin"
-                element={
-                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
-                    <Admin />
-                  </MainLayout>
-                }
-              />
-            </Route>
-
-            <Route element={<ProtectRoute allowedRoles={["user"]} />}>
-              <Route
-                path="/user-dashboard"
-                element={
-                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
-                    <UserDashboard />
-                  </MainLayout>
-                }
-              />
 
               <Route
                 path="/projects"

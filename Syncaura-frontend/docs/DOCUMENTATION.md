@@ -106,10 +106,11 @@ A typical user action follows this flow:
 
 ### 5.4 Role-Based Architecture
 
-The platform appears to support two primary roles:
+The platform appears to support three primary roles:
 
 - user
 - admin
+- co-admin
 
 These roles are reflected in route protection and dashboard access. The route structure in [src/App.jsx](src/App.jsx) shows separate access paths for each role.
 
@@ -156,7 +157,7 @@ Contains page-level screens such as:
 - Dashboard
 - UserDashboard
 - Admin
-- Admin
+- CoAdmin
 - Projects
 - Tasks
 - Meetings
@@ -223,6 +224,7 @@ The app includes authentication-related pages and Redux async actions for:
 The frontend includes separate experiences for:
 - user dashboard
 - admin dashboard
+- co-admin dashboard
 
 ### Project & Task Management
 The project contains UI modules for listing and managing projects and tasks.
@@ -269,6 +271,7 @@ The application uses React Router with role-based route protection. Key routes i
 - /notice: notices page
 - /settings: user settings
 - /admin: admin dashboard
+- /co-admin: co-admin dashboard
 
 The route protection layer is currently present but appears to be simplified and may need further enforcement logic in future development.
 
