@@ -63,15 +63,9 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) {
-          throw new Error("No refresh token found");
-        }
-
-        // Call token refresh using plain axios to avoid the main interceptor
-        const res = await axios.post("http://localhost:5000/api/auth/refresh", {
-          refreshToken,
-        });
+        // The backend reads the httpOnly refreshToken cookie, not a JSON body.
+        // Use plain axios to avoid recursively invoking this interceptor.
+        const res = await axios.post("/api/auth/refresh", {}, { withCredentials: true });
 
         const { accessToken } = res.data;
         localStorage.setItem("accessToken", accessToken);

@@ -14,33 +14,33 @@ import {
 const router = express.Router();
 
 /**
- * ADMIN + CO-ADMIN
+ * ADMIN
  */
 router.get(
   '/completion',
   auth,
-  permit(ROLES.ADMIN, ROLES.CO_ADMIN),
+  permit(ROLES.ADMIN),
   completionRate
 );
 
 router.get(
   '/burndown',
   auth,
-  permit(ROLES.ADMIN, ROLES.CO_ADMIN),
+  permit(ROLES.ADMIN),
   burndownData
 );
 
 router.get(
   '/workload',
   auth,
-  permit(ROLES.ADMIN, ROLES.CO_ADMIN),
+  permit(ROLES.ADMIN),
   workload
 );
 
 router.get(
   '/project-health/:projectId',
   auth,
-  permit(ROLES.ADMIN, ROLES.CO_ADMIN),
+  permit(ROLES.ADMIN),
   projectHealth
 );
 
@@ -50,7 +50,7 @@ router.get(
 router.get(
   '/my-workload',
   auth,
-  permit(ROLES.USER, ROLES.ADMIN, ROLES.CO_ADMIN),
+  permit(ROLES.USER, ROLES.ADMIN),
   myWorkload
 );
 

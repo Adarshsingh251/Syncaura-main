@@ -110,7 +110,7 @@ export default function SignUpPage() {
 
       setTimeout(() => {
         const userRole = data?.user?.role || 'user'
-        const roleHome = userRole === 'admin' ? '/admin' : userRole === 'co-admin' ? '/co-admin' : '/user-dashboard'
+        const roleHome = userRole === 'admin' ? '/admin' : '/user-dashboard'
         navigate(roleHome)
       }, 1000)
 

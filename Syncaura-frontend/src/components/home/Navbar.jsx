@@ -39,9 +39,14 @@ const isLearnMoreActive = location.pathname === "/learn-more";
       { threshold: [0.3, 0.5, 0.7], rootMargin: "-100px 0px -100px 0px" }
     );
 
-    elements.forEach((el) => observer.observe(el));
+    elements.forEach((element) => observer.observe(element));
 
     return () => observer.disconnect();
+  }, []);
+useEffect(() => {
+    if (location.pathname !== "/") {
+      setActiveSection("");
+    }
   }, [location.pathname]);
   const scrollToSection = (e, sectionId) => {
     e.preventDefault();
@@ -269,3 +274,4 @@ const isLearnMoreActive = location.pathname === "/learn-more";
 };
 
 export default Navbar;
+

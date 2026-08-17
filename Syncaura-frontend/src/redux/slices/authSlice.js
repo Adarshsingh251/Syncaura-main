@@ -99,6 +99,8 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.token = action.payload.accessToken;
         state.isAuthenticated = true;
+        localStorage.setItem("accessToken", action.payload.accessToken);
+        localStorage.setItem("token", action.payload.accessToken);
       })
       .addCase(refreshAccessToken.rejected, (state) => {
         state.authChecking = false;

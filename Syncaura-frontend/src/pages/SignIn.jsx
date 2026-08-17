@@ -6,16 +6,18 @@ import { loginUser } from '../redux/features/authThunks'
 import { Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { FaGithub, FaFacebookF } from 'react-icons/fa'
-import leftArt from "../assets/left-art.png"
-import "./style9.css"
-import Spinner from "../components/Spinner"
+import leftArt from '../assets/left-art.png'
+import './style9.css'
+import Spinner from '../components/Spinner'
 
 export default function SignIn() {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
   const { t } = useTranslation()
-  const { isLoading: reduxLoading } = useSelector((state) => state.auth || {})
+  const { isLoading: reduxLoading } = useSelector(
+    (state) => state.auth || {}
+  )
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -27,8 +29,10 @@ export default function SignIn() {
   const selectedRole = (searchParams.get('role') || 'employee').toLowerCase()
 
   const getLeadText = () => {
-    if (selectedRole === 'admin') return 'Enter your admin credentials to continue.'
-    if (selectedRole === 'co-admin') return 'Enter your co-admin credentials to continue.'
+    if (selectedRole === 'admin') {
+      return 'Enter your admin credentials to continue.'
+    }
+
     return 'Login to continue your journey.'
   }
 
@@ -65,6 +69,7 @@ export default function SignIn() {
       if (data?.tokens?.accessToken) {
         localStorage.setItem('accessToken', data.tokens.accessToken)
       }
+
       if (data?.tokens?.refreshToken) {
         localStorage.setItem('refreshToken', data.tokens.refreshToken)
       }
@@ -72,12 +77,11 @@ export default function SignIn() {
       setMessage(t('auth_login_success'))
 
       const userRole = data?.user?.role || 'user'
+
       const roleHome =
         userRole === 'admin'
           ? '/admin'
-          : userRole === 'co-admin'
-            ? '/co-admin'
-            : '/user-dashboard'
+          : '/user-dashboard'
 
       navigate(roleHome)
     } catch (error) {
@@ -106,23 +110,26 @@ export default function SignIn() {
             <h1>
               {selectedRole === 'employee' ? (
                 <>
-                  Welcome <em>Back</em>
+                  {t('welcomeBack')}
                 </>
-              ) : selectedRole === 'admin' ? (
-                'Admin Sign In'
               ) : (
-                'Co-Admin Sign In'
+                'Admin Sign In'
               )}
             </h1>
 
-            <p className="lead">{getLeadText()}</p>
+            <p className="lead">
+              {selectedRole === 'employee'
+                ? t('auth_signin_lead')
+                : getLeadText()}
+            </p>
 
             <div className="fields">
               <label className="field">
                 <Mail size={19} strokeWidth={1.8} />
+
                 <input
                   type="email"
-                  placeholder="Email"
+                  placeholder={t('emailAddress')}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   required
@@ -131,20 +138,26 @@ export default function SignIn() {
 
               <label className="field">
                 <LockKeyhole size={19} strokeWidth={1.8} />
+
                 <input
                   type={visible ? 'text' : 'password'}
-                  placeholder="Password"
+                  placeholder={t('password')}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
                 />
+
                 <button
                   type="button"
                   className="reveal"
-                  aria-label="Show password"
+                  aria-label={t('show_password')}
                   onClick={() => setVisible(!visible)}
                 >
-                  {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {visible ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </label>
             </div>
@@ -152,12 +165,17 @@ export default function SignIn() {
             <div className="options">
               <label className="check">
                 <input type="checkbox" defaultChecked />
-                <span>Remember Me</span>
+                <span>{t('remember_me')}</span>
               </label>
-              <a href="#forgot">Forgot Password?</a>
+
+              <a href="#forgot">{t('forgotPassword')}</a>
             </div>
 
-            <button className="submit" type="submit" disabled={loadingState}>
+            <button
+              className="submit"
+              type="submit"
+              disabled={loadingState}
+            >
               {loadingState ? (
                 <>
                   <Spinner />
@@ -179,20 +197,35 @@ export default function SignIn() {
             </div>
 
             <div className="socials">
-              <button type="button" aria-label={t('continue_with_google')}>
+              <button
+                type="button"
+                aria-label={t('continue_with_google')}
+              >
                 <FcGoogle size={23} />
               </button>
-              <button type="button" aria-label={t('continue_with_github')}>
+
+              <button
+                type="button"
+                aria-label={t('continue_with_github')}
+              >
                 <FaGithub size={22} />
               </button>
-              <button type="button" className="facebook" aria-label={t('continue_with_facebook')}>
+
+              <button
+                type="button"
+                className="facebook"
+                aria-label={t('continue_with_facebook')}
+              >
                 <FaFacebookF size={19} />
               </button>
             </div>
 
             <p className="switch">
               {t('dontHaveAccount')}{' '}
-              <button type="button" onClick={() => navigate('/signup')}>
+              <button
+                type="button"
+                onClick={() => navigate('/signup')}
+              >
                 {t('signUp')}
               </button>
             </p>

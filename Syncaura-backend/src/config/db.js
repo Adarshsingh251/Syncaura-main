@@ -18,7 +18,6 @@ const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: false,
 });
 
 pool.on('error', (err) => {
@@ -30,7 +29,7 @@ pool.connect()
   .catch((err) => console.error("❌ PostgreSQL Connection Error:", err));
 
 
-  pool.query("SELECT current_database(), current_schema()")
+pool.query("SELECT current_database(), current_schema()")
   .then((res) => {
     
 
@@ -59,6 +58,8 @@ export const initDB = async () => {
 //     console.log("DB Test Success ✅", res.rows);
 //   }
 // });
+
+
 
 export default pool;
 

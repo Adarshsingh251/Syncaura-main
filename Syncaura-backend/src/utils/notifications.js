@@ -134,7 +134,7 @@ export const deleteNotification = async (notificationId) => {
  */
 export const notifyAdminsAboutComplaint = async (complaint, eventType) => {
   try {
-    const adminsResult = await pool.query("SELECT id FROM users WHERE role IN ('admin', 'co-admin')");
+    const adminsResult = await pool.query("SELECT id FROM users WHERE role = 'admin'");
     const adminIds = adminsResult.rows.map(admin => admin.id);
 
     let title, message;
