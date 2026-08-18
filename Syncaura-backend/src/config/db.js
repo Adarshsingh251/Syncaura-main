@@ -37,9 +37,8 @@ pool.connect()
 
   pool.query("SELECT current_database(), current_schema()")
   .then((res) => {
-    
-
-    
+    console.log("Connected DB:", res.rows[0].current_database);
+    console.log("Current Schema:", res.rows[0].current_schema); 
   })
   .catch(console.error);
 
