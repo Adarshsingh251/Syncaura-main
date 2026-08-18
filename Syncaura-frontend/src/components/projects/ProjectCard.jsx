@@ -8,6 +8,8 @@ import {
   Edit3,
   Copy,
   Trash2,
+  ChevronRight,
+  Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
@@ -25,6 +27,8 @@ const ProjectCard = ({
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
 
+  const [showStatusSubmenu, setShowStatusSubmenu] = useState(false);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -34,6 +38,7 @@ const ProjectCard = ({
         !buttonRef.current.contains(event.target)
       ) {
         setShowMenu(false);
+        setShowStatusSubmenu(false);
       }
     };
 
@@ -48,10 +53,11 @@ const ProjectCard = ({
     };
   }, [showMenu]);
 
-  const handleAction = (actionType) => {
+  const handleAction = (actionType, targetStatus = null) => {
     setShowMenu(false);
+    setShowStatusSubmenu(false);
     if (onAction) {
-      onAction(actionType, { title, department, priority, progress, dueDate });
+      onAction(actionType, { title, department, priority, progress, dueDate }, targetStatus);
     }
   };
 
@@ -151,14 +157,53 @@ const ProjectCard = ({
                     <span>Duplicate</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleAction("status")}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-colors text-left cursor-pointer"
-                  >
-                    <CheckCircle2 className="size-4 text-amber-500" />
-                    <span>Change Status</span>
-                  </button>
+                  {/* Change Status Submenu Toggle */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowStatusSubmenu((prev) => !prev)}
+                      className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <CheckCircle2 className="size-4 text-amber-500" />
+                        <span>Change Status</span>
+                      </div>
+                      <ChevronRight className={`size-3.5 text-gray-400 transition-transform ${showStatusSubmenu ? "rotate-90" : ""}`} />
+                    </button>
+
+                    {/* Status Options Submenu */}
+                    <AnimatePresence>
+                      {showStatusSubmenu && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="bg-gray-50 dark:bg-[#151515] py-1 border-y border-gray-100 dark:border-gray-800 overflow-hidden"
+                        >
+                          {[
+                            { label: "Ongoing", color: "bg-[#0000A5]" },
+                            { label: "Completed", color: "bg-[#004500]" },
+                            { label: "On Hold", color: "bg-[#69707E]" },
+                            { label: "Critical", color: "bg-[#C71212]" },
+                          ].map((st) => (
+                            <button
+                              key={st.label}
+                              type="button"
+                              onClick={() => handleAction("status", st.label)}
+                              className={`w-full flex items-center gap-2 px-5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#252525] transition-colors text-left cursor-pointer ${
+                                priority === st.label ? "font-bold text-black dark:text-white bg-gray-200/60 dark:bg-[#202020]" : ""
+                              }`}
+                            >
+                              <span className={`size-2 rounded-full ${st.color}`} />
+                              <span>{st.label}</span>
+                              {priority === st.label && <Check className="size-3 ml-auto text-blue-500 dark:text-[#73FBFD]" />}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
                   <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 
