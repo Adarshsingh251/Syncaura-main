@@ -12,7 +12,7 @@
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
@@ -221,7 +221,8 @@ const AttendanceLeave = () => {
       setIsSubmitting(false);
       setShowPopup(false);
     }, 1000);
-  };
+  }
+};
 
 
 
@@ -297,11 +298,11 @@ useEffect(() => {
 
     if (debouncedValue) {
       result = result.filter(
-        (item) =>
-          item.reason.toLowerCase().includes(debouncedValue) ||
-          item.status.toLowerCase().includes(debouncedValue) ||
-          item.type.toLowerCase().includes(debouncedValue),
-      );
+      (item) =>
+            (item.reason || "").toLowerCase().includes(debouncedValue) ||
+            (item.status || "").toLowerCase().includes(debouncedValue) ||
+            (item.type || "").toLowerCase().includes(debouncedValue),
+        );
     }
 
     if (appliedFilters) {
@@ -319,8 +320,11 @@ useEffect(() => {
           const startStr = item.startDate ? item.startDate.split("T")[0] : "";
           const endStr = item.endDate ? item.endDate.split("T")[0] : "";
           if (!startStr) return false;
-          if (!endStr) return selectedDateStr >= startStr;
-          return selectedDateStr >= startStr && selectedDateStr <= endStr;
+          return (
+            selectedDateStr >= startStr &&
+            (!endStr || selectedDateStr <= endStr)
+            );
+          
         });
       }
     }
@@ -349,9 +353,9 @@ useEffect(() => {
     };
   }, [showPopup]);
 
-  const handleApplyFilters = useCallback((newFilters) => {
-    setAppliedFilters(newFilters);
-  }, []);
+  const handleApplyFilters = (newFilters) => {
+  setAppliedFilters(newFilters);
+};
 
   const handleOpenCreateModal = () => {
     setLeaveToEdit(null);
