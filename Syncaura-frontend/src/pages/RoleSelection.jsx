@@ -1,8 +1,10 @@
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, ShieldCheck, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export default function RoleSelection() {
   const navigate = useNavigate();
+  const isDark = useSelector((state) => state.theme.isDark);
 
   const roles = [
     {
@@ -32,7 +34,10 @@ export default function RoleSelection() {
   ];
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(79,230,230,0.16),_transparent_45%),linear-gradient(135deg,_#f8fbff_0%,_#eef4ff_100%)] px-4 py-12 text-slate-900 dark:bg-[radial-gradient(circle_at_top,_rgba(79,230,230,0.2),_transparent_45%),linear-gradient(135deg,_#020617_0%,_#111827_100%)] dark:text-slate-100 sm:px-6 lg:px-8">
+    <main
+      data-theme={isDark ? "dark" : "light"}
+      className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(115,251,253,0.16),_transparent_45%),linear-gradient(135deg,_#f8fbff_0%,_#eef4ff_100%)] px-4 py-12 text-slate-900 dark:bg-[radial-gradient(circle_at_top,_rgba(115,251,253,0.2),_transparent_45%),linear-gradient(135deg,_#020617_0%,_#111827_100%)] dark:text-slate-100 sm:px-6 lg:px-8"
+    >
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
         <button
           type="button"
@@ -45,7 +50,7 @@ export default function RoleSelection() {
 
         <section className="rounded-[32px] border border-slate-200/70 bg-white/80 p-8 shadow-[0_30px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/70 sm:p-10 lg:p-12">
           <div className="max-w-3xl">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.35em] text-blue-600 dark:text-[#4FE6E6]">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.35em] text-blue-600 dark:text-[#73FBFD]">
               Choose your role
             </p>
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">

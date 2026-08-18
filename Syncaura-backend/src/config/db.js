@@ -16,10 +16,15 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const { Pool } = pkg;
 
-const pool = new Pool({
+const poolConfig = {
   connectionString: process.env.DATABASE_URL,
-  ssl: false,
-});
+};
+
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('sslmode=')) {
+  poolConfig.ssl = { rejectUnauthorized: false };
+}
+
+const pool = new Pool(poolConfig);
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle database client:', err.message);
