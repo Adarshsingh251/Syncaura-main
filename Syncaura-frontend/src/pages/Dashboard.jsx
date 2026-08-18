@@ -10,16 +10,16 @@ import Tabs from "../components/dashboard/Main/SubMain/Right/Tabs";
 import ProjectItem from "../components/dashboard/Main/SubMain/Right/ProjectItem";
 import TaskStatCard from "../components/dashboard/Main/SubMain/Left/TaskStatCard";
 import DashboardCircles from "../components/dashboard/Main/SubMain/Left/DashboardCircles";
-import SupportChatbot from "../components/SupportChatbot";
+import SupportChatbot from "../components/common/SupportChatbot";
 import { useSelector } from "react-redux";
 
 const Dashboard = () => {
-  const isDark=useSelector((state)=>state.theme.isDark)
+  const isDark = useSelector((state) => state.theme.isDark);
   // const { isDark } = useThemeStore();
   const tabs = ["Last Projects", "On Deadline", "View All Projects"];
   const [active, setActive] = useState(0);
   const [subHeadActive, setSubHeaderActive] = useState("Dashboard");
-  const [showUpperSideBar, setShowUpperSideBar]=useState(false)
+  const [showUpperSideBar, setShowUpperSideBar] = useState(false);
 
   const actions = [
     { icon: "/images/clipboard.png", label: "Project" },
@@ -138,7 +138,11 @@ const Dashboard = () => {
       className=" bg-[#F7F8FA] dark:bg-[#1A1B1E] w-full px-4 xl:px-5 py-2 min-h-screen  transition-colors duration-500 "
     >
       <div className="  px-2 left-0 min-w-full ">
-         <Header currTab={subHeadActive} show={showUpperSideBar} setShow={setShowUpperSideBar}  />
+        <Header
+          currTab={subHeadActive}
+          show={showUpperSideBar}
+          setShow={setShowUpperSideBar}
+        />
       </div>
 
       <div className="grid grid-cols-[270px_1fr] xl:grid-cols-[330px_1fr] gap-1 xl:gap-3 pt-2 xl:pt-5 min-h-screen">
@@ -146,10 +150,15 @@ const Dashboard = () => {
 
         <div className="flex flex-col  ">
           <div className="w-full">
-            <DashboardHeader active={subHeadActive} setActive={setSubHeaderActive} />
+            <DashboardHeader
+              active={subHeadActive}
+              setActive={setSubHeaderActive}
+            />
           </div>
 
-          <div className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Dashboard" ? "grid animate-slideIn" : "hidden"} grid-cols-5 px-3  2xl:px-10 gap-5 2xl:gap-10`}>
+          <div
+            className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Dashboard" ? "grid animate-slideIn" : "hidden"} grid-cols-5 px-3  2xl:px-10 gap-5 2xl:gap-10`}
+          >
             <div className="col-span-3 flex flex-col gap-5 ">
               <QuickActions actions={actions} />
               <div className="grid grid-cols-7 xl:grid-cols-10 2xl:grid-cols-9 gap-5 2xl:gap-10">
@@ -164,19 +173,17 @@ const Dashboard = () => {
               </div>
               <div className="grid grid-cols-10 xl:grid-cols-7 gap-2 xl:gap-7">
                 <div className="col-span-6 xl:col-span-4 bg-white  dark:bg-[#1A1B1E] flex flex-col pt-1  xl:pt-5 px-5 pb-0.5  xl:pb-2 gap-4 w-full items-center justify-center shadow-[0_6px_5px_1px_rgba(0,0,0,0.40),0_0px_0px_0px_rgba(0,0,0,0.15)] rounded-xl">
-
                   <div className="flex items-center justify-between   w-full px-4 2xl:px-10">
-                    <p className="font-semibold text-xs 2xl:text-2xl text-[#000000]  dark:text-[#A7A7A7]   ">Task</p>
-                    <div className="w-full flex items-center justify-end" ><Ellipsis className="text-xl text-[#C3CAD9] " /></div>
+                    <p className="font-semibold text-xs 2xl:text-2xl text-[#000000]  dark:text-[#A7A7A7]   ">
+                      Task
+                    </p>
+                    <div className="w-full flex items-center justify-end">
+                      <Ellipsis className="text-xl text-[#C3CAD9] " />
+                    </div>
                   </div>
                   <div className="w-full flex items-center justify-center ">
                     <DashboardCircles />
-
                   </div>
-
-
-
-
                 </div>
                 <div className="col-span-4 xl:col-span-3">
                   <div className="flex flex-col items-center justify-center gap-2 xl:gap-5">
@@ -197,12 +204,13 @@ const Dashboard = () => {
                   className={`
     absolute inset-0 w-full
     transition-transform transition-opacity duration-600 ease-in-out
-    ${active === 0
-                      ? "translate-x-0 opacity-100"
-                      : active > 0
-                        ? "-translate-x-full opacity-0"
-                        : "translate-x-full opacity-0"
-                    }
+    ${
+      active === 0
+        ? "translate-x-0 opacity-100"
+        : active > 0
+          ? "-translate-x-full opacity-0"
+          : "translate-x-full opacity-0"
+    }
   `}
                 >
                   {PROJECTS_LIST_ITEM.map(
@@ -217,7 +225,7 @@ const Dashboard = () => {
                         income,
                         tasks,
                       },
-                      idx
+                      idx,
                     ) => (
                       <div className="pt-5 w-full " key={idx}>
                         <ProjectItem
@@ -231,7 +239,7 @@ const Dashboard = () => {
                           tasks={tasks}
                         />
                       </div>
-                    )
+                    ),
                   )}
                 </div>
 
@@ -240,12 +248,13 @@ const Dashboard = () => {
                   className={`
         absolute inset-0 w-full h-full flex items-center justify-center
         transition-transform transition-opacity duration-300 ease-in-out
-        ${active === 1
-                      ? "translate-x-0 opacity-100"
-                      : active > 1
-                        ? "-translate-x-full opacity-0"
-                        : "translate-x-full opacity-0"
-                    }
+        ${
+          active === 1
+            ? "translate-x-0 opacity-100"
+            : active > 1
+              ? "-translate-x-full opacity-0"
+              : "translate-x-full opacity-0"
+        }
       `}
                 >
                   <p className="text-xl text-gray-400">On DeadLine Card</p>
@@ -256,10 +265,11 @@ const Dashboard = () => {
                   className={`
         absolute inset-0 w-full h-full flex items-center justify-center
         transition-transform transition-opacity duration-300 ease-in-out
-        ${active === 2
-                      ? "translate-x-0 opacity-100"
-                      : "translate-x-full opacity-0"
-                    }
+        ${
+          active === 2
+            ? "translate-x-0 opacity-100"
+            : "translate-x-full opacity-0"
+        }
       `}
                 >
                   <p className="text-xl text-gray-400">
@@ -269,24 +279,34 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          <div className={`mt-1 xl:mt-5 w-full ${subHeadActive === "All Projects" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}>
+          <div
+            className={`mt-1 xl:mt-5 w-full ${subHeadActive === "All Projects" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}
+          >
             <h1>All Projects</h1>
           </div>
-          <div className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Schedule" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}>
+          <div
+            className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Schedule" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}
+          >
             <h1>Schedule</h1>
           </div>
-          <div className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Meeting" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}>
+          <div
+            className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Meeting" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}
+          >
             <h1>Meeting</h1>
           </div>
-          <div className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Activity" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}>
+          <div
+            className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Activity" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}
+          >
             <h1>Activity</h1>
           </div>
-          <div className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Members" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}>
+          <div
+            className={`mt-1 xl:mt-5 w-full ${subHeadActive === "Members" ? "flex animate-slideIn" : "hidden"} items-center justify-center w-full h-full px-3  2xl:px-10 gap-5 2xl:gap-10`}
+          >
             <h1>Members</h1>
           </div>
         </div>
       </div>
-      <SupportChatbot/>
+      <SupportChatbot />
     </div>
   );
 };

@@ -71,6 +71,10 @@ web_modules/
 
 # dotenv environment variables file
 .env
+src/validators/.env
+.env
+.env.test
+.env.production
 .env.*
 !.env.example
 

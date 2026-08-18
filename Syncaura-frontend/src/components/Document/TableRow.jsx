@@ -42,7 +42,7 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
         </div>
 
         <div className="flex-1/13 w-full flex justify-end">
-          <button className="text-[#2461E6] hover:underline font-medium">
+          <button className="text-[#2461E6] hover:underline font-medium btn-hover">
             Edit
           </button>
         </div>
@@ -50,7 +50,7 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
 
       <div className="md:hidden w-full px-4">
         <div className="flex flex-col gap-3 rounded-xl border bg-white dark:bg-black p-4 shadow-sm">
-        
+
           <div className="flex items-center gap-3">
             <FileText className={`size-7 ${docColor}`} />
             <h1 className="font-semibold text-black dark:text-white text-sm break-all">
@@ -87,7 +87,7 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
           </div>
 
           <div className="flex justify-end pt-2">
-            <button className="text-sm font-medium text-[#2461E6] hover:underline">
+            <button className="text-sm font-medium text-[#2461E6] hover:underline btn-hover">
               Edit
             </button>
           </div>

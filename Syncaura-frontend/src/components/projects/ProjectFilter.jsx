@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import FilterDropdown from "../FilterDropdown";
+import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
 
@@ -92,12 +92,11 @@ export default function ProjectFilter({ onClose, onApply }) {
                 <button
                   key={item}
                   onClick={() => setPriority(item)}
-                  className={`px-4 py-1.5 rounded-full text-sm border
-            ${
-              priority === item
-                ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]"
-                : "border-gray-300 text-gray-500"
-            }`}
+                  className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${
+                    priority === item
+                      ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]"
+                      : "border-gray-300 text-gray-500"
+                  }`}
                 >
                   {item}
                 </button>

@@ -25,11 +25,12 @@ if (end <= start) {
 
     try {
       calendarEvent = await createCalendarEvent({
-        title,
-        description,
-        startTime,
-        endTime,
-      });
+  tokens: req.googleTokens,
+  title,
+  description,
+  startTime,
+  endTime,
+});
     } catch (err) {
       console.warn("Calendar sync failed:", err.message);
     }
@@ -136,12 +137,13 @@ export const updateMeeting = async (req, res) => {
     // Sync update to Google Calendar
     if (meeting.google_event_id) {
       try {
-        await updateCalendarEvent(meeting.google_event_id, {
-          title: title || meeting.title,
-          description: description || meeting.description,
-          startTime: startTime || meeting.start_time,
-          endTime: endTime || meeting.end_time,
-        });
+       await updateCalendarEvent(meeting.google_event_id, {
+  tokens: req.googleTokens,
+  title: title || meeting.title,
+  description: description || meeting.description,
+  startTime: startTime || meeting.start_time,
+  endTime: endTime || meeting.end_time,
+});
       } catch (err) {
         console.warn("Google Calendar update failed:", err.message);
         // Continue updating the database even if Google sync fails
@@ -188,7 +190,11 @@ export const deleteMeeting = async (req, res) => {
     // Step 2: Delete from Google Calendar first
     if (googleEventId) {
       try {
-        await deleteCalendarEvent(googleEventId);
+        await deleteCalendarEvent(
+          googleEventId,
+          req.googleTokens
+        );
+        
       } catch (err) {
         console.warn("Google Calendar delete failed:", err.message);
         // continue even if Google fails

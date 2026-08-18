@@ -4,8 +4,8 @@ export default function MessageBubble({ text, isOwn }) {
       <div
         className={`max-w-xs px-4 py-3 rounded-2xl text-sm ${
           isOwn
-            ? "bg-[#2457C5] dark:bg-[#73FBFD] dark:text-[#000000] text-[#FFFFFF] rounded-br-sm"
-            : "dark:bg-[#424242] bg-[#FFFFFF] text-[#000000] dark:text-[#FFFFFF] rounded-bl-sm"
+            ? "bg-[#2457C5] dark:bg-[#73FBFD] text-white dark:text-black rounded-br-sm"
+            : "bg-white dark:bg-[#424242] text-black dark:text-white rounded-bl-sm"
         }`}
       >
         {text}

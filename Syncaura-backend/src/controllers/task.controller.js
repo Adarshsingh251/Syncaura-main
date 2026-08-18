@@ -1,4 +1,6 @@
+import { logTaskActivity } from "../utils/taskActivityLogger.js";
 import pool from "../config/db.js";
+import { validate as isUUID } from "uuid";
 
 /**
  * CREATE TASK
@@ -10,6 +12,9 @@ export const createTask = async (req, res) => {
       projectId, startDate, endDate, dependencies, reminderAt 
     } = req.body;
 
+    // RBAC: Fallback to logged-in user if assignedTo is omitted
+    const finalAssignedTo = assignedTo || req.user?.id;
+
     const result = await pool.query(
       `INSERT INTO tasks (
         title, description, priority, assigned_to, deadline, status, 
@@ -17,7 +22,7 @@ export const createTask = async (req, res) => {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
       RETURNING *`,
       [
-        title, description, priority || "medium", assignedTo, deadline, 
+        title, description, priority || "medium", finalAssignedTo, deadline, 
         status || "TODO", projectId || null, startDate || null, 
         endDate || null, reminderAt || deadline || null
       ]
@@ -36,6 +41,14 @@ export const createTask = async (req, res) => {
       task.dependencies = dependencies;
     }
 
+    await logTaskActivity({
+      taskId: task.id,
+      action: "TASK_CREATED",
+      changedBy: req.user?.id,
+      oldValue: null,
+      newValue: { title: task.title, status: task.status, priority: task.priority, assignedTo: task.assigned_to }
+    });
+
     res.status(201).json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -47,10 +60,82 @@ export const createTask = async (req, res) => {
  */
 export const getAllTasks = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM tasks ORDER BY created_at DESC");
-    res.json(result.rows);
+    const {
+      projectId,
+      assignedTo,
+      priority,
+      status,
+      deadline,
+      search
+    } = req.query;
+
+    // Validate Project ID
+    if (projectId && !isUUID(projectId)) {
+      return res.status(400).json({
+        message: "Invalid project ID",
+      });
+    }
+
+    let query = "SELECT * FROM tasks";
+    const conditions = [];
+    const values = [];
+
+    // Project Filter
+    if (projectId) {
+      values.push(projectId);
+      conditions.push(`project_id = $${values.length}`);
+    }
+
+    // Assignee Filter
+    if (assignedTo) {
+      values.push(assignedTo);
+      conditions.push(`assigned_to = $${values.length}`);
+    }
+
+    // Priority Filter
+    if (priority) {
+      values.push(priority);
+      conditions.push(`priority = $${values.length}`);
+    }
+
+    // Status Filter
+    if (status) {
+      values.push(status);
+      conditions.push(`status = $${values.length}`);
+    }
+
+    // Due Date Filter
+    if (deadline) {
+      values.push(deadline);
+      conditions.push(`DATE(deadline) = DATE($${values.length})`);
+    }
+
+    // Search by title or description
+    if (search) {
+      values.push(`%${search}%`);
+      conditions.push(
+        `(title ILIKE $${values.length} OR description ILIKE $${values.length})`
+      );
+    }
+
+    // Add WHERE clause
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ");
+    }
+
+    // Sort latest first
+    query += " ORDER BY created_at DESC";
+
+    const result = await pool.query(query, values);
+
+    return res.status(200).json(result.rows);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Get Tasks Error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch tasks",
+    });
   }
 };
 
@@ -96,6 +181,19 @@ export const updateTask = async (req, res) => {
       projectId, startDate, endDate, reminderAt 
     } = req.body;
 
+    // Fetch existing task to check permissions
+    const taskCheck = await pool.query("SELECT * FROM tasks WHERE id = $1", [id]);
+    if (taskCheck.rowCount === 0) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const existingTask = taskCheck.rows[0];
+
+    // RBAC: Check if user is Admin OR assigned to this task
+    if (req.user?.role !== "admin" && existingTask.assigned_to !== req.user?.id) {
+      return res.status(403).json({ message: "Forbidden: Not authorized to update this task" });
+    }
+
     const result = await pool.query(
       `UPDATE tasks SET 
         title = COALESCE($1, title),
@@ -116,9 +214,13 @@ export const updateTask = async (req, res) => {
       ]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Task not found" });
-    }
+    await logTaskActivity({
+      taskId: id,
+      action: "TASK_UPDATED",
+      changedBy: req.user?.id,
+      oldValue: { title: existingTask.title, description: existingTask.description, priority: existingTask.priority, status: existingTask.status },
+      newValue: result.rows[0]
+    });
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -132,13 +234,31 @@ export const updateTask = async (req, res) => {
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query("DELETE FROM tasks WHERE id = $1 RETURNING *", [id]);
 
-    if (result.rowCount === 0) {
+    // Fetch existing task to check permissions
+    const taskCheck = await pool.query("SELECT * FROM tasks WHERE id = $1", [id]);
+    if (taskCheck.rowCount === 0) {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    res.json({ message: "Task deleted" });
+    const existingTask = taskCheck.rows[0];
+
+    // RBAC: Check if user is Admin OR assigned to this task
+    if (req.user?.role !== "admin" && existingTask.assigned_to !== req.user?.id) {
+      return res.status(403).json({ message: "Forbidden: Not authorized to delete this task" });
+    }
+
+    const result = await pool.query("DELETE FROM tasks WHERE id = $1 RETURNING *", [id]);
+
+    await logTaskActivity({
+      taskId: id,
+      action: "TASK_DELETED",
+      changedBy: req.user?.id,
+      oldValue: result.rows[0],
+      newValue: null
+    });
+
+    res.json({ message: "Task deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -177,6 +297,14 @@ export const updateTaskStatus = async (req, res) => {
       [status, taskId]
     );
 
+    await logTaskActivity({
+      taskId: taskId,
+      action: "STATUS_CHANGED",
+      changedBy: req.user?.id,
+      oldValue: { status: task.status },
+      newValue: { status: status }
+    });
+
     res.json({
       message: "Task status updated successfully",
       task: updateResult.rows[0],
@@ -186,6 +314,9 @@ export const updateTaskStatus = async (req, res) => {
   }
 };
 
+/**
+ * ADD SUBTASK
+ */
 export const addSubtask = async (req, res) => {
   try {
     const { taskId } = req.params;
@@ -205,6 +336,9 @@ export const addSubtask = async (req, res) => {
   }
 };
 
+/**
+ * GET GANTT DATA
+ */
 export const getGanttData = async (req, res) => {
   try {
     const { projectId } = req.query;
@@ -228,11 +362,14 @@ export const getGanttData = async (req, res) => {
   }
 };
 
+/**
+ * GET UPCOMING REMINDERS
+ */
 export const getUpcomingReminders = async (req, res) => {
   try {
     const now = new Date();
     const upcoming = new Date();
-    upcoming.setDate(now.getDate() + 3); // next 3 days
+    upcoming.setDate(now.getDate() + 3);
 
     const result = await pool.query(
       `SELECT * FROM tasks 
@@ -250,11 +387,13 @@ export const getUpcomingReminders = async (req, res) => {
   }
 };
 
+/**
+ * START TASK
+ */
 export const startTask = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check dependencies
     const depsResult = await pool.query(
       `SELECT d.status 
        FROM task_dependencies td 
@@ -281,6 +420,44 @@ export const startTask = async (req, res) => {
     }
 
     res.json(updateResult.rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/**
+ * GET TASK ACTIVITY LOG
+ */
+export const getTaskActivity = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const taskCheck = await pool.query("SELECT id FROM tasks WHERE id = $1", [id]);
+    if (taskCheck.rowCount === 0) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const result = await pool.query(
+      `SELECT 
+        tal.id,
+        tal.action,
+        tal.old_value,
+        tal.new_value,
+        tal.created_at,
+        u.name as changed_by_name,
+        u.email as changed_by_email
+       FROM task_activity_log tal
+       LEFT JOIN users u ON tal.changed_by = u.id
+       WHERE tal.task_id = $1
+       ORDER BY tal.created_at DESC`,
+      [id]
+    );
+
+    res.json({
+      taskId: id,
+      totalActivities: result.rowCount,
+      activities: result.rows
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

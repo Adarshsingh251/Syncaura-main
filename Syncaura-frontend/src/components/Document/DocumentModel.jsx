@@ -5,33 +5,33 @@ import { useForm, Controller } from "react-hook-form";
 import MotionSelect from "../projects/Model/MotionSelect";
 
 export default function DocumentModal({ onClose, addReport }) {
-  const { register, handleSubmit,control, setValue, watch, formState: { errors }, } = useForm();
+  const { register, handleSubmit, control, setValue, watch, formState: { errors }, } = useForm();
   const [isDragging, setIsDragging] = useState(false);
   const noticeCategories = [
-  "ALL",
-  "GENERAL",
-  "ACADEMIC",
-  "IT",
-  "FACILITY",
-  "EVENT",
-  "EXAM",
-];
+    "ALL",
+    "GENERAL",
+    "ACADEMIC",
+    "IT",
+    "FACILITY",
+    "EVENT",
+    "EXAM",
+  ];
 
 
   const files = watch("attachments");
   const fileRef = useRef(null);
 
   const onSubmit = (data) => {
-    const id= `#${Date.now().toString().slice(0, 4)}`;
-    const category=data.category;
-    const title=data.description
-    const type=data.type;
-    addReport((prev)=>[{id, category, type, title }, ...prev])
+    const id = `#${Date.now().toString().slice(0, 4)}`;
+    const category = data.category;
+    const title = data.description
+    const type = data.type;
+    addReport((prev) => [{ id, category, type, title }, ...prev])
     onClose()
   };
   const onError = (formErrors) => {
-  console.log("Form Errors:", formErrors);
-};
+    console.log("Form Errors:", formErrors);
+  };
 
   const handleFileClick = () => {
     fileRef.current?.click();
@@ -81,7 +81,7 @@ export default function DocumentModal({ onClose, addReport }) {
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+            className="absolute right-4 top-4 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white btn-hover"
           >
             <X size={18} />
           </button>
@@ -95,21 +95,21 @@ export default function DocumentModal({ onClose, addReport }) {
             <div>
 
               <div className="relative mt-1">
-               <h1 className="text-base font-medium w-full text-[#000000] dark:text-[#F8F8F8]">
-                                Name
-                            </h1>
-                            <div className="flex w-full rounded-xl px-1 md:px-3 py-1 dark:bg-[#2E2F2F] ">
-                                <Controller
-                                    name="category"
-                                    control={control}
-                                    rules={{ required: true }}
-                                    render={({ field }) => (
-                                        <MotionSelect {...field} startVal="Select category" options={noticeCategories} />
-                                    )}
-                                />
-                            </div>
+                <h1 className="text-base font-medium w-full text-[#000000] dark:text-[#F8F8F8]">
+                  Name
+                </h1>
+                <div className="flex w-full rounded-xl px-1 md:px-3 py-1 dark:bg-[#2E2F2F] ">
+                  <Controller
+                    name="category"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <MotionSelect {...field} startVal="Select category" options={noticeCategories} />
+                    )}
+                  />
+                </div>
 
-               
+
               </div>
             </div>
 
@@ -167,11 +167,10 @@ export default function DocumentModal({ onClose, addReport }) {
                 onDrop={handleDrop}
                 className={`
       mt-1 h-24 rounded-xl border-2 border-dashed
-      ${
-        isDragging
-          ? "border-blue-500 bg-blue-50/20"
-          : "border-gray-300 dark:border-gray-600"
-      }
+      ${isDragging
+                    ? "border-blue-500 bg-blue-50/20"
+                    : "border-gray-300 dark:border-gray-600"
+                  }
       flex flex-col items-center justify-center gap-1
       text-sm text-gray-600 dark:text-gray-400
       cursor-pointer

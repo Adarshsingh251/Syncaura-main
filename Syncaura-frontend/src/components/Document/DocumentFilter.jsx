@@ -1,16 +1,16 @@
 import { motion } from "framer-motion";
-import FilterDropdown from "../FilterDropdown";
+import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
 
 export default function DocumentFilter({ onClose, onApply }) {
-  const [status, setStatus] = useState("Final");
-  const [type, setType] = useState("PDF");
+  const [status, setStatus] = useState("All");
+  const [type, setType] = useState("All");
   const [version, setVersion] = useState("Above");
-  const [versionNo, setVersionNo] = useState("v1.0");
+  const [versionNo, setVersionNo] = useState("All");
   const [date, setDate] = useState("");
 
-  const items = ["Final", "Draft", "Revised"];
+  const items = ["All", "Final", "Draft", "Revised"];
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10">
       <motion.div
@@ -66,7 +66,7 @@ export default function DocumentFilter({ onClose, onApply }) {
 
           {/* Type */}
           <FilterDropdown
-            options={["PDF", "XLS", "DOC", "ZIP"]}
+            options={["All", "PDF", "XLS", "DOC", "ZIP"]}
             startVal={type}
             label="Type"
             onChange={setType}
@@ -80,10 +80,10 @@ export default function DocumentFilter({ onClose, onApply }) {
             onChange={setVersion}
           />
 
-          {/* Version No (full width on tablet, normal on desktop) */}
-
+          {/* Version No */}
           <FilterDropdown
             options={[
+              "All",
               "v1.0",
               "v1.5",
               "v2.0",
@@ -93,8 +93,6 @@ export default function DocumentFilter({ onClose, onApply }) {
               "v4.0",
               "v4.5",
               "v5.0",
-              "v5.5",
-              "v6.0",
             ]}
             startVal={versionNo}
             label="Version No"
@@ -112,7 +110,7 @@ export default function DocumentFilter({ onClose, onApply }) {
               <button
                 onClick={() => setStatus(item)}
                 key={item}
-                className={`px-4 py-1.5 rounded-full text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]" : "border-gray-300 text-gray-500"}`}
+                className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]" : "border-gray-300 text-gray-500"}`}
               >
                 {item}
               </button>
