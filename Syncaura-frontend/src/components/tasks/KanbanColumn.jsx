@@ -6,26 +6,35 @@ const COLUMN_CONFIG = {
     label: "To Do",
     color: "bg-slate-100 dark:bg-slate-800/50",
     headerColor: "text-slate-600 dark:text-slate-400",
-    countColor: "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300",
+    countColor:
+      "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300",
     indicator: "bg-slate-400",
   },
   IN_PROGRESS: {
     label: "In Progress",
     color: "bg-blue-50 dark:bg-blue-950/30",
     headerColor: "text-blue-600 dark:text-blue-400",
-    countColor: "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300",
+    countColor:
+      "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300",
     indicator: "bg-blue-500",
   },
   DONE: {
     label: "Done",
     color: "bg-emerald-50 dark:bg-emerald-950/20",
     headerColor: "text-emerald-600 dark:text-emerald-400",
-    countColor: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300",
+    countColor:
+      "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300",
     indicator: "bg-emerald-500",
   },
 };
 
-const KanbanColumn = ({ status, tasks, onOpenTask, onDeleteTask }) => {
+const KanbanColumn = ({
+  status,
+  tasks,
+  onOpenTask,
+  onDeleteTask,
+  canDeleteTask,
+}) => {
   const config = COLUMN_CONFIG[status];
 
   return (

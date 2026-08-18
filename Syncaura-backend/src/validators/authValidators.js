@@ -6,7 +6,7 @@ export const registerValidator = [
   body('password').isStrongPassword({
     minLength: 8, minSymbols: 0
   }),
-  body('roles').optional().isArray().custom((arr) => arr.every(r => ['user','admin'].includes(r)))
+  body('roles').optional().isArray().custom((arr) => arr.every(r => ['user','admin','co-admin'].includes(r)))
 ];
 
 export const loginValidator = [

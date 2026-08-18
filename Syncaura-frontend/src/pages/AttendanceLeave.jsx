@@ -16,7 +16,6 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
-import api from "../config/axios";
 
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
@@ -53,19 +52,27 @@ const initialAttendanceStats = [
   },
 ];
 
+const ATTENDANCE_STORAGE_PREFIX = "syncaura:attendance:";
+const LEAVE_STORAGE_PREFIX = "syncaura:leaves:";
+
 const getToday = () => {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60_000;
   return new Date(now.getTime() - offset).toISOString().split("T")[0];
 };
 
+const getInitialAttendanceState = () => ({
+  presentDays: initialAttendanceStats.find((stat) => stat.title === "Present Days")
+    .value,
+  records: {},
+});
+
 const AttendanceLeave = () => {
   const user = useSelector((state) => state.auth.user);
-  const authChecking = useSelector((state) => state.auth.authChecking);
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
-  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
+
   const [showPopup, setShowPopup] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Check-In");
   const popupRef = useRef(null);
@@ -79,99 +86,101 @@ const AttendanceLeave = () => {
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingRecords, setIsLoadingRecords] = useState(true);
-  const [leaveError, setLeaveError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
-  const [leaveData, setLeaveData] = useState([]);
+  const attendanceStateRef = useRef(getInitialAttendanceState());
+  const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+  const leaveStorageKey = `${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
 
-  useEffect(() => {
-    setLeaveData([]);
-    setLeaveError(null);
-    setCheckInTime(null);
-    setCheckOutTime(null);
-    setSelectedTab("Check-In");
-    setAttendanceStats(initialAttendanceStats);
-  }, [user?.id]);
+  // Load leave data from localStorage (persists across refreshes)
+  const [leaveData, setLeaveData] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
-  // Kept for legacy edit flows; displayed leave data is always replaced by the API response.
+  // Persist leave data to localStorage whenever it changes
   const syncLeavesToStorage = useCallback((updater) => {
     setLeaveData((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
       try {
-        // Leave records are persisted by the API, never by this page.
+        localStorage.setItem(leaveStorageKey, JSON.stringify(next));
       } catch {
         // storage quota exceeded — silently ignore
       }
       return next;
     });
-  }, []);
+  }, [leaveStorageKey]);
+
+  // Until an attendance API exists, this keeps a user's daily status stable across
+  // refreshes, logins, and logouts. Replace this with a GET attendance-status call
+  // when the backend endpoint is available.
+  useEffect(() => {
+    const emptyState = getInitialAttendanceState();
+
+    try {
+      const storedValue = localStorage.getItem(attendanceStorageKey);
+      const storedState = storedValue ? JSON.parse(storedValue) : emptyState;
+      attendanceStateRef.current = {
+        presentDays: Number.isFinite(storedState.presentDays)
+          ? storedState.presentDays
+          : emptyState.presentDays,
+        records: storedState.records && typeof storedState.records === "object"
+          ? storedState.records
+          : {},
+      };
+    } catch {
+      attendanceStateRef.current = emptyState;
+    }
+
+    const todayRecord = attendanceStateRef.current.records[getToday()] || {};
+    let isCurrent = true;
+
+    queueMicrotask(() => {
+      if (!isCurrent) return;
+
+      setCheckInTime(todayRecord.checkInTime || null);
+      setCheckOutTime(todayRecord.checkOutTime || null);
+      setAttendanceStats((previousStats) =>
+        previousStats.map((stat) =>
+          stat.title === "Present Days"
+            ? { ...stat, value: attendanceStateRef.current.presentDays }
+            : stat,
+        ),
+      );
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [attendanceStorageKey]);
+
+  const saveAttendanceState = (nextState) => {
+    attendanceStateRef.current = nextState;
+    localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
+  };
 
   const canCheckIn = !checkInTime && !checkOutTime;
   const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    void (async () => {
-      setIsSubmitting(true);
-      try {
-        const response = await api.post(
-          selectedTab === "Check-In" ? "/attendance/check-in" : "/attendance/check-out",
-        );
-        const record = response.data?.data;
-        if (selectedTab === "Check-In") {
-          setCheckInTime(record?.check_in_time || null);
-          setSelectedTab("CheckOut");
-        } else {
-          setCheckOutTime(record?.check_out_time || null);
-        }
-        toast.success(response.data?.message || "Attendance updated successfully.");
-      } catch (error) {
-        console.error("Attendance update failed:", error.response?.data || error);
-        toast.error(error.response?.data?.message || "Unable to update attendance.");
-      } finally {
-        setIsSubmitting(false);
+    if (selectedTab === "Check-In" && !canCheckIn) {
+      toast.info(`You have already checked in today at ${checkInTime}`);
+      setShowPopup(false);
+      return;
+    }
+    if (selectedTab === "CheckOut" && !canCheckOut) {
+      if (checkOutTime) {
+        toast.info(`You have already checked out today at ${checkOutTime}`);
         setShowPopup(false);
+        return;
       }
-    })();
-    return;
-
-    /*
-
-    if (selectedTab === "Check-In") {
-      const nextState = {
-        presentDays: attendanceStateRef.current.presentDays + 1,
-        records: {
-          ...attendanceStateRef.current.records,
-          [attendanceDate]: { ...currentRecord, checkInTime: timeString },
-        },
-      };
-
-      saveAttendanceState(nextState);
-
-      setAttendanceStats((previousStats) =>
-        previousStats.map((stat) =>
-          stat.title === "Present Days"
-            ? { ...stat, value: nextState.presentDays }
-            : stat,
-        ),
-      );
-
-      setSelectedTab("CheckOut");
-
-      toast.success(t("attendance_marked_success", { date: attendanceDate }));
-    } else if (selectedTab === "CheckOut") {
-      setCheckOutTime(timeString);
-
-      saveAttendanceState({
-        ...attendanceStateRef.current,
-        records: {
-          ...attendanceStateRef.current.records,
-          [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
-        },
-      });
-
-      toast.success(t("attendance_checkout_success"));
+      toast.error("Please check in before checking out!");
+      return;
     }
 
     setIsSubmitting(true);
@@ -187,42 +196,27 @@ const AttendanceLeave = () => {
           presentDays: attendanceStateRef.current.presentDays + 1,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: {
-              ...currentRecord,
-              checkInTime: timeString,
-            },
+            [attendanceDate]: { ...currentRecord, checkInTime: timeString },
           },
         };
-
         saveAttendanceState(nextState);
-
         setAttendanceStats((previousStats) =>
           previousStats.map((stat) =>
-            stat.title === "Present Days"
-              ? { ...stat, value: nextState.presentDays }
-              : stat,
+            stat.title === "Present Days" ? { ...stat, value: nextState.presentDays } : stat,
           ),
         );
-
         setSelectedTab("CheckOut");
-
-        toast.success(t("attendance_marked_success", { date: attendanceDate }));
-
+        toast.success(`Attendance marked successfully for ${attendanceDate}!`);
       } else if (selectedTab === "CheckOut") {
         setCheckOutTime(timeString);
-
         saveAttendanceState({
           ...attendanceStateRef.current,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: {
-              ...currentRecord,
-              checkOutTime: timeString,
-            },
+            [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
           },
         });
-
-        toast.success(t("attendance_checkout_success"));
+        toast.success("Check-out recorded successfully!");
       }
       setIsSubmitting(false);
       setShowPopup(false);
@@ -230,71 +224,60 @@ const AttendanceLeave = () => {
   };
 
 
-    */
-  };
 
-const fetchAttendance = useCallback(async () => {
-  if (authChecking || !user) return;
 
-  try {
-    console.log("Attendance/Leave fetch started", user);
-    const response = await api.get("/attendance/my-attendance");
-    console.log("Attendance/Leave API response:", response);
-    const attendanceRecords = response.data?.records || [];
-    const todayRecord = attendanceRecords.find((record) => record.date === getToday());
-    console.log("Attendance records:", attendanceRecords);
-    setCheckInTime(todayRecord?.check_in_time || null);
-    setCheckOutTime(todayRecord?.check_out_time || null);
-    setAttendanceStats((previousStats) => previousStats.map((stat) => {
-      if (stat.title === "Present Days") return { ...stat, value: response.data?.summary?.totalPresentDays || 0 };
-      if (stat.title === "Absent Days") return { ...stat, value: response.data?.summary?.totalAbsentDays || 0 };
-      if (stat.title === "Leave Taken") return { ...stat, value: response.data?.summary?.totalLeaveDays || 0 };
-      return stat;
-    }));
-  } catch (error) {
-    console.error("Attendance/Leave fetch failed:", error.response?.data || error);
-  }
-}, [authChecking, user]);
+
 
 const fetchLeaves = useCallback(async () => {
-  if (authChecking || !user) return;
-  setLeaveError(null);
-  setIsLoadingRecords(true);
-
   try {
-    const isAdmin = user?.role === "admin";
-    const endpoint = isAdmin ? "/leave/allleaves" : "/leave/myleaves";
-    console.log("Attendance/Leave fetch started", user);
-    const response = await api.get(endpoint, { params: { page: currentPage, limit: 5 } });
-    console.log("Attendance/Leave API response:", response);
-    const data = response.data;
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      throw new Error("Access token not found");
+    }
+
+    const isAdminOrCoAdmin =
+  user?.role === "admin" ||
+  user?.role === "co-admin";
+
+   const endpoint = isAdminOrCoAdmin
+  ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
+  : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
+
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch leaves: ${response.status}`);
+    }
+
+    const data = await response.json();
+   
 
     setTotalPages(data.totalPages || 1);
+
+       
 
     const formattedLeaves = (data.leaves || []).map((leave) => ({
       ...leave,
       startDate: leave.from_date,
       endDate: leave.to_date,
       type: leave.leave_type || "Leave",
-      status: leave.status ? `${leave.status.charAt(0).toUpperCase()}${leave.status.slice(1)}` : "Pending",
     }));
 
-    console.log("Leave records:", formattedLeaves);
+     
+    console.log("Formatted Leaves:", formattedLeaves);
     setLeaveData(formattedLeaves);
-    setLeaveError(null);
   } catch (error) {
-    console.error("Attendance/Leave fetch failed:", error.response?.data || error);
-    const message = error.response?.data?.message || error.message || "Failed to load leave requests";
-    setLeaveError(message);
-    toast.error(message);
-  } finally {
-    setIsLoadingRecords(false);
+    console.error("Error fetching leaves:", error);
+    toast.error("Failed to load leave requests");
   }
-}, [authChecking, currentPage, user]);
-
-useEffect(() => {
-  fetchAttendance();
-}, [fetchAttendance]);
+}, [user?.role,currentPage]);
 
 useEffect(() => {
   fetchLeaves();
@@ -458,8 +441,28 @@ useEffect(() => {
             <AttendanceCard {...item} />
           </div>
         ))}
-        <div className="relative w-full flex justify-center mt-2">
-          {/* TOP CARD */}
+{/* 5th CARD: MARK THE PRESENCE */}
+{/* <div className="relative w-full flex justify-center">
+  <motion.div
+    onClick={() => setShowPopup((prev) => !prev)}
+    ref={triggerRef}
+    whileTap={{ scale: 0.97 }}
+    className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED]"
+  >
+    <h1
+      className={`font-semibold text-xs sm:text-sm ${
+        checkInTime ? 'text-[#29C339]' : 'text-[#FF0000]'
+      }`}
+    >
+      {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
+    </h1>
+
+    <div className="flex items-center justify-between mt-2">
+      ...
+    </div>
+  </motion.div>
+</div> */}
+        <div className="relative w-full flex justify-center">
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
             ref={triggerRef}
@@ -502,13 +505,12 @@ useEffect(() => {
                 //     w-[90vw] sm:w-[380px] md:w-[400px] 
                 //   "
                 className="
-                  fixed
-                  inset-0
-                  z-[100]
-                  flex
-                  items-center
-                  justify-center
-                  p-4
+                  absolute
+                  right-full
+                  top-0
+                  mr-3
+                  z-50
+                  w-[90vw] sm:w-[380px] md:w-[400px]
               "
               >
                 <div
@@ -596,14 +598,8 @@ useEffect(() => {
                         </>
                       ) : (
                         selectedTab === "Check-In"
-                          ? canCheckIn
-                            ? "Check In"
-                            : "Checked In"
-                          : canCheckOut
-                            ? "Check Out"
-                            : checkOutTime
-                              ? "Attendance Complete"
-                              : "Check in first"
+                          ? canCheckIn ? "Check In" : "Checked In"
+                          : canCheckOut ? "Check Out" : checkOutTime ? "Attendance Complete" : "Check In First"
                       )}
                     </button>
                   </div>
@@ -640,24 +636,13 @@ useEffect(() => {
           </h1>
         </div>
 
-        {isLoadingRecords ? (
-          <div className="flex flex-col items-center justify-center w-full py-16 px-4 text-center">
-            <Loader className="size-6 animate-spin text-[#2461E6] dark:text-[#73FBFD]" />
-            <p className="mt-3 text-lg font-medium text-gray-500 dark:text-gray-400">Loading leave records...</p>
-          </div>
-        ) : leaveError ? (
-          <div className="flex flex-col items-center justify-center w-full py-16 px-4 text-center">
-            <p className="text-lg font-medium text-red-500">{leaveError}</p>
-          </div>
-        ) : (
-          <AttendanceList
-            LeaveData={filteredLeaveHistory}
-            currId={selectedId}
-            setCurrId={setSelectedId}
-            onEditLeave={handleOpenEditModal}
-            onDeleteLeave={handleDeleteLeave}
-          />
-        )}
+        <AttendanceList
+          LeaveData={filteredLeaveHistory}
+          currId={selectedId}
+          setCurrId={setSelectedId}
+          onEditLeave={handleOpenEditModal}
+          onDeleteLeave={handleDeleteLeave}
+        />
 
 
 
@@ -706,24 +691,13 @@ useEffect(() => {
         <h1 className="flex items-center justify-center w-full text-2xl text-black dark:text-white font-bold">
           Leave List
         </h1>
-        {isLoadingRecords ? (
-          <div className="flex flex-col items-center justify-center w-full py-12 px-4 text-center">
-            <Loader className="size-6 animate-spin text-[#2461E6] dark:text-[#73FBFD]" />
-            <p className="mt-3 text-lg font-medium text-gray-500 dark:text-gray-400">Loading leave records...</p>
-          </div>
-        ) : leaveError ? (
-          <div className="flex flex-col items-center justify-center w-full py-12 px-4 text-center">
-            <p className="text-lg font-medium text-red-500">{leaveError}</p>
-          </div>
-        ) : (
-          <AttendanceList
-            currId={selectedId}
-            setCurrId={setSelectedId}
-            LeaveData={filteredLeaveHistory}
-            onEditLeave={handleOpenEditModal}
-            onDeleteLeave={handleDeleteLeave}
-          />
-        )}
+        <AttendanceList
+          currId={selectedId}
+          setCurrId={setSelectedId}
+          LeaveData={filteredLeaveHistory}
+          onEditLeave={handleOpenEditModal}
+          onDeleteLeave={handleDeleteLeave}
+        />
       </div>
 
       <button
@@ -739,7 +713,6 @@ useEffect(() => {
           onClose={handleCloseLeaveModal}
           setLeaveData={syncLeavesToStorage}
           editingLeave={leaveToEdit}
-          onSaved={fetchLeaves}
         />
       )}
     </div>

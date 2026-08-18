@@ -25,7 +25,7 @@ router.use(auth);
  * Public routes (all authenticated users)
  */
 // Get complaint statistics
-router.get('/stats', permit(ROLES.ADMIN), getComplaintStats);
+router.get('/stats', permit(ROLES.ADMIN, ROLES.CO_ADMIN), getComplaintStats);
 // File a new complaint
 router.post('/', upload.array('attachments', 5), createComplaint);
 
@@ -39,23 +39,23 @@ router.get('/:id', getComplaintById);
 router.post('/:id/comments', addComment);
 
 /**
- * Admin only routes
+ * Admin/Co-admin only routes
  */
 
 // Get all complaints with filters
-router.get('/', permit(ROLES.ADMIN), getAllComplaints);
+router.get('/', permit(ROLES.ADMIN, ROLES.CO_ADMIN), getAllComplaints);
 
 // Update complaint status
-router.patch('/:id/status', permit(ROLES.ADMIN), updateComplaintStatus);
+router.patch('/:id/status', permit(ROLES.ADMIN, ROLES.CO_ADMIN), updateComplaintStatus);
 
 // Assign complaint to handler
-router.patch('/:id/assign', permit(ROLES.ADMIN), assignComplaint);
+router.patch('/:id/assign', permit(ROLES.ADMIN, ROLES.CO_ADMIN), assignComplaint);
 
 // Update complaint details
-router.patch('/:id', permit(ROLES.ADMIN), updateComplaint);
+router.patch('/:id', permit(ROLES.ADMIN, ROLES.CO_ADMIN), updateComplaint);
 
 // Delete complaint
-router.delete('/:id', permit(ROLES.ADMIN), deleteComplaint);
+router.delete('/:id', permit(ROLES.ADMIN, ROLES.CO_ADMIN), deleteComplaint);
 
 
 

@@ -44,10 +44,15 @@ const AuthCallback = () => {
         toast.success(`Welcome Back ${userName || "User"}!!`);
 
         // Route to the appropriate dashboard based on user role
-        if (role === "Admin") {
-          navigate("/admin", { replace: true });
-        } else {
-          navigate("/user-dashboard", { replace: true });
+        switch (role) {
+          case "Admin":
+            navigate("/admin", { replace: true });
+            break;
+          case "Co-Admin":
+            navigate("/co-admin", { replace: true });
+            break;
+          default:
+            navigate("/user-dashboard", { replace: true });
         }
       } catch (err) {
         console.error("Error setting OAuth credentials:", err);

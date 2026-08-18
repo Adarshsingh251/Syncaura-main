@@ -11,6 +11,7 @@ const ProtectRoute = ({ allowedRoles, publicOnly = false }) => {
 
   const getRoleHome = () => {
     if (user?.role === "admin") return "/admin";
+    if (user?.role === "co-admin") return "/co-admin";
     return "/user-dashboard";
   };
 

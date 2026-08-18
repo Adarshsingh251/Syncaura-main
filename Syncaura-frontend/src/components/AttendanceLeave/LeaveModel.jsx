@@ -3,9 +3,8 @@ import { FileText, X } from "lucide-react"
 import MotionSelect from "../projects/Model/MotionSelect"
 import { Controller, useForm } from "react-hook-form"
 import { useEffect } from "react"
-import api from "../../config/axios"
 
-const LeaveModel = ({ onClose, setLeaveData, editingLeave = null, onSaved }) => {
+const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
 
     const leaveTypes = [
         "Casual",
@@ -53,17 +52,6 @@ const LeaveModel = ({ onClose, setLeaveData, editingLeave = null, onSaved }) => 
 
     const onSubmit = async (data) => {
         try {
-            if (!editingLeave) {
-                await api.post("/leave/applyleave", {
-                    fromDate: data.startDate,
-                    toDate: data.endDate,
-                    reason: data.reason,
-                });
-                await onSaved?.();
-                onClose();
-                return;
-            }
-
             const currData = {
                 startDate: new Date(`${data.startDate}T00:00:00Z`).toISOString(),
                 endDate: new Date(`${data.endDate}T00:00:00Z`).toISOString(),

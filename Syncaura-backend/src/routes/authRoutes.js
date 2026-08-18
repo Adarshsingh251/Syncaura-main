@@ -1,9 +1,17 @@
 import { Router } from 'express';
 
 import {
-  register, login, refresh, changePassword,
-  forgotPassword, resetPassword, adminOnly,
-  requestPasswordOtp, changePasswordWithOtp, logout
+  register,
+  login,
+  refresh,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+  adminOnly,
+  requestPasswordOtp,
+  changePasswordWithOtp,
+  getProfile,
+  logout
 } from '../controllers/authController.js';
 
 import { auth } from '../middlewares/auth.js';
@@ -25,7 +33,7 @@ router.post('/register', registerValidator, register);
 router.post('/login', loginValidator, login);
 router.post('/refresh', refresh);
 
-//setting upgrades 
+router.get('/me', auth, getProfile);
 
 // OTP change password flow
 router.post(
@@ -48,10 +56,11 @@ router.post('/reset-password', resetPasswordValidator, resetPassword);
 
 // Traditional change password
 router.put('/change-password', auth, changePasswordValidator, changePassword);
-//new 
 
 // Role-based route
 router.get('/admin', auth, permit('admin'), adminOnly);
 
-router.post("/logout", logout);
+// Logout
+router.post('/logout', logout);
+
 export default router;
