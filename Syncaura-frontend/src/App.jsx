@@ -75,6 +75,10 @@ export default function App() {
       });
   }, [dispatch]);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+  }, [isDark]);
+
   const { fontSize = "medium", zoom = 100 } = useSelector(
     (state) => state.ui || {}
   );
