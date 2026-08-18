@@ -3,44 +3,7 @@ import { Star } from "lucide-react";
 import { useState } from "react";
 
 export default function ChatMessages({ viewMode = "chat", currentChat }) {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hey bro, you free ah? Need to ask something.",
-      isOwn: false,
-      starred: true,
-      timestamp: "2:30 PM",
-      sender: "Aarav M",
-      avatar: "A"
-    },
-    {
-      id: 2,
-      text: "Ya I'm free. What do you want to ask?",
-      isOwn: true,
-      starred: true,
-      timestamp: "2:30 PM",
-      sender: "You",
-      avatar: "J"
-    },
-    {
-      id: 3,
-      text: "Can you help me with the project?",
-      isOwn: false,
-      starred: false,
-      timestamp: "2:31 PM",
-      sender: "Aarav M",
-      avatar: "A"
-    },
-    {
-      id: 4,
-      text: "Sure, what do you need?",
-      isOwn: true,
-      starred: false,
-      timestamp: "2:31 PM",
-      sender: "You",
-      avatar: "J"
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
 
   const toggleStar = (id) => {
     setMessages((prev) =>
