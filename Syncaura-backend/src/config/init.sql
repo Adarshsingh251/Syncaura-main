@@ -26,11 +26,21 @@ CREATE TABLE IF NOT EXISTS users (
   
 
   --new changes , sharad
-   ALTER TABLE users
-  ADD COLUMN first_name VARCHAR(80),
-  ADD COLUMN last_name VARCHAR(80),
-  ADD COLUMN phone VARCHAR(20),
-  ADD COLUMN language VARCHAR(10) DEFAULT 'en';
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS first_name VARCHAR(80),
+ADD COLUMN IF NOT EXISTS last_name VARCHAR(80),
+ADD COLUMN IF NOT EXISTS phone VARCHAR(20),
+ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT 'en';
+
+  ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS co_admin_id UUID
+  REFERENCES users(id)
+  ON DELETE SET NULL;
+
+  ALTER TABLE users
+ADD CONSTRAINT users_role_check
+CHECK (role IN ('admin', 'co-admin', 'user'));
+
 -- Projects
 CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
