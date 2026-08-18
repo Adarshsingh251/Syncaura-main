@@ -12,7 +12,7 @@
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
@@ -221,7 +221,7 @@ const AttendanceLeave = () => {
       setIsSubmitting(false);
       setShowPopup(false);
     }, 1000);
-  }
+  
 };
 
 
