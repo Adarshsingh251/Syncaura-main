@@ -311,12 +311,34 @@ export const changePassword = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-
 export const adminOnly = async (req, res) => {
   res.json({ message: 'Hello Admin!' });
 };
 
-//new changes,
+ export const getProfile = async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.is_active
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 export const logout = async (req, res) => {
   res.clearCookie("refreshToken");
