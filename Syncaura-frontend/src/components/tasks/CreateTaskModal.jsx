@@ -5,17 +5,24 @@ import { X, Flag, Calendar, User, AlignLeft } from "lucide-react";
 const PRIORITIES = ["low", "medium", "high"];
 const PRIORITY_COLORS = {
   low: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  medium:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
-const CreateTaskModal = ({ onClose, onSubmit, isLoading }) => {
+const CreateTaskModal = ({
+  onClose,
+  onSubmit,
+  isLoading,
+  isAdmin,
+  currentUserEmail,
+}) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
     priority: "medium",
     deadline: "",
-    assignedTo: "",
+    assignedTo: isAdmin ? "" : currentUserEmail || "",
     status: "TODO",
   });
   const [errors, setErrors] = useState({});
@@ -39,7 +46,11 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading }) => {
       setErrors(newErrors);
       return;
     }
-    const payload = { ...form };
+    const payload = {
+      ...form,
+      assignedTo: isAdmin ? form.assignedTo : currentUserEmail,
+    };
+
     if (!payload.deadline) delete payload.deadline;
     if (!payload.assignedTo) delete payload.assignedTo;
     onSubmit(payload);
@@ -59,7 +70,9 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading }) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#2d2f33]">
-          <h2 className="text-lg font-bold text-[#0A0A0A] dark:text-white">Create New Task</h2>
+          <h2 className="text-lg font-bold text-[#0A0A0A] dark:text-white">
+            Create New Task
+          </h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2d2f33] transition-colors btn-hover"
@@ -86,7 +99,9 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading }) => {
                   : "border-gray-200 dark:border-[#2d2f33] focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30"
               } bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 transition-all`}
             />
-            {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
+            {errors.title && (
+              <p className="text-xs text-red-500 mt-1">{errors.title}</p>
+            )}
           </div>
 
           {/* Description */}
@@ -115,10 +130,13 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading }) => {
                   <button
                     key={p}
                     type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, priority: p }))}
+                    onClick={() =>
+                      setForm((prev) => ({ ...prev, priority: p }))
+                    }
                     className={`btn-hover flex-1 py-1.5 text-xs font-semibold rounded-lg capitalize ${
                       form.priority === p
-                        ? PRIORITY_COLORS[p] + "ring-2 ring-offset-1 ring-current"
+                        ? PRIORITY_COLORS[p] +
+                          "ring-2 ring-offset-1 ring-current"
                         : "bg-gray-100 dark:bg-[#2d2f33] text-gray-500 dark:text-gray-400"
                     }`}
                   >
@@ -163,13 +181,22 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading }) => {
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
                 Assigned To
               </label>
-              <input
-                name="assignedTo"
-                value={form.assignedTo}
-                onChange={handleChange}
-                placeholder="Name or email"
-                className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
-              />
+              {isAdmin ? (
+                <input
+                  name="assignedTo"
+                  value={form.assignedTo}
+                  onChange={handleChange}
+                  placeholder="Name or email"
+                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                />
+              ) : (
+                <input
+                  value={currentUserEmail || ""}
+                  readOnly
+                  disabled
+                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-gray-50 dark:bg-[#1a1b1e] text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                />
+              )}
             </div>
           </div>
 

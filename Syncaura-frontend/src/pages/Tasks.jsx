@@ -497,6 +497,8 @@ const Tasks = () => {
             onClose={() => setShowCreate(false)}
             onSubmit={handleCreate}
             isLoading={createLoading}
+            isAdmin={isAdmin}
+            currentUserEmail={currentUser?.email}
           />
         )}
         {selectedTask && (
