@@ -16,9 +16,9 @@ export default function Documents() {
   const [selectedTab, setSelectedTab] = useState("All Files");
   const [showModal, setShowModal] = useState(false);
   const [currId, setCurrId] = useState(null);
-  
+
   const [showFilter, setShowFilter] = useState(false);
-  
+
   const [search, setSearch] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
   const [appliedFilters, setAppliedFilters] = useState(null);
@@ -36,7 +36,7 @@ export default function Documents() {
     const timer = setTimeout(() => {
       setDebouncedValue(search.toLowerCase());
     }, 400);
-    
+
     return () => clearTimeout(timer);
   }, [search]);
 
@@ -101,11 +101,10 @@ export default function Documents() {
             <button
               onClick={() => setSelectedTab(item)}
               key={item}
-              className={`btn-hover flex items-center border justify-center py-2 w-32 ${
-                selectedTab === item
+              className={`btn-hover flex items-center border justify-center py-2 w-32 ${selectedTab === item
                   ? "bg-[#EFF6FF] dark:bg-[#344343] border-[#DBEAFE] dark:border-[#73FBFD] text-[#1D6BE3] dark:text-[#73FBFD]"
                   : "border-[#EAECEF] text-[#989696] cursor-pointer"
-              } rounded-xl`}
+                } rounded-xl`}
             >
               <h1 className="text-sm font-semibold">{item}</h1>
             </button>
@@ -115,9 +114,8 @@ export default function Documents() {
         <div className="flex items-center relative md:static justify-center md:justify-end flex-nowrap gap-5 px-2 sm:px-7 w-full sm:w-auto">
           <button
             onClick={() => setShowFilter((prev) => !prev)}
-            className={`btn-hover px-4 py-2 bg-white dark:bg-[#292828] flex items-center gap-2 border rounded-xl ${
-              showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#EAECEF] dark:border-[#575757]"
-            }`}
+            className={`btn-hover px-4 py-2 bg-white dark:bg-[#292828] flex items-center gap-2 border rounded-xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#EAECEF] dark:border-[#575757]"
+              }`}
           >
             <ListFilter className={`size-5 ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"}`} />
             <h1 className={`text-sm ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"} font-semibold`}>Filter</h1>
@@ -156,8 +154,10 @@ export default function Documents() {
             <div className="flex-2/13 w-full flex items-center justify-start"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Version</h1></div>
             <div className="flex-2/13 w-full flex items-center justify-start"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Last Modified</h1></div>
             <div className="flex-2/13 w-full flex items-center justify-center"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Status</h1></div>
+            <div className="flex-2/13 w-full flex items-center justify-center"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Document</h1></div>
             <div className="flex-1/13 w-full flex items-center justify-start" />
           </div>
+
 
           {loading && <p className="text-gray-400 text-center py-10">Loading documents...</p>}
           {error && <p className="text-red-400 text-center py-10">Failed to load documents.</p>}
@@ -170,11 +170,10 @@ export default function Documents() {
               <div
                 onClick={() => setCurrId(item._id || item.id)}
                 key={item._id || item.id}
-                className={`flex relative transition-all duration-300 items-center justify-between w-full bg-[#FFFFFF] dark:bg-[#000000] py-6 ${
-                  currId === (item._id || item.id)
+                className={`flex relative transition-all duration-300 items-center justify-between w-full bg-[#FFFFFF] dark:bg-[#000000] py-6 ${currId === (item._id || item.id)
                     ? "bg-blue-50 dark:bg-[#1C3939]"
                     : "hover:bg-[#d1d4db75] dark:hover:bg-gray-800 hover:scale-[1.01] cursor-pointer"
-                }`}
+                  }`}
               >
                 <span className={`absolute left-0 top-0 h-full w-1 bg-blue-500 dark:bg-gray-400 transition-transform duration-300 ${currId === (item._id || item.id) ? "scale-y-100" : "scale-y-0 group-hover:scale-y-100"}`} />
                 <TableRow
@@ -183,7 +182,14 @@ export default function Documents() {
                   date={item.updatedAt}
                   status="Active"
                   version={item.versions?.length ? `v${item.versions.length}` : "v1"}
-                  docColor={idx % 3 === 0 ? "text-[#DC2626]" : idx % 3 === 1 ? "text-[#9333EA]" : "text-[#2563EB]"}
+                  document={item.content ? item.title : "—"}
+                  docColor={
+                    idx % 3 === 0
+                      ? "text-[#DC2626]"
+                      : idx % 3 === 1
+                        ? "text-[#9333EA]"
+                        : "text-[#2563EB]"
+                  }
                 />
               </div>
             ))}

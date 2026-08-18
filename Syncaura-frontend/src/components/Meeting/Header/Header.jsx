@@ -1,19 +1,21 @@
 import ToggleSwitch from "../../dashboard/Header/ToggleSwitch";
 import { useSelector } from "react-redux";
 import { Menu } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Header = ({ setOpen }) => {
+  const { t, i18n } = useTranslation();
   const user = useSelector((state) => state.auth.user);
 
   const today = new Date();
 
-  const formattedDate = today.toLocaleDateString("en-US", {
+  const formattedDate = today.toLocaleDateString(i18n.language || "en", {
     month: "short",
     day: "2-digit",
     year: "numeric",
   });
 
-  const dayName = today.toLocaleDateString("en-US", {
+  const dayName = today.toLocaleDateString(i18n.language || "en", {
     weekday: "long",
   });
 

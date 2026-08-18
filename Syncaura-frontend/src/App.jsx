@@ -149,7 +149,7 @@ export default function App() {
         transition={Bounce}
       />
 
-     <BrowserRouter>
+      <BrowserRouter>
         <ScrollToTop />
         <Suspense
           fallback={
@@ -172,8 +172,8 @@ export default function App() {
                 element={<GithubCallback />}
               />
               <Route path="/learn-more" element={<LearnMore />} />
-<Route path="/about-us" element={<AboutUs />} />
-</Route>
+              <Route path="/about-us" element={<AboutUs />} />
+            </Route>
 
             <Route
               element={
@@ -205,7 +205,11 @@ export default function App() {
               />
             </Route>
 
-            <Route element={<ProtectRoute allowedRoles={["user"]} />}>
+            <Route
+              element={
+                <ProtectRoute allowedRoles={["user", "admin", "co-admin"]} />
+              }
+            >
               <Route
                 path="/user-dashboard"
                 element={

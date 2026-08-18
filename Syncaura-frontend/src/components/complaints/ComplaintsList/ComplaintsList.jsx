@@ -1,6 +1,15 @@
-import { CircleAlert, CircleCheck, Clock, Eye } from "lucide-react";
+import {
+  Search,
+  Filter,
+  MoreVertical,
+  CircleAlert,
+  Clock,
+  CircleCheck,
+  Eye,
+} from "lucide-react";
 import { FaClock } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export default function ComplaintsList({
   COMPLAINTS,
@@ -9,16 +18,17 @@ export default function ComplaintsList({
   statusStyle,
   statusIcon,
 }) {
- const formatDate = (dateString) => {
-  if (!dateString) return "";
+  const { t } = useTranslation();
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
 
-  return new Date(dateString).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
- const mobileStatusStyle = (status) => {
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+  const mobileStatusStyle = (status) => {
     if (status === "open") return " bg-[#FFC2C2] dark:bg-[#3D2D2D] text-[#C71212]";
     if (status === "in-progress") return "bg-[#FEF2C2] dark:bg-[#3E3A29] text-[#C05328]";
     return "bg-[#D1FAE5] dark:bg-[#1F402F] text-[#29CC39]";
@@ -62,19 +72,19 @@ export default function ComplaintsList({
           border border-[#8a858560] dark:border-[#575757] gap-x-2 sticky top-0
           bg-white dark:bg-[#2E2F2F] transition-colors duration-500 z-10">
           <div className="text-sm xl:text-lg font-semibold uppercase col-span-2 text-[#000000] dark:text-[#FFFFFF]">
-            complaint id
+            {t("complaintsList_complaintId", "complaint id")}
           </div>
           <div className="text-sm flex items-center justify-start w-full xl:text-lg font-semibold uppercase col-span-4 text-[#000000] dark:text-[#FFFFFF]">
-            subject/category
+            {t("complaintsList_subjectCategory", "subject/category")}
           </div>
           <div className="text-sm xl:text-lg font-semibold uppercase col-span-2 text-[#000000] dark:text-[#FFFFFF]">
-            date
+            {t("complaintsList_date", "date")}
           </div>
           <div className="text-sm xl:text-lg font-semibold uppercase col-span-2 text-[#000000] dark:text-[#FFFFFF]">
-            status
+            {t("complaintsList_status", "status")}
           </div>
           <div className="text-sm xl:text-lg font-semibold uppercase col-span-1 text-[#000000] dark:text-[#FFFFFF]">
-            actions
+            {t("complaintsList_actions", "actions")}
           </div>
         </div>
 
@@ -94,18 +104,16 @@ export default function ComplaintsList({
 
               className={`relative grid py-5 grid-cols-11 px-5 xl:px-15 2xl:px-20 gap-x-2 place-items-center
                 transition-all duration-300
-                ${
-                  activeId === id
-                    ? "bg-[#E2EBFF] dark:bg-[#1C3939]"
-                    : "hover:bg-[#e2ebff75] dark:hover:bg-[#1d3333] hover:scale-[1.005]"
+                ${activeId === id
+                  ? "bg-[#E2EBFF] dark:bg-[#1C3939]"
+                  : "hover:bg-[#e2ebff75] dark:hover:bg-[#1d3333] hover:scale-[1.005]"
                 }`}
             >
               <span
                 className={`absolute  left-0 top-0 h-full w-1 bg-blue-500 dark:bg-gray-400 transition-transform duration-300
-                  ${ 
-                    activeId === id
-                      ? "scale-y-100"
-                      : "scale-y-0 group-hover:scale-y-100"
+                  ${activeId === id
+                    ? "scale-y-100"
+                    : "scale-y-0 group-hover:scale-y-100"
                   }`}
               />
 
@@ -164,7 +172,7 @@ export default function ComplaintsList({
         {COMPLAINTS.map(({ id, title, category, status, created_at }, idx) => (
           <div
             key={COMPLAINTS.length + idx}
-              onClick={() => setActiveId(id)}
+            onClick={() => setActiveId(id)}
             className="flex flex-col gap-2 bg-[#FFFFFF] dark:bg-[#2E2F2F]  px-5 py-2 shadow-[0_0_10px_3px_#D2D2D233]
               dark:shadow-[0_0_10px_3px_#D2D2D233]
               transition-shadow duration-200 rounded-2xl relative h-33"
@@ -189,13 +197,13 @@ export default function ComplaintsList({
               <h2 className="text-sm font-light text-[#000000] dark:text-white" >{category}</h2>
             </div>
             <div className="flex items-center justify-start gap-2 ">
-              <FaClock className="size-5 text-white dark:text-[#2E2F2F] fill-black dark:fill-gray-400"  />
+              <FaClock className="size-5 text-white dark:text-[#2E2F2F] fill-black dark:fill-gray-400" />
               <h1 className="text-[#000000] dark:text-[#FFFFFF] font-light text-xs" >{formatDate(created_at)}</h1>
             </div>
             <div className="absolute bottom-5 right-5 ">
               <Eye className="size-6 text-gray-700 dark:text-gray-300" />
             </div>
-           
+
           </div>
         ))}
       </div>
