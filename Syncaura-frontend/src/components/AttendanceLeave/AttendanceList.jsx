@@ -1,7 +1,7 @@
-import { CircleAlert, CircleCheck, Clock, Eye } from "lucide-react";
+import { CircleAlert, CircleCheck, Clock, Edit3, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const AttendanceList = ({ LeaveData = [], currId, setCurrId, onViewDetail }) => {
+const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDeleteLeave }) => {
   const statusColor = {
     Pending: "text-[#C05328] bg-[#FEF2C2]",
     Approved: "text-[#29CC39] bg-[#D1FAE5]",
@@ -73,7 +73,6 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onViewDetail }) => 
               variants={itemVariants}
               onClick={() => {
                 setCurrId(idx);
-                onViewDetail?.(item);
               }}
               key={idx}
               className={`flex  relative transition-all duration-300 items-center justify-between w-full bg-[#FFFFFF] dark:bg-[#000000]  px-10 py-6 ${
@@ -90,36 +89,49 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onViewDetail }) => 
                         : "scale-y-0 group-hover:scale-y-100"
                     }`}
               />
-              <div className=" text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center flex-3/9 flex-wrap w-full">
+              <div className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[24%] flex-wrap">
                 <h1>{formattedDate(startDate)}</h1>
-                <h1>{" - "}</h1>
+                <h1 className="mx-1">{" - "}</h1>
                 <h1>{formattedDate(endDate)}</h1>
               </div>
-              <h1 className=" text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center flex-1/9">
+              <h1 className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[20%] px-2 text-center break-words">
                 {type}
               </h1>
-              <h1 className=" text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-start flex-3/9">
+              <h1 className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-start w-[34%] px-4 break-words">
                 {reason}
               </h1>
-              <div className="  flex items-center justify-center flex-1/9">
+              <div className="flex items-center justify-center w-[11%]">
                 <div
-                  className={`${statusColor[status] || "text-gray-700 bg-gray-100"} px-4 py-1 flex items-center justify-center gap-2 rounded-2xl`}
+                  className={`${statusColor[status] || "text-gray-700 bg-gray-100"} px-3 py-1 flex items-center justify-center gap-1.5 rounded-2xl`}
                 >
                   {statusIcon[status]}
-                  <p className=" text-xs font-medium">{status}</p>
+                  <p className="text-xs font-medium">{status}</p>
                 </div>
               </div>
-              <div className=" text-base  font-medium flex items-center justify-center flex-1/9">
+              <div className="text-base font-medium flex items-center justify-center gap-2 w-[11%]">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setCurrId(idx);
-                    onViewDetail?.(item);
+                    onEditLeave?.(item);
                   }}
-                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-                  title="View Details"
+                  className="p-1.5 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  title="Edit Leave"
+                  aria-label="Edit leave"
                 >
-                  <Eye className="size-5 text-[#000000] dark:text-[#F8F8F8] " />
+                  <Edit3 className="size-4 text-[#2461E6] dark:text-[#73FBFD]" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrId(idx);
+                    onDeleteLeave?.(item);
+                  }}
+                  className="p-1.5 hover:bg-red-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  title="Delete Leave"
+                  aria-label="Delete leave"
+                >
+                  <Trash2 className="size-4 text-[#C71212] dark:text-[#FF6B6B]" />
                 </button>
               </div>
             </motion.div>
@@ -189,16 +201,30 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onViewDetail }) => 
                   <h1 className="text-[#000000] dark:text-[#FFFFFF] text-base font-semibold flex-2/5">
                     Action
                   </h1>
-                  <button
-                    onClick={() => {
-                      setCurrId(idx);
-                      onViewDetail?.(item);
-                    }}
-                    className="text-[#000000] dark:text-[#FFFFFF] text-sm font-semibold flex-3/5 hover:opacity-75 transition-opacity"
-                    title="View Details"
-                  >
-                    <Eye className="size-5 text-[#000000] dark:text-[#F8F8F8] " />
-                  </button>
+                  <div className="flex items-center gap-2 flex-3/5">
+                    <button
+                      onClick={() => {
+                        setCurrId(idx);
+                        onEditLeave?.(item);
+                      }}
+                      className="p-1.5 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                      title="Edit Leave"
+                      aria-label="Edit leave"
+                    >
+                      <Edit3 className="size-4 text-[#2461E6] dark:text-[#73FBFD]" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrId(idx);
+                        onDeleteLeave?.(item);
+                      }}
+                      className="p-1.5 hover:bg-red-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                      title="Delete Leave"
+                      aria-label="Delete leave"
+                    >
+                      <Trash2 className="size-4 text-[#C71212] dark:text-[#FF6B6B]" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
