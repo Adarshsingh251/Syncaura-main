@@ -5,7 +5,12 @@ import { useTranslation } from "react-i18next";
 export default function NotificationRow({title, about, date, bgColor, docColor}) {
     const { t } = useTranslation();
     function formatDateYYYYMMDD(isoDate) {
+  if (!isoDate) return "N/A";
+
   const d = new Date(isoDate);
+
+  if (isNaN(d.getTime())) return "N/A";
+
   return d.toISOString().split("T")[0];
 }
 
