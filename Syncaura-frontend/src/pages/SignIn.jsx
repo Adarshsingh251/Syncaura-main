@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser } from '../redux/features/authThunks'
+import { toast } from 'react-toastify'
 import { Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { FaGithub, FaFacebookF } from 'react-icons/fa'
@@ -27,6 +28,19 @@ export default function SignIn() {
 
   const searchParams = new URLSearchParams(location.search)
   const selectedRole = (searchParams.get('role') || 'employee').toLowerCase()
+
+  const handleGoogleLogin = () => {
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    window.location.href = `${apiBase}/api/auth/google`;
+  };
+
+  const handleGithubLogin = () => {
+    const state = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem("github_oauth_state", state);
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || "dummygithubclientid";
+    const redirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/auth/github/callback";
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${state}`;
+  };
 
   const getLeadText = () => {
     if (selectedRole === 'admin') {
@@ -210,6 +224,7 @@ export default function SignIn() {
               <button
                 type="button"
                 aria-label={t('continue_with_google')}
+                onClick={handleGoogleLogin}
               >
                 <FcGoogle size={23} />
               </button>
@@ -217,6 +232,7 @@ export default function SignIn() {
               <button
                 type="button"
                 aria-label={t('continue_with_github')}
+                onClick={handleGithubLogin}
               >
                 <FaGithub size={22} />
               </button>
@@ -225,6 +241,7 @@ export default function SignIn() {
                 type="button"
                 className="facebook"
                 aria-label={t('continue_with_facebook')}
+                onClick={() => toast.info("Facebook login is not implemented yet. Please use the form above to log in.")}
               >
                 <FaFacebookF size={19} />
               </button>

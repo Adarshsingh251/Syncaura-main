@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { registerUser } from '../redux/features/authThunks'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'react-toastify'
 import { UserRound, Mail, LockKeyhole, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { FaGithub, FaFacebookF } from 'react-icons/fa'
@@ -61,6 +62,19 @@ export default function SignUpPage() {
   const [passwordStrength, setPasswordStrength] = useState("")
   const [passwordError, setPasswordError] = useState("")
   const { t } = useTranslation();
+
+  const handleGoogleLogin = () => {
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    window.location.href = `${apiBase}/api/auth/google`;
+  };
+
+  const handleGithubLogin = () => {
+    const state = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem("github_oauth_state", state);
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || "dummygithubclientid";
+    const redirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/auth/github/callback";
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${state}`;
+  };
 
 
   async function handleSubmit(event) {
@@ -239,9 +253,9 @@ export default function SignUpPage() {
             
             <div className="divider"><span>{t('orContinueWith').toUpperCase()}</span></div>
             <div className="socials">
-              <button type="button" aria-label={t('continue_with_google')}><FcGoogle size={23} /></button>
-              <button type="button" aria-label={t('continue_with_github')}><FaGithub size={22} /></button>
-              <button type="button" className="facebook" aria-label={t('continue_with_facebook')}><FaFacebookF size={19} /></button>
+              <button type="button" aria-label={t('continue_with_google')} onClick={handleGoogleLogin}><FcGoogle size={23} /></button>
+              <button type="button" aria-label={t('continue_with_github')} onClick={handleGithubLogin}><FaGithub size={22} /></button>
+              <button type="button" className="facebook" aria-label={t('continue_with_facebook')} onClick={() => toast.info("Facebook registration is not implemented yet. Please use the form above to register.")}><FaFacebookF size={19} /></button>
             </div>
             
             <p className="switch">
