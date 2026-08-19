@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function DocumentFilter({ onClose, onApply }) {
   const [status, setStatus] = useState("All");
@@ -47,7 +48,7 @@ export default function DocumentFilter({ onClose, onApply }) {
         >
           <div className="flex flex-col gap-2 w-full">
             <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Date Range
+              {t("dateRange", "Date Range")}
             </label>
 
             <input
@@ -68,7 +69,7 @@ export default function DocumentFilter({ onClose, onApply }) {
           <FilterDropdown
             options={["All", "PDF", "XLS", "DOC", "ZIP"]}
             startVal={type}
-            label="Type"
+            label={t("type", "Type")}
             onChange={setType}
           />
 
@@ -76,7 +77,7 @@ export default function DocumentFilter({ onClose, onApply }) {
           <FilterDropdown
             options={["Above", "Below"]}
             startVal={version}
-            label="Version"
+            label={t("documents_version", "Version")}
             onChange={setVersion}
           />
 
@@ -95,7 +96,7 @@ export default function DocumentFilter({ onClose, onApply }) {
               "v5.0",
             ]}
             startVal={versionNo}
-            label="Version No"
+            label={t("versionNo", "Version No")}
             onChange={setVersionNo}
           />
         </div>
@@ -103,7 +104,7 @@ export default function DocumentFilter({ onClose, onApply }) {
         {/* Status */}
         <div className="flex flex-col items-start gap-2 w-full lg:w-2/9">
           <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Status
+            {t("status", "Status")}
           </label>
           <div className="flex flex-wrap  gap-2">
             {items.map((item) => (
@@ -112,7 +113,7 @@ export default function DocumentFilter({ onClose, onApply }) {
                 key={item}
                 className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]" : "border-gray-300 text-gray-500"}`}
               >
-                {item}
+                {t(`status_${item.toLowerCase()}`, item)}
               </button>
             ))}
           </div>
@@ -135,7 +136,7 @@ export default function DocumentFilter({ onClose, onApply }) {
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             className="w-full  lg:w-30  bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium px-5 py-3 rounded-full shadow-sm text-sm"
           >
-            Apply Filters
+            {t("filter_applyFilters", "Apply Filters")}
           </motion.button>
         </div>
       </motion.div>

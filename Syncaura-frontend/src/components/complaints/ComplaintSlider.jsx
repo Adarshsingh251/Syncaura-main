@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CircleAlert, CircleCheck, Clock, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function ComplaintSlider({ dummyComplaints, idx, onClose }) {
+  const { t } = useTranslation();
   const [index, setIndex] = useState(
     dummyComplaints
       .map((item, i) => {
@@ -69,13 +71,13 @@ export default function ComplaintSlider({ dummyComplaints, idx, onClose }) {
             <div className="flex w-full flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
               <div className="flex items-center justify-center  ">
                 <p className=" text-xl sm:text-2xl text-black dark:text-white font-medium">
-                  COMPLAINT ID : {data.id}
+                  {t("complaintSlider_complaintId", "COMPLAINT ID : ")} {data.id}
                 </p>
               </div>
               <div className="flex flex-col items-start justify-center gap-1  ">
                 <div className="flex items-center justify-center gap-5 ">
                   <p className="text-sm sm:text-base text-black dark:text-gray-400 font-medium uppercase ">
-                    status :{" "}
+                    {t("complaintSlider_status", "status :")}
                   </p>
                   <div
                     className={`flex items-center gap-2 justify-center py-1 rounded-2xl px-4 ${statusStyle(
@@ -88,7 +90,7 @@ export default function ComplaintSlider({ dummyComplaints, idx, onClose }) {
                 </div>
                 <div className="flex items-center justify-center gap-5 ">
                   <p className="text-sm sm:text-base text-black dark:text-gray-400 font-medium uppercase ">
-                    Date :{" "}
+                    {t("complaintSlider_date", "Date :")}
                   </p>
                   <p className="text-base text-[#000000] font-medium dark:text-white ">
                     {new Date(data.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
@@ -109,7 +111,7 @@ export default function ComplaintSlider({ dummyComplaints, idx, onClose }) {
 
             <div className="flex flex-col items-start justify-center gap-3 w-full">
               <h3 className="text-xl sm:text-2xl text-black dark:text-white font-semibold">
-                Attachments
+                {t("complaintSlider_attachments", "Attachments")}
               </h3>
               <div className="flex flex-wrap items-center justify-center w-full gap-3">
                 {data.attachments?.map((attachment, i) => {
@@ -141,7 +143,7 @@ export default function ComplaintSlider({ dummyComplaints, idx, onClose }) {
               disabled={index === 0}
               className={`flex-1 px-6 py-3 rounded-xl ${index===0? "cursor-not-allowed" :"cursor-pointer"} bg-gray-200 text-gray-900 font-medium disabled:opacity-50`}
             >
-              Previous
+              {t("complaintSlider_previous", "Previous")}
             </motion.button>
 
             <motion.button
@@ -149,7 +151,7 @@ export default function ComplaintSlider({ dummyComplaints, idx, onClose }) {
               disabled={index === dummyComplaints.length - 1}
               className={`flex-1 px-6 py-3 rounded-xl ${index===dummyComplaints.length - 1? "cursor-not-allowed" :"cursor-pointer"} bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium disabled:opacity-50`}
             >
-              Next
+              {t("complaintSlider_next", "Next")}
             </motion.button>
           </div>
         </div>

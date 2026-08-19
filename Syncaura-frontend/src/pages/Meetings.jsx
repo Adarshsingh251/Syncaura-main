@@ -19,7 +19,7 @@ export default function Meetings() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const reduxMeetings = useSelector((state) => state.meeting?.meetings || []);
-
+  const userRole = useSelector((state) => state.auth?.user?.role);
   const [modalOpen, setModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [direction, setDirection] = useState(0);
@@ -181,19 +181,16 @@ export default function Meetings() {
           {/* Header */}
           <div className="w-full bg-white dark:bg-[#1a1a1a] border-b border-[#e5e7eb] dark:border-[#2c2c2c] px-4 py-2 shadow-sm">
             {/* Mobile Header */}
-            <div className="flex lg:hidden items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {userRole === "admin" && (
                 <button
-                  onClick={() => setSidebarOpen(true)}
-                  className="p-1 btn-hover"
+                  onClick={() => setModalOpen(true)}
+                  className="flex items-center gap-1 bg-[#2563eb] text-white px-3 py-2 rounded-2xl shadow-sm btn-hover"
                 >
-                  <FaBars className="text-2xl text-black dark:text-white" />
+                  <span className="text-xs font-medium">+ Create</span>
                 </button>
+              )}
 
-                <h1 className="text-2xl font-bold text-black dark:text-white">
-                  Meetings
-                </h1>
-              </div>
               <button
                 onClick={handleSyncCalendar}
                 className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-4 py-2 rounded-2xl shadow-sm border border-[#e5e7eb] dark:border-[#3a3a3a] text-[#111827] dark:text-white btn-hover"
@@ -217,17 +214,32 @@ export default function Meetings() {
                   Manage your schedule and prepare for upcoming calls
                 </p>
               </div>
-              <button
-                onClick={handleSyncCalendar}
-                className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-3.5 py-1.5 rounded-full border border-[#f1f1f1] dark:border-[#2f2f2f] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.06)] transition text-[#4b5563] dark:text-white btn-hover"
-              >
-                <RefreshCcw
-                  size={14}
-                  className="text-[#111827] dark:text-white"
-                />
+              <div className="flex items-center gap-3">
+                {userRole === "admin" && (
+                  <button
+                    onClick={() => setModalOpen(true)}
+                    className="flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-4 py-2 rounded-full shadow-sm transition btn-hover"
+                  >
+                    <span className="text-[13px] font-medium">
+                      + Create New Meeting
+                    </span>
+                  </button>
+                )}
 
-                <span className="text-[13px] font-medium">Sync Calendar</span>
-              </button>
+                <button
+                  onClick={handleSyncCalendar}
+                  className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-3.5 py-1.5 rounded-full border border-[#f1f1f1] dark:border-[#2f2f2f] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.06)] transition text-[#4b5563] dark:text-white btn-hover"
+                >
+                  <RefreshCcw
+                    size={14}
+                    className="text-[#111827] dark:text-white"
+                  />
+
+                  <span className="text-[13px] font-medium">
+                    Sync Calendar
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -247,11 +259,10 @@ export default function Meetings() {
               <div className="flex flex-col sm:flex-row gap-2 items-center">
                 <button
                   onClick={() => setShowFilter((prev) => !prev)}
-                  className={`flex items-center justify-center gap-1.5 border px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition btn-hover ${
-                    showFilter || appliedFilters
-                      ? "bg-blue-50 dark:bg-[#2a2a2a] border-[#2563eb] dark:border-[#73FBFD] text-[#2563eb] dark:text-[#73FBFD]"
-                      : "bg-white dark:bg-[#2a2a2a] border-[#f1f1f1] dark:border-[#2f2f2f] text-[#4b5563] dark:text-[#d1d5db]"
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 border px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition btn-hover ${showFilter || appliedFilters
+                    ? "bg-blue-50 dark:bg-[#2a2a2a] border-[#2563eb] dark:border-[#73FBFD] text-[#2563eb] dark:text-[#73FBFD]"
+                    : "bg-white dark:bg-[#2a2a2a] border-[#f1f1f1] dark:border-[#2f2f2f] text-[#4b5563] dark:text-[#d1d5db]"
+                    }`}
                 >
                   <Funnel size={14} />
                   <span className="text-[13px]">

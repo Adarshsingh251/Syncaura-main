@@ -148,11 +148,10 @@ export default function Documents() {
             <button
               onClick={() => setSelectedTab(item)}
               key={item}
-              className={`btn-hover flex items-center border justify-center py-2 w-32 ${
-                selectedTab === item
+              className={`btn-hover flex items-center border justify-center py-2 w-32 ${selectedTab === item
                   ? "bg-[#EFF6FF] dark:bg-[#344343] border-[#DBEAFE] dark:border-[#73FBFD] text-[#1D6BE3] dark:text-[#73FBFD]"
                   : "border-[#EAECEF] text-[#989696] cursor-pointer"
-              } rounded-xl`}
+                } rounded-xl`}
             >
               <h1 className="text-sm font-semibold">{item}</h1>
             </button>
@@ -214,8 +213,10 @@ export default function Documents() {
             <div className="flex-2/13 w-full flex items-center justify-start"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Version</h1></div>
             <div className="flex-2/13 w-full flex items-center justify-start"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Last Modified</h1></div>
             <div className="flex-2/13 w-full flex items-center justify-center"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Status</h1></div>
+            <div className="flex-2/13 w-full flex items-center justify-center"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Document</h1></div>
             <div className="flex-1/13 w-full flex items-center justify-start" />
           </div>
+
 
           {loading && <p className="text-gray-400 text-center py-10">Loading documents...</p>}
           {error && <p className="text-red-400 text-center py-10">{typeof error === "string" ? error : "Failed to load documents."}</p>}
@@ -232,7 +233,7 @@ export default function Documents() {
                   currId === (item._id || item.id)
                     ? "bg-blue-50 dark:bg-[#1C3939]"
                     : "hover:bg-[#d1d4db75] dark:hover:bg-gray-800 hover:scale-[1.01] cursor-pointer"
-                }`}
+                  }`}
               >
                 <span className={`absolute left-0 top-0 h-full w-1 bg-blue-500 dark:bg-gray-400 transition-transform duration-300 ${currId === (item._id || item.id) ? "scale-y-100" : "scale-y-0 group-hover:scale-y-100"}`} />
                 <TableRow
@@ -241,7 +242,14 @@ export default function Documents() {
                   date={item.updated_at || item.updatedAt || item.created_at}
                   status={item.status || "Active"}
                   version={item.versions?.length ? `v${item.versions.length}` : "v1"}
-                  docColor={idx % 3 === 0 ? "text-[#DC2626]" : idx % 3 === 1 ? "text-[#9333EA]" : "text-[#2563EB]"}
+                  document={item.content ? item.title : "—"}
+                  docColor={
+                    idx % 3 === 0
+                      ? "text-[#DC2626]"
+                      : idx % 3 === 1
+                        ? "text-[#9333EA]"
+                        : "text-[#2563EB]"
+                  }
                 />
               </div>
             ))}
