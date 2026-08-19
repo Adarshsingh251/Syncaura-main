@@ -51,7 +51,7 @@ router.get("/google", auth, async (req, res) => {
 });
 
 // Step 1: Generate Google auth URL
-router.get("/google/callback", async (req, res) => {
+router.get("/callback", async (req, res) => {
   try {
     const { code, state } = req.query;
 
