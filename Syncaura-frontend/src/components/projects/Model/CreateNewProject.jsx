@@ -3,21 +3,29 @@ import { X } from "lucide-react";
 import MotionSelect from "./MotionSelect";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 const CreateNewProject = ({ onClose }) => {
-  const teams = ["Design", "Development", "Marketing", "HR", "Sales"];
+  const { t } = useTranslation();
+  const teams = [
+    t("createNewProject_teamDesign", "Design"),
+    t("createNewProject_teamDevelopment", "Development"),
+    t("createNewProject_teamMarketing", "Marketing"),
+    t("createNewProject_teamHR", "HR"),
+    t("createNewProject_teamSales", "Sales")
+  ];
 
   const projectStatus = [
-    "Backlog",
-    "Planning",
-    "Not Started",
-    "In Progress",
-    "Review",
-    "Testing",
-    "On Hold",
-    "Completed",
-    "Archived",
-    "Cancelled",
+    t("createNewProject_statusBacklog", "Backlog"),
+    t("createNewProject_statusPlanning", "Planning"),
+    t("createNewProject_statusNotStarted", "Not Started"),
+    t("createNewProject_statusInProgress", "In Progress"),
+    t("createNewProject_statusReview", "Review"),
+    t("createNewProject_statusTesting", "Testing"),
+    t("createNewProject_statusOnHold", "On Hold"),
+    t("createNewProject_statusCompleted", "Completed"),
+    t("createNewProject_statusArchived", "Archived"),
+    t("createNewProject_statusCancelled", "Cancelled"),
   ];
   const members = [
     "Alex",
@@ -32,8 +40,13 @@ const CreateNewProject = ({ onClose }) => {
 
   const owners = ["Alex Carter", "Jordan Miles", "Taylor Brooks"];
 
-  const priorities = ["Low", "Medium", "High", "Critical"];
-  const [selectPriority, setSelectPriority] = useState("Low");
+  const priorities = [
+    t("createNewProject_priorityLow", "Low"),
+    t("createNewProject_priorityMedium", "Medium"),
+    t("createNewProject_priorityHigh", "High"),
+    t("createNewProject_priorityCritical", "Critical")
+  ];
+  const [selectPriority, setSelectPriority] = useState(priorities[0]);
   const {
     register,
     handleSubmit,
@@ -42,7 +55,7 @@ const CreateNewProject = ({ onClose }) => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      priority: "Low",
+      priority: priorities[0],
     },
   });
   const startDate = watch("startDate");
@@ -85,7 +98,7 @@ const CreateNewProject = ({ onClose }) => {
                 >
                     <div className="flex flex-col w-full gap-5 ">
                         <div className="flex w-full items-center justify-between ">
-                            <h1 className="text-2xl text-[#000000] dark:text-[#FFFFFF] font-bold">New Project</h1>
+                            <h1 className="text-2xl text-[#000000] dark:text-[#FFFFFF] font-bold">{t("createNewProject_newProject", "New Project")}</h1>
                             <button
                                 onClick={onClose}
                                 className="absolute right-4 top-4 text-gray-600 dark:text-[#898888] hover:text-black dark:hover:text-white btn-hover"
@@ -96,27 +109,27 @@ const CreateNewProject = ({ onClose }) => {
                         <form onSubmit={handleSubmit(onSubmit, onError)} className="flex flex-col w-full gap-4 ">
                             <div className="flex flex-col w-full gap-1 ">
                                 <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF]">
-                                    Project Name
+                                    {t("createNewProject_projectName", "Project Name")}
                                 </h2>
                                 <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-2 px-5 rounded-2xl">
                                     <input
                                         {...register("projectName", { required: true })}
                                         type="text"
-                                        placeholder="eg: Website Redesign "
+                                        placeholder={t("createNewProject_egWebsiteRedesign", "eg: Website Redesign ")}
                                         className="bg-transparent font-semibold outline-none text-[#898888] text-sm placeholder:text-[#898888]"
                                     />
                                 </div>
                             </div>
                             <div className="flex flex-col w-full gap-1 ">
                                 <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF]">
-                                    Project Description
+                                    {t("createNewProject_projectDescription", "Project Description")}
                                 </h2>
                                 <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-2 px-5 rounded-2xl">
                                     <textarea
                                         {...register("description", { required: true })}
                                         type="text"
                                         rows={3}
-                                        placeholder="briefly explain the project  "
+                                        placeholder={t("createNewProject_brieflyExplainTheProject", "briefly explain the project  ")}
                                         className="bg-transparent w-full font-semibold outline-none text-[#898888] text-sm placeholder:text-[#898888]"
                                     ></textarea>
                                 </div>
@@ -124,7 +137,7 @@ const CreateNewProject = ({ onClose }) => {
                             <div className="flex sm:flex-row flex-col w-full items-center gap-4 justify-start ">
                                 <div className="flex flex-1/2 flex-col w-full gap-1 ">
                                     <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF]">
-                                        Department/ Team
+                                        {t("createNewProject_departmentTeam", "Department/ Team")}
                                     </h2>
                                     <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-1 px-5 rounded-2xl">
                                         <Controller
@@ -132,14 +145,14 @@ const CreateNewProject = ({ onClose }) => {
                                             control={control}
                                             rules={{ required: true }}
                                             render={({ field }) => (
-                                                <MotionSelect {...field} startVal="Select Team.." options={teams} />
+                                                <MotionSelect {...field} startVal={t("createNewProject_selectTeam", "Select Team..")} options={teams} />
                                             )}
                                         />
                                     </div>
                                 </div>
                                 <div className="flex flex-1/2 flex-col w-full gap-1 ">
                                     <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF]">
-                                        Project Status
+                                        {t("createNewProject_projectStatus", "Project Status")}
                                     </h2>
                                     <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-1 px-5 rounded-2xl">
                                         <Controller
@@ -147,7 +160,7 @@ const CreateNewProject = ({ onClose }) => {
                                             control={control}
                                             rules={{ required: true }}
                                             render={({ field }) => (
-                                                <MotionSelect {...field} startVal="Select Project Status.." options={projectStatus} />
+                                                <MotionSelect {...field} startVal={t("createNewProject_selectProjectStatus", "Select Project Status..")} options={projectStatus} />
                                             )}
                                         />
                                     </div>
@@ -156,7 +169,7 @@ const CreateNewProject = ({ onClose }) => {
                             <div className="flex sm:flex-row flex-col w-full items-center gap-4 justify-start ">
                                 <div className="flex flex-1/2 flex-col w-full gap-1 ">
                                     <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF]">
-                                        Priority
+                                        {t("createNewProject_priority", "Priority")}
                                     </h2>
                                     <div className="relative w-full flex rounded-2xl overflow-hidden bg-[#FFFFFF] dark:bg-[#2E2F2F] ">
                                         <input type="hidden" {...register("priority")} value={selectPriority} />
@@ -193,7 +206,7 @@ const CreateNewProject = ({ onClose }) => {
                                 <div className="flex sm:flex-row flex-col flex-1/2  w-full gap-2 ">
                                     <div className="flex flex-1/2 flex-col w-full gap-1 ">
                                         <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF]">
-                                            Start Date
+                                            {t("createNewProject_startDate", "Start Date")}
                                         </h2>
                                         <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-2 px-5 rounded-2xl">
                                             <input
@@ -208,16 +221,16 @@ const CreateNewProject = ({ onClose }) => {
                                     </div>
                                     <div className="flex flex-1/2 flex-col w-full gap-1 ">
                                         <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF]">
-                                            End Date
+                                            {t("createNewProject_endDate", "End Date")}
                                         </h2>
                                         <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-2 px-5 rounded-2xl">
                                             <input
                                                 type="date"
                                                 min={startDate || today}
                                                 {...register("endDate", {
-                                                    required: "End date is required",
+                                                    required: t("createNewProject_endDateIsRequired", "End date is required"),
                                                     validate: (value) =>
-                                                        !startDate || value > startDate || "End date must be after start date",
+                                                        !startDate || value > startDate || t("createNewProject_endDateMustBeAfterStartDate", "End date must be after start date"),
                                                 })}
 
 
@@ -231,7 +244,7 @@ const CreateNewProject = ({ onClose }) => {
                             <div className="flex sm:flex-row flex-col w-full items-center gap-4 justify-start ">
                                 <div className="flex flex-1/2 flex-col w-full gap-1 ">
                                     <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF]">
-                                        Add Members
+                                        {t("createNewProject_addMembers", "Add Members")}
                                     </h2>
                                     <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-1 px-5 rounded-2xl">
                                         <Controller
@@ -239,14 +252,14 @@ const CreateNewProject = ({ onClose }) => {
                                             control={control}
                                             rules={{ required: true }}
                                             render={({ field }) => (
-                                                <MotionSelect {...field} startVal="Select Members.." options={members} />
+                                                <MotionSelect {...field} startVal={t("createNewProject_selectMembers", "Select Members..")} options={members} />
                                             )}
                                         />
                                     </div>
                                 </div>
                                 <div className="flex flex-1/2 flex-col w-full gap-1 ">
                                     <h2 className="text-lg font-medium text-[#000000] dark:text-[#FFFFFF] ">
-                                        Project Owner
+                                        {t("createNewProject_projectOwner", "Project Owner")}
                                     </h2>
                                     <div className="w-full bg-[#FFFFFF] dark:bg-[#2E2F2F] py-1 px-5 rounded-2xl">
                                         <Controller
@@ -254,7 +267,7 @@ const CreateNewProject = ({ onClose }) => {
                                             control={control}
                                             rules={{ required: true }}
                                             render={({ field }) => (
-                                                <MotionSelect {...field} startVal="Select owner.." options={owners} />
+                                                <MotionSelect {...field} startVal={t("createNewProject_selectOwner", "Select owner..")} options={owners} />
                                             )}
                                         />
                                     </div>
@@ -263,10 +276,10 @@ const CreateNewProject = ({ onClose }) => {
                             <div className="flex items-center justify-end w-full">
                                 <div className="flex items-center justify-center gap-5 ">
                                     <div className="flex items-center justify-center ">
-                                        <button type="button" className="text-[#000000] dark:text-[#FFFFFF] text-base font-medium hover:underline btn-hover" onClick={onClose} >Cancel</button>
+                                        <button type="button" className="text-[#000000] dark:text-[#FFFFFF] text-base font-medium hover:underline btn-hover" onClick={onClose} >{t("createNewProject_cancel", "Cancel")}</button>
                                     </div>
                                     <button type="submit" className="flex items-center justify-center hover:bg-[#4277eb] bg-[#2461E6] rounded-3xl px-5 py-1.5 dark:bg-[#73FBFD] dark:hover:bg-[#14d3d6] btn-hover">
-                                        <p className=" text-[#EDEDED] dark:text-[#000000] text-base font-semibold" >Create Project</p>
+                                        <p className=" text-[#EDEDED] dark:text-[#000000] text-base font-semibold" >{t("createNewProject_createProject", "Create Project")}</p>
                                     </button>
 
                                 </div>

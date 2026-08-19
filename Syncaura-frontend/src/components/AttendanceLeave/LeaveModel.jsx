@@ -82,7 +82,7 @@ const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
             console.error("Error applying leave:", error);
         }
     };
-
+   
 
 
 
