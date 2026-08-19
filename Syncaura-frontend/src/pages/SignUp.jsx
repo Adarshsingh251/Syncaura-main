@@ -148,7 +148,7 @@ export default function SignUpPage() {
         <div className="form-pane">
           <form onSubmit={handleSubmit}>
             <p className="eyebrow">{t('auth_signup_eyebrow').toUpperCase()}</p>
-            <h1>{t('createAccount')} <em>{t('account_emphasis')}</em></h1>
+            <h1>{t('createAccount')} </h1>
             <p className="lead">{t('auth_signup_lead')}</p>
             
             <div className="fields">
