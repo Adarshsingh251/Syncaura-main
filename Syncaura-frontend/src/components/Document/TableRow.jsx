@@ -90,7 +90,7 @@ const TableRow = ({
       {/* Mobile */}
       <div className="md:hidden w-full px-4">
         <div className="flex flex-col gap-3 rounded-xl border bg-white dark:bg-black p-4 shadow-sm">
-          {/* Name */}
+
           <div className="flex items-center gap-3">
             <FileText className={`size-7 ${docColor}`} />
             <h1 className="font-semibold text-black dark:text-white text-sm break-all">

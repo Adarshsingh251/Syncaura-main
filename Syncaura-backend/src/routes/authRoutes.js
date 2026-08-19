@@ -1,15 +1,36 @@
 import { Router } from 'express';
+
 import {
-  register, login, refresh, changePassword,
-  forgotPassword, resetPassword, adminOnly,
-  requestPasswordOtp, changePasswordWithOtp, logout
+  register,
+  login,
+  refresh,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+  adminOnly,
+  requestPasswordOtp,
+  changePasswordWithOtp,
+  getProfile,
+  logout
 } from '../controllers/authController.js';
-import  {auth}  from '../middlewares/auth.js';
-import  {permit}  from '../middlewares/role.js';
+
 import {
-  registerValidator, loginValidator, changePasswordValidator,
-  forgotPasswordValidator, resetPasswordValidator,
-  requestPasswordOtpValidator, changePasswordWithOtpValidator
+  initiateGoogleLogin,
+  handleGoogleCallback,
+  handleGithubCallback
+} from '../controllers/oauthController.js';
+
+import { auth } from '../middlewares/auth.js';
+import { permit } from '../middlewares/role.js';
+
+import {
+  registerValidator,
+  loginValidator,
+  changePasswordValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
+  requestPasswordOtpValidator,
+  changePasswordWithOtpValidator
 } from '../validators/authValidators.js';
 
 const router = Router();
@@ -18,22 +39,39 @@ router.post('/register', registerValidator, register);
 router.post('/login', loginValidator, login);
 router.post('/refresh', refresh);
 
-//setting upgrades 
+// Social Login
+router.get('/google', initiateGoogleLogin);
+router.get('/google/callback', handleGoogleCallback);
+router.post('/github/callback', handleGithubCallback);
+
+router.get('/me', auth, getProfile);
 
 // OTP change password flow
-router.post('/request-password-otp', auth, requestPasswordOtpValidator, requestPasswordOtp);
-router.post('/change-password-otp', auth, changePasswordWithOtpValidator, changePasswordWithOtp);
+router.post(
+  '/request-password-otp',
+  auth,
+  requestPasswordOtpValidator,
+  requestPasswordOtp
+);
+
+router.post(
+  '/change-password-otp',
+  auth,
+  changePasswordWithOtpValidator,
+  changePasswordWithOtp
+);
 
 // Email reset flow
 router.post('/forgot-password', forgotPasswordValidator, forgotPassword);
 router.post('/reset-password', resetPasswordValidator, resetPassword);
 
-// Traditional change password (with current password)
+// Traditional change password
 router.put('/change-password', auth, changePasswordValidator, changePassword);
-//new 
 
-// Example role-based route
+// Role-based route
 router.get('/admin', auth, permit('admin'), adminOnly);
 
-router.post("/logout", logout);
+// Logout
+router.post('/logout', logout);
+
 export default router;
