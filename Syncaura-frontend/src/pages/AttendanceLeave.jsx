@@ -73,7 +73,8 @@ const AttendanceLeave = () => {
   const [debouncedValue, setDebouncedValue] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [attendanceDate] = useState(getToday);
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
@@ -453,7 +454,8 @@ useEffect(() => {
         Out: {checkOutTime || '-'}
       </p>
     </div>
-          <motion.div
+  </motion.div>
+          {/* <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
             ref={triggerRef}
             whileTap={{ scale: 0.97 }}
@@ -472,8 +474,8 @@ useEffect(() => {
                 Out: {checkOutTime || '-'}
               </p>
             </div>
-          </motion.div>
-
+          </motion.div> */}
+    
           {/* POPUP */}
           <AnimatePresence>
             {showPopup && (
