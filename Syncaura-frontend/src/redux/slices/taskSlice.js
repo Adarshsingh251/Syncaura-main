@@ -14,6 +14,16 @@ const initialState = {
   error: null,
 };
 
+const normalizeTask = (t) => {
+  if (!t || typeof t !== "object") return t;
+  const assigned = t.assignedTo || t.assigned_to || t.assigned_user_name || null;
+  return {
+    ...t,
+    assignedTo: assigned,
+    assigned_to: assigned,
+  };
+};
+
 const taskSlice = createSlice({
   name: "tasks",
   initialState,
@@ -31,7 +41,9 @@ const taskSlice = createSlice({
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.tasks = action.payload;
+        state.tasks = Array.isArray(action.payload)
+          ? action.payload.map(normalizeTask)
+          : [];
       })
       .addCase(fetchTasks.rejected, (state, action) => {
         state.isLoading = false;
@@ -44,7 +56,7 @@ const taskSlice = createSlice({
       })
       .addCase(createTask.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.tasks.unshift(action.payload);
+        state.tasks.unshift(normalizeTask(action.payload));
       })
       .addCase(createTask.rejected, (state, action) => {
         state.isLoading = false;
@@ -54,7 +66,7 @@ const taskSlice = createSlice({
       // Update task
       .addCase(updateTask.fulfilled, (state, action) => {
         const idx = state.tasks.findIndex((t) => t.id === action.payload.id);
-        if (idx !== -1) state.tasks[idx] = action.payload;
+        if (idx !== -1) state.tasks[idx] = normalizeTask(action.payload);
       })
 
       // Delete task
@@ -65,13 +77,13 @@ const taskSlice = createSlice({
       // Update task status
       .addCase(updateTaskStatus.fulfilled, (state, action) => {
         const idx = state.tasks.findIndex((t) => t.id === action.payload.id);
-        if (idx !== -1) state.tasks[idx] = action.payload;
+        if (idx !== -1) state.tasks[idx] = normalizeTask(action.payload);
       })
 
       // Add subtask
       .addCase(addSubtask.fulfilled, (state, action) => {
         const idx = state.tasks.findIndex((t) => t.id === action.payload.id);
-        if (idx !== -1) state.tasks[idx] = action.payload;
+        if (idx !== -1) state.tasks[idx] = normalizeTask(action.payload);
       });
   },
 });
