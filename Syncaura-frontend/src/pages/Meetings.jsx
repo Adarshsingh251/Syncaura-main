@@ -152,28 +152,8 @@ export default function Meetings() {
         <div className="flex-1 flex flex-col ">
           {/* Header */}
           <div className="w-full bg-white dark:bg-[#1a1a1a] border-b border-[#e5e7eb] dark:border-[#2c2c2c] px-4 py-2 shadow-sm">
-            {/* Mobile Header */}
-            <div className="flex items-center gap-2">
-              {userRole === "admin" && (
-                <button
-                  onClick={() => setModalOpen(true)}
-                  className="flex items-center gap-1 bg-[#2563eb] text-white px-3 py-2 rounded-2xl shadow-sm btn-hover"
-                >
-                  <span className="text-xs font-medium">+ Create</span>
-                </button>
-              )}
 
-              <button
-                className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-4 py-2 rounded-2xl shadow-sm border border-[#e5e7eb] dark:border-[#3a3a3a] text-[#111827] dark:text-white btn-hover"
-              >
-                <RefreshCcw
-                  size={16}
-                  className="text-[#111827] dark:text-white"
-                />
-
-                <span className="text-sm font-medium">Sync Calendar</span>
-              </button>
-            </div>
+           
 
             {/* Desktop Header */}
             <div className="hidden lg:flex items-start justify-between">
