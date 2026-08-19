@@ -63,6 +63,19 @@ export default function SignUpPage() {
   const [passwordError, setPasswordError] = useState("")
   const { t } = useTranslation();
 
+  const handleGoogleLogin = () => {
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    window.location.href = `${apiBase}/api/auth/google`;
+  };
+
+  const handleGithubLogin = () => {
+    const state = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem("github_oauth_state", state);
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || "dummygithubclientid";
+    const redirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/auth/github/callback";
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${state}`;
+  };
+
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -240,8 +253,8 @@ export default function SignUpPage() {
             
             <div className="divider"><span>{t('orContinueWith').toUpperCase()}</span></div>
             <div className="socials">
-              <button type="button" aria-label={t('continue_with_google')} onClick={() => toast.info("Google registration is not implemented yet. Please use the form above to register.")}><FcGoogle size={23} /></button>
-              <button type="button" aria-label={t('continue_with_github')} onClick={() => toast.info("GitHub registration is not implemented yet. Please use the form above to register.")}><FaGithub size={22} /></button>
+              <button type="button" aria-label={t('continue_with_google')} onClick={handleGoogleLogin}><FcGoogle size={23} /></button>
+              <button type="button" aria-label={t('continue_with_github')} onClick={handleGithubLogin}><FaGithub size={22} /></button>
               <button type="button" className="facebook" aria-label={t('continue_with_facebook')} onClick={() => toast.info("Facebook registration is not implemented yet. Please use the form above to register.")}><FaFacebookF size={19} /></button>
             </div>
             

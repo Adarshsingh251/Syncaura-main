@@ -29,6 +29,19 @@ export default function SignIn() {
   const searchParams = new URLSearchParams(location.search)
   const selectedRole = (searchParams.get('role') || 'employee').toLowerCase()
 
+  const handleGoogleLogin = () => {
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    window.location.href = `${apiBase}/api/auth/google`;
+  };
+
+  const handleGithubLogin = () => {
+    const state = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem("github_oauth_state", state);
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || "dummygithubclientid";
+    const redirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/auth/github/callback";
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${state}`;
+  };
+
   const getLeadText = () => {
     if (selectedRole === 'admin') {
       return 'Enter your admin credentials to continue.'
@@ -211,7 +224,7 @@ export default function SignIn() {
               <button
                 type="button"
                 aria-label={t('continue_with_google')}
-                onClick={() => toast.info("Google login is not implemented yet. Please use the form above to log in.")}
+                onClick={handleGoogleLogin}
               >
                 <FcGoogle size={23} />
               </button>
@@ -219,7 +232,7 @@ export default function SignIn() {
               <button
                 type="button"
                 aria-label={t('continue_with_github')}
-                onClick={() => toast.info("GitHub login is not implemented yet. Please use the form above to log in.")}
+                onClick={handleGithubLogin}
               >
                 <FaGithub size={22} />
               </button>
