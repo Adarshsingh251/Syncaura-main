@@ -7,34 +7,38 @@ import { useTranslation } from "react-i18next";
 
 export default function NewNoticeModal({ onClose, addNotice }) {
   const { t } = useTranslation();
-  const { register, handleSubmit,control, setValue, watch, formState: { errors }, } = useForm();
+  const { register, handleSubmit, control, setValue, watch, formState: { errors }, } = useForm();
   const [category, setCategory] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const noticeCategories = [
-  t("all_upper", "ALL"),
-  t("general_upper", "GENERAL"),
-  t("academic_upper", "ACADEMIC"),
-  t("it_upper", "IT"),
-  t("facility_upper", "FACILITY"),
-  t("event_upper", "EVENT"),
-  t("exam_upper", "EXAM"),
-];
+    t("all_upper", "ALL"),
+    t("general_upper", "GENERAL"),
+    t("academic_upper", "ACADEMIC"),
+    t("it_upper", "IT"),
+    t("facility_upper", "FACILITY"),
+    t("event_upper", "EVENT"),
+    t("exam_upper", "EXAM"),
+  ];
 
 
   const files = watch("attachments");
   const fileRef = useRef(null);
 
   const onSubmit = (data) => {
-    const id= `#${Date.now().toString().slice(0, 4)}`;
-    const category=data.category;
-    const title=data.description
-    const date=new Date(data.date).toISOString();
-    addNotice((prev)=>[{id, category, date, title }, ...prev])
-    onClose()
+    const noticeData = {
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      createdAt: data.date,
+      attachments: data.attachments,
+    };
+
+    addNotice(noticeData);
+    onClose();
   };
   const onError = (formErrors) => {
-  console.log("Form Errors:", formErrors);
-};
+    console.log("Form Errors:", formErrors);
+  };
 
   const handleFileClick = () => {
     fileRef.current?.click();
@@ -98,40 +102,53 @@ export default function NewNoticeModal({ onClose, addNotice }) {
             <div>
 
               <div className="relative mt-1">
-               <h1 className="text-base font-medium w-full text-[#000000] dark:text-[#F8F8F8]">
-                                {t("category", "Category")}
-                            </h1>
-                            <div className="flex w-full rounded-xl px-1 md:px-3 py-1 dark:bg-[#2E2F2F] ">
-                                <Controller
-                                    name="category"
-                                    control={control}
-                                    rules={{ required: true }}
-                                    render={({ field }) => (
-                                        <MotionSelect {...field} startVal={t("all_camel", "All")} options={noticeCategories} />
-                                    )}
-                                />
-                            </div>
+                <h1 className="text-base font-medium w-full text-[#000000] dark:text-[#F8F8F8]">
+                  {t("category", "Category")}
+                </h1>
+                <div className="flex w-full rounded-xl px-1 md:px-3 py-1 dark:bg-[#2E2F2F] ">
+                  <Controller
+                    name="category"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <MotionSelect {...field} startVal={t("all_camel", "All")} options={noticeCategories} />
+                    )}
+                  />
+                </div>
 
-               
+
               </div>
             </div>
 
+            {/* Title */}
+            <div>
+              <label className="text-sm font-medium text-black dark:text-white">
+                {t("title", "Title")}
+              </label>
+
+              <input
+                {...register("title", { required: true })}
+                placeholder={t("notice_title", "Notice title")}
+                className="
+      mt-1 w-full rounded-full px-4 py-2 text-sm outline-none
+      bg-white dark:bg-[#1f1f1f]
+      text-black dark:text-white
+      border border-gray-300 dark:border-gray-600
+      focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40
+      transition-all
+    "
+              />
+            </div>
             {/* Subject */}
             <div>
               <label className="text-sm font-medium text-black dark:text-white">
                 {t("date", "Date")}
               </label>
               <input
+                type="date"
                 {...register("date", { required: true })}
-                placeholder={t("notice_issued_on", "Notice issued on")}
                 className="
-                  mt-1 w-full rounded-full px-4 py-2 text-sm outline-none
-                  bg-white dark:bg-[#1f1f1f]
-                  text-black dark:text-white 
-                  border border-gray-300 dark:border-gray-600
-                  focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40
-                  transition-all
-                "
+                 mt-1 w-full rounded-full px-4 py-2 text-sm outline-none bg-white dark:bg-[#1f1f1f] text-black dark:text-white border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all"
               />
             </div>
 
@@ -171,11 +188,10 @@ export default function NewNoticeModal({ onClose, addNotice }) {
                 onDrop={handleDrop}
                 className={`
       mt-1 h-24 rounded-xl border-2 border-dashed
-      ${
-        isDragging
-          ? "border-blue-500 bg-blue-50/20"
-          : "border-gray-300 dark:border-gray-600"
-      }
+      ${isDragging
+                    ? "border-blue-500 bg-blue-50/20"
+                    : "border-gray-300 dark:border-gray-600"
+                  }
       flex flex-col items-center justify-center gap-1
       text-sm text-gray-600 dark:text-gray-400
       cursor-pointer
