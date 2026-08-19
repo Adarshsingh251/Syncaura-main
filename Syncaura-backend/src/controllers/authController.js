@@ -60,8 +60,8 @@ export const register = async (req, res, next) => {
       console.error("Welcome email failed:", err);
     }
 
-    res.cookie("refreshToken",refreshToken,{
-      httpOnly:true,
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
       secure: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000
@@ -69,7 +69,7 @@ export const register = async (req, res, next) => {
 
     res.status(201).json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
-      tokens: { accessToken}
+      tokens: { accessToken }
     });
   } catch (err) { next(err); }
 };
@@ -83,7 +83,7 @@ export const login = async (req, res, next) => {
     if (userRes.rowCount === 0) return res.status(401).json({ message: 'Invalid credentials' });
 
     const user = userRes.rows[0];
-  
+
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -93,24 +93,30 @@ export const login = async (req, res, next) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user, rid);
 
-    res.cookie("refreshToken",refreshToken,{
-      httpOnly:true,
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000
-    }); 
+    });
 
     res.json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
       tokens: { accessToken }
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({
+      message: err.message,
+      stack: err.stack,
+    });
+  }
 };
 
 export const refresh = async (req, res, next) => {
   try {
-    const refreshToken  = req.cookies.refreshToken;
-    if (!refreshToken){ 
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
       return res.status(400).json({ message: 'Missing refreshToken' })
     };
 
@@ -227,7 +233,7 @@ export const forgotPassword = async (req, res, next) => {
       'UPDATE users SET reset_token_hash = $1, reset_token_expires_at = $2 WHERE id = $3',
       [tokenHash, expiresAt, user.id]
     );
-console.log(user.email);
+    console.log(user.email);
 
     try {
       await sendResetEmail({

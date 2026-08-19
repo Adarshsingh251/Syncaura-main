@@ -64,7 +64,7 @@ const AttendanceLeave = () => {
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
-
+  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Check-In");
   const popupRef = useRef(null);
@@ -158,19 +158,40 @@ const AttendanceLeave = () => {
   const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In" && !canCheckIn) {
-      toast.info(`You have already checked in today at ${checkInTime}`);
-      setShowPopup(false);
-      return;
-    }
-    if (selectedTab === "CheckOut" && !canCheckOut) {
-      if (checkOutTime) {
-        toast.info(`You have already checked out today at ${checkOutTime}`);
-        setShowPopup(false);
-        return;
-      }
-      toast.error("Please check in before checking out!");
-      return;
+    if (selectedTab === "Check-In") {
+      const nextState = {
+        presentDays: attendanceStateRef.current.presentDays + 1,
+        records: {
+          ...attendanceStateRef.current.records,
+          [attendanceDate]: { ...currentRecord, checkInTime: timeString },
+        },
+      };
+
+      saveAttendanceState(nextState);
+
+      setAttendanceStats((previousStats) =>
+        previousStats.map((stat) =>
+          stat.title === "Present Days"
+            ? { ...stat, value: nextState.presentDays }
+            : stat,
+        ),
+      );
+
+      setSelectedTab("CheckOut");
+
+      toast.success(t("attendance_marked_success", { date: attendanceDate }));
+    } else if (selectedTab === "CheckOut") {
+      setCheckOutTime(timeString);
+
+      saveAttendanceState({
+        ...attendanceStateRef.current,
+        records: {
+          ...attendanceStateRef.current.records,
+          [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
+        },
+      });
+
+      toast.success(t("attendance_checkout_success"));
     }
 
     setIsSubmitting(true);
@@ -186,27 +207,42 @@ const AttendanceLeave = () => {
           presentDays: attendanceStateRef.current.presentDays + 1,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: { ...currentRecord, checkInTime: timeString },
+            [attendanceDate]: {
+              ...currentRecord,
+              checkInTime: timeString,
+            },
           },
         };
+
         saveAttendanceState(nextState);
+
         setAttendanceStats((previousStats) =>
           previousStats.map((stat) =>
-            stat.title === "Present Days" ? { ...stat, value: nextState.presentDays } : stat,
+            stat.title === "Present Days"
+              ? { ...stat, value: nextState.presentDays }
+              : stat,
           ),
         );
+
         setSelectedTab("CheckOut");
-        toast.success(`Attendance marked successfully for ${attendanceDate}!`);
+
+        toast.success(t("attendance_marked_success", { date: attendanceDate }));
+
       } else if (selectedTab === "CheckOut") {
         setCheckOutTime(timeString);
+
         saveAttendanceState({
           ...attendanceStateRef.current,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
+            [attendanceDate]: {
+              ...currentRecord,
+              checkOutTime: timeString,
+            },
           },
         });
-        toast.success("Check-out recorded successfully!");
+
+        toast.success(t("attendance_checkout_success"));
       }
       setIsSubmitting(false);
       setShowPopup(false);
@@ -588,8 +624,14 @@ useEffect(() => {
                         </>
                       ) : (
                         selectedTab === "Check-In"
-                          ? canCheckIn ? "Check In" : "Checked In"
-                          : canCheckOut ? "Check Out" : checkOutTime ? "Attendance Complete" : "Check In First"
+                          ? canCheckIn
+                            ? "Check In"
+                            : "Checked In"
+                          : canCheckOut
+                            ? "Check Out"
+                            : checkOutTime
+                              ? "Attendance Complete"
+                              : t("attendance_check_in_required")
                       )}
                     </button>
                   </div>
