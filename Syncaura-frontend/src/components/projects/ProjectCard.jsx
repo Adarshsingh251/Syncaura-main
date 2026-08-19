@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
+import { useSelector } from "react-redux";
 
 const ProjectCard = ({
+  id,
   title,
   department,
   priority,
@@ -23,6 +25,7 @@ const ProjectCard = ({
   dueDate,
   onAction,
 }) => {
+  const user = useSelector((state) => state.auth.user);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
@@ -56,8 +59,13 @@ const ProjectCard = ({
   const handleAction = (actionType, targetStatus = null) => {
     setShowMenu(false);
     setShowStatusSubmenu(false);
+
     if (onAction) {
-      onAction(actionType, { title, department, priority, progress, dueDate }, targetStatus);
+      onAction(
+        actionType,
+        { id, title, department, priority, progress, dueDate },
+        targetStatus
+      );
     }
   };
 
@@ -191,9 +199,8 @@ const ProjectCard = ({
                               key={st.label}
                               type="button"
                               onClick={() => handleAction("status", st.label)}
-                              className={`w-full flex items-center gap-2 px-5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#252525] transition-colors text-left cursor-pointer ${
-                                priority === st.label ? "font-bold text-black dark:text-white bg-gray-200/60 dark:bg-[#202020]" : ""
-                              }`}
+                              className={`w-full flex items-center gap-2 px-5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#252525] transition-colors text-left cursor-pointer ${priority === st.label ? "font-bold text-black dark:text-white bg-gray-200/60 dark:bg-[#202020]" : ""
+                                }`}
                             >
                               <span className={`size-2 rounded-full ${st.color}`} />
                               <span>{st.label}</span>
@@ -207,14 +214,16 @@ const ProjectCard = ({
 
                   <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 
-                  <button
-                    type="button"
-                    onClick={() => handleAction("delete")}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-left cursor-pointer"
-                  >
-                    <Trash2 className="size-4 text-red-500" />
-                    <span>Delete Project</span>
-                  </button>
+                  {user?.role === "admin" && (
+                    <button
+                      type="button"
+                      onClick={() => handleAction("delete")}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-left cursor-pointer"
+                    >
+                      <Trash2 className="size-4 text-red-500" />
+                      <span>Delete Project</span>
+                    </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -238,15 +247,14 @@ const ProjectCard = ({
           <div className="relative w-full h-2 bg-[#F3F4F6] rounded-2xl overflow-hidden">
             <motion.div
               style={{ width: `${progress}%` }}
-              className={`h-2 ${
-                priority === "Critical"
-                  ? "bg-[#C71212]"
-                  : priority === "Ongoing"
+              className={`h-2 ${priority === "Critical"
+                ? "bg-[#C71212]"
+                : priority === "Ongoing"
                   ? "bg-[#0000A5]"
                   : priority === "On Hold"
-                  ? "bg-[#69707E]"
-                  : "bg-[#004500]"
-              } rounded-l-2xl ${progress === 100 ? "rounded-r-2xl" : ""}`}
+                    ? "bg-[#69707E]"
+                    : "bg-[#004500]"
+                } rounded-l-2xl ${progress === 100 ? "rounded-r-2xl" : ""}`}
             />
           </div>
         </div>
@@ -278,8 +286,8 @@ const ProjectCard = ({
               {priority === "Completed"
                 ? "Done"
                 : priority === "On Hold" || priority === "on Hold"
-                ? "TBD"
-                : formatDate(dueDate)}
+                  ? "TBD"
+                  : formatDate(dueDate)}
             </p>
           </div>
         </div>

@@ -11,9 +11,14 @@ import { toast } from "react-toastify";
 
 const Projects = () => {
   const userRole = useSelector((state) => state.auth?.user?.role);
-  const isAdmin = userRole === "admin" || userRole === "co-admin" || true; // allow creation & editing for demo
-
-  const [projectsList, setProjectsList] = useState(PROJECTS);
+  const isAdmin = userRole === "admin" || userRole === "co-admin";
+  const [projectsList, setProjectsList] = useState(() => {
+    const savedProjects = localStorage.getItem("projectsList");
+    return savedProjects ? JSON.parse(savedProjects) : PROJECTS;
+  });
+  useEffect(() => {
+    localStorage.setItem("projectsList", JSON.stringify(projectsList));
+  }, [projectsList]);
   const [currTab, setCurrTab] = useState("All Projects");
   const [showModel, setShowModel] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -137,7 +142,10 @@ const Projects = () => {
       );
       toast.info(`Updated status for "${projectData.title}" to ${newStatus}`);
     } else if (actionType === "delete") {
-      setProjectsList((prev) => prev.filter((p) => p.title !== projectData.title));
+      setProjectsList((prev) =>
+        prev.filter((p) => p.id !== projectData.id)
+      );
+
       toast.warn(`Deleted project "${projectData.title}"`);
     }
   };
@@ -150,13 +158,13 @@ const Projects = () => {
       prev.map((p) =>
         p.title === selectedProject.title
           ? {
-              ...p,
-              title: editFormData.title,
-              department: editFormData.department,
-              priority: editFormData.priority,
-              progress: Number(editFormData.progress),
-              dueDate: editFormData.dueDate,
-            }
+            ...p,
+            title: editFormData.title,
+            department: editFormData.department,
+            priority: editFormData.priority,
+            progress: Number(editFormData.progress),
+            dueDate: editFormData.dueDate,
+          }
           : p
       )
     );
@@ -248,11 +256,10 @@ const Projects = () => {
                           setShowSortDropdown(false);
                           toast.info(`Sorted projects by: ${option}`);
                         }}
-                        className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left cursor-pointer transition-colors ${
-                          sortBy === option
-                            ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-[#73FBFD] font-bold"
-                            : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2A2A2A]"
-                        }`}
+                        className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left cursor-pointer transition-colors ${sortBy === option
+                          ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-[#73FBFD] font-bold"
+                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2A2A2A]"
+                          }`}
                       >
                         <span>{option}</span>
                         {sortBy === option && <Check className="size-4 text-blue-600 dark:text-[#73FBFD]" />}
@@ -310,11 +317,10 @@ const Projects = () => {
           >
             {sortedProjects.map(
               (
-                { title, department, priority, progress, dueDate, avatars },
-                idx
-              ) => (
+                { id, title, department, priority, progress, dueDate, avatars }) => (
                 <ProjectCard
-                  key={title + idx}
+                  key={id}
+                  id={id}
                   title={title}
                   department={department}
                   priority={priority}
