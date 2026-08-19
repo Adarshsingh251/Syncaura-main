@@ -7,13 +7,16 @@ import Sidebar from "../components/Meeting/Sidebar/Sidebar";
 import MeetingFilter from "../components/Meeting/MeetingFilter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
 //import { getMeetings } from "../redux/features/meetingThunks";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Meetings() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const reduxMeetings = useSelector((state) => state.meeting?.meetings || []);
 
@@ -24,6 +27,31 @@ export default function Meetings() {
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const isGoogleConnected = searchParams.get("google_connected");
+    const errorMsg = searchParams.get("error");
+
+    if (isGoogleConnected === "true") {
+      toast.success("Google Calendar connected successfully! 🎉");
+      searchParams.delete("google_connected");
+      setSearchParams(searchParams);
+    } else if (errorMsg) {
+      toast.error(`Failed to connect Google Calendar: ${decodeURIComponent(errorMsg)}`);
+      searchParams.delete("error");
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams]);
+
+  const handleSyncCalendar = () => {
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please log in first.");
+      return;
+    }
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    window.location.href = `${apiBase}/auth/google?token=${token}`;
+  };
 
   const getMeetingType = useCallback((startTime, endTime) => {
     const now = new Date();
@@ -167,6 +195,7 @@ export default function Meetings() {
                 </h1>
               </div>
               <button
+                onClick={handleSyncCalendar}
                 className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-4 py-2 rounded-2xl shadow-sm border border-[#e5e7eb] dark:border-[#3a3a3a] text-[#111827] dark:text-white btn-hover"
               >
                 <RefreshCcw
@@ -189,6 +218,7 @@ export default function Meetings() {
                 </p>
               </div>
               <button
+                onClick={handleSyncCalendar}
                 className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-3.5 py-1.5 rounded-full border border-[#f1f1f1] dark:border-[#2f2f2f] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.06)] transition text-[#4b5563] dark:text-white btn-hover"
               >
                 <RefreshCcw
