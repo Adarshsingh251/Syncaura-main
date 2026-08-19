@@ -183,6 +183,7 @@ const resources = {
       auth_logging_in: "Logging In...",
       auth_signup_eyebrow: "WELCOME",
       auth_signup_lead: "Create your account to get started.",
+      auth_signin_lead: "Login to continue your journey.",
       auth_creating_account: "Creating Account...",
       auth_terms_intro: "I agree to the",
       auth_terms_and: "and",
