@@ -270,16 +270,23 @@ const fetchLeaves = useCallback(async () => {
     const token = localStorage.getItem("accessToken");
 
     if (!token) {
-      throw new Error("Access token not found");
+      // Fallback to localStorage if no token
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          setLeaveData(JSON.parse(stored));
+        }
+      } catch {}
+      return;
     }
 
     const isAdminOrCoAdmin =
-  user?.role === "admin" ||
-  user?.role === "co-admin";
+      user?.role === "admin" ||
+      user?.role === "co-admin";
 
-   const endpoint = isAdminOrCoAdmin
-  ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
-  : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
+    const endpoint = isAdminOrCoAdmin
+      ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
+      : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
 
     const response = await fetch(endpoint, {
       method: "GET",
@@ -294,27 +301,41 @@ const fetchLeaves = useCallback(async () => {
     }
 
     const data = await response.json();
-   
-
     setTotalPages(data.totalPages || 1);
 
-       
-
-    const formattedLeaves = (data.leaves || []).map((leave) => ({
-      ...leave,
-      startDate: leave.from_date,
-      endDate: leave.to_date,
-      type: leave.leave_type || "Leave",
-    }));
-
-     
-    console.log("Formatted Leaves:", formattedLeaves);
-    setLeaveData(formattedLeaves);
+    if (data.leaves && data.leaves.length > 0) {
+      const formattedLeaves = data.leaves.map((leave) => ({
+        ...leave,
+        startDate: leave.from_date || leave.startDate,
+        endDate: leave.to_date || leave.endDate,
+        type: leave.leave_type || leave.type || "Leave",
+      }));
+      setLeaveData(formattedLeaves);
+    } else {
+      // If backend returns empty leaves list, fallback to local storage
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          const localLeaves = JSON.parse(stored);
+          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+            setLeaveData(localLeaves);
+          }
+        }
+      } catch {}
+    }
   } catch (error) {
-    console.error("Error fetching leaves:", error);
-    toast.error("Failed to load leave requests");
+    console.warn("Error fetching leaves from backend, using local fallback:", error.message);
+    try {
+      const stored = localStorage.getItem(leaveStorageKey);
+      if (stored) {
+        const localLeaves = JSON.parse(stored);
+        if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+          setLeaveData(localLeaves);
+        }
+      }
+    } catch {}
   }
-}, [user?.role,currentPage]);
+}, [user?.role, currentPage, leaveStorageKey]);
 
 useEffect(() => {
   fetchLeaves();
