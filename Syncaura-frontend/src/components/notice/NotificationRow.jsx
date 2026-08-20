@@ -13,7 +13,6 @@ export default function NotificationRow({title, about, date, bgColor, docColor})
 
   return d.toISOString().split("T")[0];
 }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
