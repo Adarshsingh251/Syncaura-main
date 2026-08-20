@@ -13,7 +13,7 @@ const Notice = () => {
   const dispatch = useDispatch();
   const { notices, isLoading } = useSelector((state) => state.notice);
   const isdark = useSelector((state) => state.theme.isDark);
-
+  const user = useSelector((state) => state.auth.user);
   const [showModel, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
@@ -145,13 +145,15 @@ const Notice = () => {
         </div>
       </div>
 
-      <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-500 px-6 py-3 text-white shadow-lg hover:bg-blue-400 dark:hover:bg-[#2cc4c7] btn-hover"
-      >
-        <Plus size={18} />
-        New Notice
-      </button>
+      {user?.role === "admin" && (
+        <button
+          onClick={() => setShowModal(true)}
+          className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-500 px-6 py-3 text-white shadow-lg hover:bg-blue-400 dark:hover:bg-[#2cc4c7] btn-hover"
+        >
+          <Plus size={18} />
+          New Notice
+        </button>
+      )}
       {showModel && (
         <NewNoticeModal onClose={() => setShowModal(false)} addNotice={handleAddNotice} />
       )}

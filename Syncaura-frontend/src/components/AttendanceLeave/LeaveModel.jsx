@@ -3,8 +3,10 @@ import { FileText, X } from "lucide-react"
 import MotionSelect from "../projects/Model/MotionSelect"
 import { Controller, useForm } from "react-hook-form"
 import { useEffect } from "react"
+import { useSelector } from "react-redux"
 
 const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
+    const user = useSelector((state) => state.auth.user);
 
     const leaveTypes = [
         "Casual",
@@ -52,12 +54,23 @@ const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
 
     const onSubmit = async (data) => {
         try {
+            const userKey = user?.id || user?.email || "current-user";
             const currData = {
                 startDate: new Date(`${data.startDate}T00:00:00Z`).toISOString(),
                 endDate: new Date(`${data.endDate}T00:00:00Z`).toISOString(),
+                from_date: new Date(`${data.startDate}T00:00:00Z`).toISOString(),
+                to_date: new Date(`${data.endDate}T00:00:00Z`).toISOString(),
                 type: data.leaveType || "Casual",
+                leave_type: data.leaveType || "Casual",
                 reason: data.reason,
                 status: editingLeave ? editingLeave.status : "Pending",
+                user_id: user?.id,
+                userId: user?.id,
+                user_name: user?.name || user?.email || "Employee",
+                employee_name: user?.name || user?.email || "Employee",
+                user_email: user?.email,
+                appliedBy: userKey,
+                isSelfLeave: true,
             };
 
             if (typeof setLeaveData === "function") {
@@ -82,7 +95,7 @@ const LeaveModel = ({ onClose, setLeaveData, editingLeave = null }) => {
             console.error("Error applying leave:", error);
         }
     };
-
+   
 
 
 
