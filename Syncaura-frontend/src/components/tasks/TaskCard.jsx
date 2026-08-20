@@ -116,6 +116,11 @@ const TaskCard = ({ task, onOpen, onDelete, canDelete }) => {
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-2">
+        {(task.assignedTo || task.assigned_to || task.assigned_user_name) ? (
+          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+            {task.assignedTo || task.assigned_to || task.assigned_user_name}
+          </span>
+        ) : <span />}
         {deadline ? (
           <span
             className={`flex items-center gap-1 text-xs font-medium ${overdue ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}

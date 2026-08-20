@@ -53,7 +53,11 @@ router.get("/google/callback", async (req, res) => {
   try {
     const { code, state } = req.query;
 
+    console.log("=== Google OAuth Callback Triggered ===");
+    console.log("Query parameters:", { code: !!code, state: !!state });
+
     if (!code) {
+      console.error("OAuth Error: Authorization code missing");
       return res.status(400).json({
         success: false,
         message: "Authorization code missing",
@@ -61,6 +65,7 @@ router.get("/google/callback", async (req, res) => {
     }
 
     if (!state) {
+      console.error("OAuth Error: State token missing");
       return res.status(400).json({
         success: false,
         message: "State token missing",
@@ -71,17 +76,31 @@ router.get("/google/callback", async (req, res) => {
 
     try {
       decoded = jwt.verify(state, process.env.JWT_ACCESS_SECRET);
+      console.log("State token verified successfully. User ID:", decoded.sub || decoded.id);
     } catch (err) {
+      console.error("JWT Verification failed for state parameter:", err.message);
       return res.status(401).json({
         success: false,
         message: "Invalid or expired token",
       });
     }
 
+    console.log("Exchanging auth code for tokens using redirect URI:", process.env.GOOGLE_REDIRECT_URI);
     const { tokens } = await oauth2Client.getToken(code);
+    
+    console.log("Tokens received from Google:", {
+      access_token: tokens.access_token ? "PRESENT" : "NULL",
+      refresh_token: tokens.refresh_token ? "PRESENT" : "NULL",
+      scope: tokens.scope,
+      expiry_date: tokens.expiry_date,
+    });
+    
     oauth2Client.setCredentials(tokens);
 
-    await pool.query(
+    const targetUserId = decoded.sub || decoded.id;
+    console.log("Updating database user tokens for user ID:", targetUserId);
+
+    const dbResult = await pool.query(
       `UPDATE users SET 
         google_access_token = $1, 
         google_refresh_token = $2, 
@@ -96,21 +115,19 @@ router.get("/google/callback", async (req, res) => {
         tokens.scope,
         tokens.token_type,
         tokens.expiry_date,
-        decoded.sub || decoded.id,
+        targetUserId,
       ]
     );
 
-    return res.status(200).json({
-      success: true,
-      message: "Google connected successfully",
-    });
+    console.log("Database update complete. Rows affected:", dbResult.rowCount);
+
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    return res.redirect(`${clientUrl}/meetings?google_connected=true`);
   } catch (error) {
     console.error("OAuth callback error:", error);
 
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Google OAuth failed",
-    });
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    return res.redirect(`${clientUrl}/meetings?error=${encodeURIComponent(error.message || "Google OAuth failed")}`);
   }
 });
 

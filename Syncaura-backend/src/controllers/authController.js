@@ -114,7 +114,13 @@ export const login = async (req, res, next) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
       tokens: { accessToken }
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({
+      message: err.message,
+      stack: err.stack,
+    });
+  }
 };
 
 export const refresh = async (req, res, next) => {

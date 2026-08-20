@@ -35,7 +35,7 @@ pool.connect()
   .catch((err) => console.error("❌ PostgreSQL Connection Error:", err));
 
 
-  pool.query("SELECT current_database(), current_schema()")
+pool.query("SELECT current_database(), current_schema()")
   .then((res) => {
     console.log("Connected DB:", res.rows[0].current_database);
     console.log("Current Schema:", res.rows[0].current_schema); 
@@ -63,6 +63,8 @@ export const initDB = async () => {
 //     console.log("DB Test Success ✅", res.rows);
 //   }
 // });
+
+
 
 export default pool;
 

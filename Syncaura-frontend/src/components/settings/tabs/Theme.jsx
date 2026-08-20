@@ -109,11 +109,13 @@ const theme = isDark ? "dark" : "light";
   const handleZoomIncrease = () => dispatch(setZoom(Math.min(200, zoom + 10)));
 
   const handleSyncCalendar = () => {
-    setIsSyncingCalendar(true);
-    setTimeout(() => {
-      setIsSyncingCalendar(false);
-      alert(t("syncCalendar") + " ✓");
-    }, 1500);
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    if (!token) {
+      alert("Please log in first.");
+      return;
+    }
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    window.location.href = `${apiBase}/auth/google?token=${token}`;
   };
 
   const handleSyncContact = () => {

@@ -189,6 +189,7 @@ const resources = {
       continue_with_google: "Continue with Google",
       continue_with_github: "Continue with GitHub",
       continue_with_facebook: "Continue with Facebook",
+      auth_signin_lead: "Sign in to your account to continue.",
 
       createAccount: "Create Account",
       account_emphasis: "Account",

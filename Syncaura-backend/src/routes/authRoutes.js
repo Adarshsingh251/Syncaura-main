@@ -15,6 +15,11 @@ import {
 } from '../controllers/authController.js';
 
 import { activateAccount } from '../controllers/accountController.js';
+import {
+  initiateGoogleLogin,
+  handleGoogleCallback,
+  handleGithubCallback
+} from '../controllers/oauthController.js';
 
 import { auth } from '../middlewares/auth.js';
 import { permit } from '../middlewares/role.js';
@@ -38,6 +43,11 @@ const router = Router();
 router.post('/register', registerValidator, register);
 router.post('/login', loginValidator, login);
 router.post('/refresh', refresh);
+
+// Social Login
+router.get('/google', initiateGoogleLogin);
+router.get('/google/callback', handleGoogleCallback);
+router.post('/github/callback', handleGithubCallback);
 
 router.get('/me', auth, getProfile);
 
