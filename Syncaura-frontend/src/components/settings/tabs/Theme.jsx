@@ -26,13 +26,29 @@ const Theme = () => {
   const dispatch = useDispatch();
 
   // Default values
-  const {
-    theme = "light",
-    font = "Arial",
-    fontSize = "medium",
-    zoom = 100,
-  } = useSelector((s) => s.ui || {});
+// <<<<<<< fix-settings-theme
+//   const { font = "Arial", fontSize = "medium", zoom = 100 } =
+//   useSelector((s) => s.ui || {});
 
+// const isDark = useSelector((s) => s.theme.isDark);
+// const theme = isDark ? "dark" : "light";
+// =======
+//   const {
+//     theme = "light",
+//     font = "Arial",
+//     fontSize = "medium",
+//     zoom = 100,
+//   } = useSelector((s) => s.ui || {});
+// >>>>>>> main
+
+  const {
+  font = "Arial",
+  fontSize = "medium",
+  zoom = 100,
+} = useSelector((s) => s.ui || {});
+
+const isDark = useSelector((s) => s.theme.isDark);
+const theme = isDark ? "dark" : "light";
   const [language, setLanguage] = useState(
     (localStorage.getItem("app_language") || i18n.language || "en").substring(
       0,
@@ -93,11 +109,13 @@ const Theme = () => {
   const handleZoomIncrease = () => dispatch(setZoom(Math.min(200, zoom + 10)));
 
   const handleSyncCalendar = () => {
-    setIsSyncingCalendar(true);
-    setTimeout(() => {
-      setIsSyncingCalendar(false);
-      alert(t("syncCalendar") + " ✓");
-    }, 1500);
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    if (!token) {
+      alert("Please log in first.");
+      return;
+    }
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    window.location.href = `${apiBase}/auth/google?token=${token}`;
   };
 
   const handleSyncContact = () => {

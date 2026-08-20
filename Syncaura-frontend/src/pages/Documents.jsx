@@ -10,15 +10,15 @@ import DocumentFilter from "../components/Document/DocumentFilter";
 
 export default function Documents() {
   const dispatch = useDispatch();
-  const { documents, loading, error } = useSelector((state) => state.documents);
+  const { documents = [], loading = false, error = null } = useSelector((state) => state.documents || {});
 
-  const tab = ["All Files", "Recent", "Shared with me", "Achived"];
+  const tab = ["All Files", "Recent", "Shared with me", "Archived"];
   const [selectedTab, setSelectedTab] = useState("All Files");
   const [showModal, setShowModal] = useState(false);
   const [currId, setCurrId] = useState(null);
-  
+
   const [showFilter, setShowFilter] = useState(false);
-  
+
   const [search, setSearch] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
   const [appliedFilters, setAppliedFilters] = useState(null);
@@ -28,46 +28,93 @@ export default function Documents() {
     dispatch(fetchDocuments());
   }, [dispatch]);
 
-  useEffect(() => {
-    setSelectedDocList(documents.slice(0, 8));
+  const safeDocuments = useMemo(() => {
+    return Array.isArray(documents) ? documents : [];
   }, [documents]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedValue(search.toLowerCase());
     }, 400);
-    
+
     return () => clearTimeout(timer);
   }, [search]);
 
-  const parseVersion = (version) => {
-    if (!version) return 0;
-    return Number(version.replace("v", ""));
-  };
-
   const filteredDocuments = useMemo(() => {
-    let result = [...documents];
+    let result = [...safeDocuments];
 
+    // Filter by Top Tab
+    if (selectedTab === "Recent") {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      result = result.filter((item) => {
+        const itemDate = item.updated_at || item.updatedAt || item.created_at;
+        return itemDate ? new Date(itemDate) >= sevenDaysAgo : true;
+      });
+    } else if (selectedTab === "Shared with me") {
+      result = result.filter((item) => item.shared || item.is_shared);
+    } else if (selectedTab === "Archived" || selectedTab === "Achived") {
+      result = result.filter((item) => item.status === "Archived" || item.is_archived);
+    }
+
+    // Filter by Search text
     if (debouncedValue) {
       result = result.filter(
         (item) =>
           item.title?.toLowerCase().includes(debouncedValue) ||
-          item.content?.toLowerCase().includes(debouncedValue)
+          item.content?.toLowerCase().includes(debouncedValue) ||
+          item.type?.toLowerCase().includes(debouncedValue) ||
+          item.category?.toLowerCase().includes(debouncedValue)
       );
     }
 
+    // Filter by Applied Filters Modal
     if (appliedFilters) {
-      const { date } = appliedFilters;
+      const { status, type, version, versionNo, date } = appliedFilters;
+
+      // Date Filter
       if (date) {
         const selectedDate = new Date(date);
-        result = result.filter(
-          (item) => new Date(item.updatedAt) >= selectedDate
-        );
+        result = result.filter((item) => {
+          const itemDate = item.updated_at || item.updatedAt || item.created_at;
+          return itemDate ? new Date(itemDate) >= selectedDate : true;
+        });
+      }
+
+      // Status Filter
+      if (status && status !== "All") {
+        result = result.filter((item) => {
+          const itemStatus = item.status || "Active";
+          return itemStatus.toLowerCase() === status.toLowerCase();
+        });
+      }
+
+      // Type Filter
+      if (type && type !== "All") {
+        result = result.filter((item) => {
+          const itemType = (item.type || item.content || "").toLowerCase();
+          const docTitle = (item.title || "").toLowerCase();
+          return itemType.includes(type.toLowerCase()) || docTitle.includes(type.toLowerCase());
+        });
+      }
+
+      // Version & VersionNo Filter
+      if (versionNo && versionNo !== "All") {
+        const targetVersion = parseFloat(versionNo.replace("v", "")) || 1.0;
+        result = result.filter((item) => {
+          const docVerCount = item.versions?.length ? item.versions.length : 1.0;
+          if (version === "Above") {
+            return docVerCount >= targetVersion;
+          } else if (version === "Below") {
+            return docVerCount <= targetVersion;
+          }
+          return docVerCount === targetVersion;
+        });
       }
     }
 
     return result;
-  }, [documents, debouncedValue, appliedFilters]);
+  }, [safeDocuments, selectedTab, debouncedValue, appliedFilters]);
 
   useEffect(() => {
     setSelectedDocList(filteredDocuments.slice(0, 8));
@@ -101,11 +148,10 @@ export default function Documents() {
             <button
               onClick={() => setSelectedTab(item)}
               key={item}
-              className={`btn-hover flex items-center border justify-center py-2 w-32 ${
-                selectedTab === item
+              className={`btn-hover flex items-center border justify-center py-2 w-32 ${selectedTab === item
                   ? "bg-[#EFF6FF] dark:bg-[#344343] border-[#DBEAFE] dark:border-[#73FBFD] text-[#1D6BE3] dark:text-[#73FBFD]"
                   : "border-[#EAECEF] text-[#989696] cursor-pointer"
-              } rounded-xl`}
+                } rounded-xl`}
             >
               <h1 className="text-sm font-semibold">{item}</h1>
             </button>
@@ -116,12 +162,23 @@ export default function Documents() {
           <button
             onClick={() => setShowFilter((prev) => !prev)}
             className={`btn-hover px-4 py-2 bg-white dark:bg-[#292828] flex items-center gap-2 border rounded-xl ${
-              showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#EAECEF] dark:border-[#575757]"
+              showFilter || appliedFilters ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#EAECEF] dark:border-[#575757]"
             }`}
           >
-            <ListFilter className={`size-5 ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"}`} />
-            <h1 className={`text-sm ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"} font-semibold`}>Filter</h1>
+            <ListFilter className={`size-5 ${showFilter || appliedFilters ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"}`} />
+            <h1 className={`text-sm ${showFilter || appliedFilters ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"} font-semibold`}>
+              {appliedFilters ? "Filter Active" : "Filter"}
+            </h1>
           </button>
+
+          {appliedFilters && (
+            <button
+              onClick={() => setAppliedFilters(null)}
+              className="text-xs font-semibold text-red-500 dark:text-red-400 hover:underline btn-hover"
+            >
+              Clear Filters
+            </button>
+          )}
 
           <AnimatePresence mode="wait">
             {showFilter && (
@@ -156,45 +213,54 @@ export default function Documents() {
             <div className="flex-2/13 w-full flex items-center justify-start"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Version</h1></div>
             <div className="flex-2/13 w-full flex items-center justify-start"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Last Modified</h1></div>
             <div className="flex-2/13 w-full flex items-center justify-center"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Status</h1></div>
+            <div className="flex-2/13 w-full flex items-center justify-center"><h1 className="text-lg text-[#000000] dark:text-[#FFFFFF] font-semibold">Document</h1></div>
             <div className="flex-1/13 w-full flex items-center justify-start" />
           </div>
 
+
           {loading && <p className="text-gray-400 text-center py-10">Loading documents...</p>}
-          {error && <p className="text-red-400 text-center py-10">Failed to load documents.</p>}
-          {!loading && !error && selectedDocList.length === 0 && (
+          {error && <p className="text-red-400 text-center py-10">{typeof error === "string" ? error : "Failed to load documents."}</p>}
+          {!loading && !error && (selectedDocList || []).length === 0 && (
             <p className="text-gray-400 text-center py-10">No documents found.</p>
           )}
 
           <div className="flex flex-col items-center justify-center w-full gap-3">
-            {selectedDocList.map((item, idx) => (
+            {(selectedDocList || []).map((item, idx) => (
               <div
                 onClick={() => setCurrId(item._id || item.id)}
-                key={item._id || item.id}
+                key={item._id || item.id || idx}
                 className={`flex relative transition-all duration-300 items-center justify-between w-full bg-[#FFFFFF] dark:bg-[#000000] py-6 ${
                   currId === (item._id || item.id)
                     ? "bg-blue-50 dark:bg-[#1C3939]"
                     : "hover:bg-[#d1d4db75] dark:hover:bg-gray-800 hover:scale-[1.01] cursor-pointer"
-                }`}
+                  }`}
               >
                 <span className={`absolute left-0 top-0 h-full w-1 bg-blue-500 dark:bg-gray-400 transition-transform duration-300 ${currId === (item._id || item.id) ? "scale-y-100" : "scale-y-0 group-hover:scale-y-100"}`} />
                 <TableRow
-                  name={item.title}
-                  type={item.content ? "Document" : "—"}
-                  date={item.updatedAt}
-                  status="Active"
+                  name={item.title || "Untitled"}
+                  type={item.type || (item.content ? "Document" : "—")}
+                  date={item.updated_at || item.updatedAt || item.created_at}
+                  status={item.status || "Active"}
                   version={item.versions?.length ? `v${item.versions.length}` : "v1"}
-                  docColor={idx % 3 === 0 ? "text-[#DC2626]" : idx % 3 === 1 ? "text-[#9333EA]" : "text-[#2563EB]"}
+                  document={item.content ? item.title : "—"}
+                  docColor={
+                    idx % 3 === 0
+                      ? "text-[#DC2626]"
+                      : idx % 3 === 1
+                        ? "text-[#9333EA]"
+                        : "text-[#2563EB]"
+                  }
                 />
               </div>
             ))}
 
-            {selectedDocList.length < filteredDocuments.length && (
+            {(selectedDocList || []).length < filteredDocuments.length && (
               <div className="w-full flex items-center justify-center mt-4">
                 <button
                   onClick={() => {
                     setSelectedDocList((prev) => [
-                      ...prev,
-                      ...filteredDocuments.slice(prev.length, prev.length + 8),
+                      ...(prev || []),
+                      ...filteredDocuments.slice((prev || []).length, (prev || []).length + 8),
                     ]);
                   }}
                   className="flex items-center justify-center text-[#C05328] text-xl hover:underline btn-hover"

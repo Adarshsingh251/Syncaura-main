@@ -89,26 +89,31 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
                         : "scale-y-0 group-hover:scale-y-100"
                     }`}
               />
-              <div className=" text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center flex-3/9 flex-wrap w-full">
+              <div className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[24%] flex-wrap">
                 <h1>{formattedDate(startDate)}</h1>
-                <h1>{" - "}</h1>
+                <h1 className="mx-1">{" - "}</h1>
                 <h1>{formattedDate(endDate)}</h1>
               </div>
-              <h1 className=" text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center flex-1/9">
-                {type}
-              </h1>
-              <h1 className=" text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-start flex-3/9">
+              <div className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex flex-col items-center justify-center w-[20%] px-2 text-center break-words">
+                <span>{type}</span>
+                {(item.user_name || item.employee_name || item.userName) && (
+                  <span className="text-[11px] font-normal text-blue-600 dark:text-[#73FBFD] truncate max-w-full">
+                    {item.user_name || item.employee_name || item.userName}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-start w-[34%] px-4 break-words">
                 {reason}
               </h1>
-              <div className="  flex items-center justify-center flex-1/9">
+              <div className="flex items-center justify-center w-[11%]">
                 <div
-                  className={`${statusColor[status] || "text-gray-700 bg-gray-100"} px-4 py-1 flex items-center justify-center gap-2 rounded-2xl`}
+                  className={`${statusColor[status] || "text-gray-700 bg-gray-100"} px-3 py-1 flex items-center justify-center gap-1.5 rounded-2xl`}
                 >
                   {statusIcon[status]}
-                  <p className=" text-xs font-medium">{status}</p>
+                  <p className="text-xs font-medium">{status}</p>
                 </div>
               </div>
-              <div className="text-base font-medium flex items-center justify-center gap-2 flex-1/9">
+              <div className="text-base font-medium flex items-center justify-center gap-2 w-[11%]">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -172,9 +177,16 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
                   <h1 className="text-[#000000] dark:text-[#FFFFFF] text-base font-semibold flex-2/5">
                     Type
                   </h1>
-                  <h1 className="text-[#000000] dark:text-[#FFFFFF] text-sm font-light flex-3/5">
-                    {type}
-                  </h1>
+                  <div className="flex flex-col">
+                    <h1 className="text-[#000000] dark:text-[#FFFFFF] text-sm font-light">
+                      {type}
+                    </h1>
+                    {(item.user_name || item.employee_name || item.userName) && (
+                      <span className="text-xs text-blue-600 dark:text-[#73FBFD]">
+                        {item.user_name || item.employee_name || item.userName}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex  justify-between w-full  items-center gap-y-3 ">

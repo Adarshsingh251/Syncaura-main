@@ -1,19 +1,21 @@
 import ToggleSwitch from "../../dashboard/Header/ToggleSwitch";
 import { useSelector } from "react-redux";
 import { Menu } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Header = ({ setOpen }) => {
+  const { t, i18n } = useTranslation();
   const user = useSelector((state) => state.auth.user);
 
   const today = new Date();
 
-  const formattedDate = today.toLocaleDateString("en-US", {
+  const formattedDate = today.toLocaleDateString(i18n.language || "en", {
     month: "short",
     day: "2-digit",
     year: "numeric",
   });
 
-  const dayName = today.toLocaleDateString("en-US", {
+  const dayName = today.toLocaleDateString(i18n.language || "en", {
     weekday: "long",
   });
 
@@ -31,7 +33,7 @@ const Header = ({ setOpen }) => {
           <div className="flex gap-2 items-center">
             {/* Avatar */}
             <div className="size-10 sm:size-12 rounded-full bg-gradient-to-b from-red-600 to-red-900 text-white flex items-center justify-center font-semibold text-lg sm:text-xl">
-              J
+              {(user?.first_name || user?.name || "U").charAt(0).toUpperCase()}
             </div>
 
             {/* Profile Text */}
@@ -39,7 +41,7 @@ const Header = ({ setOpen }) => {
               <div className="flex gap-1 items-center text-black dark:text-white">
                 <h1 className="font-light text-base sm:text-lg">Hello!</h1>
                 <h1 className="font-semibold text-base sm:text-lg">
-                  {/* {user?.name || "John Doe"} */}
+                  {/* {user?.name || "User"} */}
                   
                    {user?.first_name
     ? `${user.first_name} ${user.last_name || ""}`
@@ -48,7 +50,7 @@ const Header = ({ setOpen }) => {
               </div>
 
               <div className="text-[#989696] font-semibold text-xs sm:text-sm -mt-1">
-                Employee
+                User
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import {
+  import {
   Calendar,
   CircleCheckBig,
   Clock,
@@ -7,14 +7,16 @@ import {
   XCircleIcon,
   Loader,
   UserCheck,
+  Laptop,
+  Plus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
-import { leaveHistory } from "../constant/constant";
+
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
 import { toast } from "react-toastify";
@@ -22,13 +24,13 @@ import { toast } from "react-toastify";
 const initialAttendanceStats = [
   {
     title: "Present Days",
-    value: 13,
+    value: 0,
     borderColor: "border-[#29CC39]",
     icon: <CircleCheckBig className="size-3.5 text-[#29CC39]" />,
   },
   {
     title: "Absent Days",
-    value: 2,
+    value: 0,
     borderColor: "border-[#FF0000]",
     icon: (
       <div className="border border-[#FF0000] size-3.5">
@@ -38,13 +40,20 @@ const initialAttendanceStats = [
   },
   {
     title: "Leave Taken",
-    value: 4,
+    value: 0,
     borderColor: "border-[#FF9500]",
     icon: <Calendar className="size-3.5 text-[#FF9500]" />,
+  },
+  {
+    title: "Work From Home",
+    value: 3,
+    borderColor: "border-[#2461E6] dark:border-[#73FBFD]",
+    icon: <Laptop className="size-3.5 text-[#2461E6] dark:text-[#73FBFD]" />,
   },
 ];
 
 const ATTENDANCE_STORAGE_PREFIX = "syncaura:attendance:";
+const LEAVE_STORAGE_PREFIX = "syncaura:leaves:";
 
 const getToday = () => {
   const now = new Date();
@@ -62,9 +71,8 @@ const AttendanceLeave = () => {
   const user = useSelector((state) => state.auth.user);
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
-  const [leaveData, setLeaveData] = useState(leaveHistory);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
-
+  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Check-In");
   const popupRef = useRef(null);
@@ -73,14 +81,40 @@ const AttendanceLeave = () => {
   const [debouncedValue, setDebouncedValue] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [attendanceDate] = useState(getToday);
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const attendanceStateRef = useRef(getInitialAttendanceState());
   const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+  const leaveStorageKey = `${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+
+  // Load leave data from localStorage (persists across refreshes)
+  const [leaveData, setLeaveData] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persist leave data to localStorage whenever it changes
+  const syncLeavesToStorage = useCallback((updater) => {
+    setLeaveData((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      try {
+        localStorage.setItem(leaveStorageKey, JSON.stringify(next));
+      } catch {
+        // storage quota exceeded — silently ignore
+      }
+      return next;
+    });
+  }, [leaveStorageKey]);
 
   // Until an attendance API exists, this keeps a user's daily status stable across
   // refreshes, logins, and logouts. Replace this with a GET attendance-status call
@@ -134,19 +168,40 @@ const AttendanceLeave = () => {
   const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In" && !canCheckIn) {
-      toast.info(`You have already checked in today at ${checkInTime}`);
-      setShowPopup(false);
-      return;
-    }
-    if (selectedTab === "CheckOut" && !canCheckOut) {
-      if (checkOutTime) {
-        toast.info(`You have already checked out today at ${checkOutTime}`);
-        setShowPopup(false);
-        return;
-      }
-      toast.error("Please check in before checking out!");
-      return;
+    if (selectedTab === "Check-In") {
+      const nextState = {
+        presentDays: attendanceStateRef.current.presentDays + 1,
+        records: {
+          ...attendanceStateRef.current.records,
+          [attendanceDate]: { ...currentRecord, checkInTime: timeString },
+        },
+      };
+
+      saveAttendanceState(nextState);
+
+      setAttendanceStats((previousStats) =>
+        previousStats.map((stat) =>
+          stat.title === "Present Days"
+            ? { ...stat, value: nextState.presentDays }
+            : stat,
+        ),
+      );
+
+      setSelectedTab("CheckOut");
+
+      toast.success(t("attendance_marked_success", { date: attendanceDate }));
+    } else if (selectedTab === "CheckOut") {
+      setCheckOutTime(timeString);
+
+      saveAttendanceState({
+        ...attendanceStateRef.current,
+        records: {
+          ...attendanceStateRef.current.records,
+          [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
+        },
+      });
+
+      toast.success(t("attendance_checkout_success"));
     }
 
     setIsSubmitting(true);
@@ -155,39 +210,137 @@ const AttendanceLeave = () => {
       const now = new Date();
       const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
-      
+
       if (selectedTab === "Check-In") {
         setCheckInTime(timeString);
         const nextState = {
           presentDays: attendanceStateRef.current.presentDays + 1,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: { ...currentRecord, checkInTime: timeString },
+            [attendanceDate]: {
+              ...currentRecord,
+              checkInTime: timeString,
+            },
           },
         };
+
         saveAttendanceState(nextState);
+
         setAttendanceStats((previousStats) =>
           previousStats.map((stat) =>
-            stat.title === "Present Days" ? { ...stat, value: nextState.presentDays } : stat,
+            stat.title === "Present Days"
+              ? { ...stat, value: nextState.presentDays }
+              : stat,
           ),
         );
+
         setSelectedTab("CheckOut");
-        toast.success(`Attendance marked successfully for ${attendanceDate}!`);
+
+        toast.success(t("attendance_marked_success", { date: attendanceDate }));
+
       } else if (selectedTab === "CheckOut") {
         setCheckOutTime(timeString);
+
         saveAttendanceState({
           ...attendanceStateRef.current,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
+            [attendanceDate]: {
+              ...currentRecord,
+              checkOutTime: timeString,
+            },
           },
         });
-        toast.success("Check-out recorded successfully!");
+
+        toast.success(t("attendance_checkout_success"));
       }
       setIsSubmitting(false);
       setShowPopup(false);
     }, 1000);
-  };
+  
+};
+
+
+
+
+
+
+const fetchLeaves = useCallback(async () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      // Fallback to localStorage if no token
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          setLeaveData(JSON.parse(stored));
+        }
+      } catch {}
+      return;
+    }
+
+    const isAdminOrCoAdmin =
+      user?.role === "admin" ||
+      user?.role === "co-admin";
+
+    const endpoint = isAdminOrCoAdmin
+      ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
+      : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
+
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch leaves: ${response.status}`);
+    }
+
+    const data = await response.json();
+    setTotalPages(data.totalPages || 1);
+
+    if (data.leaves && data.leaves.length > 0) {
+      const formattedLeaves = data.leaves.map((leave) => ({
+        ...leave,
+        startDate: leave.from_date || leave.startDate,
+        endDate: leave.to_date || leave.endDate,
+        type: leave.leave_type || leave.type || "Leave",
+      }));
+      setLeaveData(formattedLeaves);
+    } else {
+      // If backend returns empty leaves list, fallback to local storage
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          const localLeaves = JSON.parse(stored);
+          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+            setLeaveData(localLeaves);
+          }
+        }
+      } catch {}
+    }
+  } catch (error) {
+    console.warn("Error fetching leaves from backend, using local fallback:", error.message);
+    try {
+      const stored = localStorage.getItem(leaveStorageKey);
+      if (stored) {
+        const localLeaves = JSON.parse(stored);
+        if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+          setLeaveData(localLeaves);
+        }
+      }
+    } catch {}
+  }
+}, [user?.role, currentPage, leaveStorageKey]);
+
+useEffect(() => {
+  fetchLeaves();
+}, [fetchLeaves,]);
+
 
   useEffect(() => {
     const timer = setTimeout(
@@ -202,11 +355,11 @@ const AttendanceLeave = () => {
 
     if (debouncedValue) {
       result = result.filter(
-        (item) =>
-          item.reason.toLowerCase().includes(debouncedValue) ||
-          item.status.toLowerCase().includes(debouncedValue) ||
-          item.type.toLowerCase().includes(debouncedValue),
-      );
+      (item) =>
+            (item.reason || "").toLowerCase().includes(debouncedValue) ||
+            (item.status || "").toLowerCase().includes(debouncedValue) ||
+            (item.type || "").toLowerCase().includes(debouncedValue),
+        );
     }
 
     if (appliedFilters) {
@@ -224,8 +377,11 @@ const AttendanceLeave = () => {
           const startStr = item.startDate ? item.startDate.split("T")[0] : "";
           const endStr = item.endDate ? item.endDate.split("T")[0] : "";
           if (!startStr) return false;
-          if (!endStr) return selectedDateStr >= startStr;
-          return selectedDateStr >= startStr && selectedDateStr <= endStr;
+          return (
+            selectedDateStr >= startStr &&
+            (!endStr || selectedDateStr <= endStr)
+            );
+          
         });
       }
     }
@@ -254,9 +410,9 @@ const AttendanceLeave = () => {
     };
   }, [showPopup]);
 
-  const handleApplyFilters = useCallback((newFilters) => {
-    setAppliedFilters(newFilters);
-  }, []);
+  const handleApplyFilters = (newFilters) => {
+  setAppliedFilters(newFilters);
+};
 
   const handleOpenCreateModal = () => {
     setLeaveToEdit(null);
@@ -277,8 +433,7 @@ const AttendanceLeave = () => {
     if (!window.confirm("Are you sure you want to delete this leave request?")) {
       return;
     }
-
-    setLeaveData((prev) => prev.filter((item) => item !== leave));
+    syncLeavesToStorage((prev) => prev.filter((item) => item !== leave));
     toast.success("Leave request deleted successfully.");
   };
 
@@ -340,50 +495,84 @@ const AttendanceLeave = () => {
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-wrap items-center gap-4 sm:gap-6 px-4 py-3 mt-2 w-full"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 px-4 py-3 mt-2 w-full items-stretch"
       >
         {attendanceStats.map((item, index) => (
-          <AttendanceCard key={index} {...item} />
+          <div key={index} className="w-full flex justify-center">
+            <AttendanceCard {...item} />
+          </div>
         ))}
-       <div className="relative w-full flex justify-center mt-2">
-          {/* TOP CARD */}
+{/* 5th CARD: MARK THE PRESENCE */}
+{/* <div className="relative w-full flex justify-center">
+  <motion.div
+    onClick={() => setShowPopup((prev) => !prev)}
+    ref={triggerRef}
+    whileTap={{ scale: 0.97 }}
+    className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED]"
+  >
+    <h1
+      className={`font-semibold text-xs sm:text-sm ${
+        checkInTime ? 'text-[#29C339]' : 'text-[#FF0000]'
+      }`}
+    >
+      {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
+    </h1>
+
+    <div className="flex items-center justify-between mt-2">
+      ...
+    </div>
+  </motion.div>
+</div> */}
+        <div className="relative w-full flex justify-center">
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
             ref={triggerRef}
             whileTap={{ scale: 0.97 }}
-            className="cursor-pointer w-[220px] min-h-[90px] px-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
+            className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
           >
-            <h1 className={`font-medium text-lg ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
+            <h1 className={`font-semibold text-xs sm:text-sm ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
               {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
             </h1>
 
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-                In: {checkInTime || '-'}
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
+                In: <span className="font-semibold">{checkInTime || '-'}</span>
               </p>
 
-              <p className="text-[#000000] dark:text-[#F8F8F8] text-sm">
-                Out: {checkOutTime || '-'}
+              <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
+                Out: <span className="font-semibold">{checkOutTime || '-'}</span>
               </p>
             </div>
           </motion.div>
-
+    
           {/* POPUP */}
           <AnimatePresence>
             {showPopup && (
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 8, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                // initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                // animate={{ opacity: 1, y: 8, scale: 1 }}
+                // exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                
+                initial={{ opacity: 0, x: 10, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 10, scale: 0.95 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
+                // className="
+                //     absolute 
+                //     right-0 sm:right-auto xl:right-0
+                //     top-full
+                //     mt-2
+                //     z-50
+                //     w-[90vw] sm:w-[380px] md:w-[400px] 
+                //   "
                 className="
-                    absolute 
-                    right-0
-                    top-full
-                    mt-2 md:mt-3
-                    z-50
-                    w-[90vw] sm:w-[380px] md:w-[400px] 
-                  "
+                  absolute
+                  right-full
+                  top-0
+                  mr-3
+                  z-50
+                  w-[90vw] sm:w-[380px] md:w-[400px]
+              "
               >
                 <div
                   ref={popupRef}
@@ -429,33 +618,31 @@ const AttendanceLeave = () => {
                         const isDisabled = item === "Check-In" ? !canCheckIn : !canCheckOut;
 
                         return (
-                        <motion.div
-                          onClick={() => !isDisabled && setSelectedTab(item)}
-                          key={idx}
-                          whileTap={{ scale: 0.95 }}
-                          layout
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                          }}
-                          aria-disabled={isDisabled}
-                          className={`flex flex-1 items-center justify-center border ${
-                            selectedTab === item
-                              ? "border-[#2461E6] dark:border-[#73FBFD]"
-                              : "border-[#EDEDED] dark:border-[#575757]"
-                          } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
-                        >
-                          <p
-                            className={`font-bold text-xs ${
-                              selectedTab === item
-                                ? "text-[#2461E6] dark:text-[#73FBFD]"
-                                : "text-[#554d4d] dark:text-gray-400"
-                            }`}
+                          <motion.div
+                            onClick={() => !isDisabled && setSelectedTab(item)}
+                            key={idx}
+                            whileTap={{ scale: 0.95 }}
+                            layout
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 20,
+                            }}
+                            aria-disabled={isDisabled}
+                            className={`flex flex-1 items-center justify-center border ${selectedTab === item
+                                ? "border-[#2461E6] dark:border-[#73FBFD]"
+                                : "border-[#EDEDED] dark:border-[#575757]"
+                              } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
                           >
-                            {item}
-                          </p>
-                        </motion.div>
+                            <p
+                              className={`font-bold text-xs ${selectedTab === item
+                                  ? "text-[#2461E6] dark:text-[#73FBFD]"
+                                  : "text-[#554d4d] dark:text-gray-400"
+                                }`}
+                            >
+                              {item}
+                            </p>
+                          </motion.div>
                         );
                       })}
                     </div>
@@ -472,8 +659,14 @@ const AttendanceLeave = () => {
                         </>
                       ) : (
                         selectedTab === "Check-In"
-                          ? canCheckIn ? "Check In" : "Checked In"
-                          : canCheckOut ? "Check Out" : checkOutTime ? "Attendance Complete" : "Check In First"
+                          ? canCheckIn
+                            ? "Check In"
+                            : "Checked In"
+                          : canCheckOut
+                            ? "Check Out"
+                            : checkOutTime
+                              ? "Attendance Complete"
+                              : t("attendance_check_in_required")
                       )}
                     </button>
                   </div>
@@ -493,19 +686,19 @@ const AttendanceLeave = () => {
           shadow-[0_4px_10px_0_rgba(0,0,0,0.25)]
           px-11 py-5"
         >
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-3/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[24%] text-center">
             Date Range
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[20%] text-center px-2">
             Type
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-3/9 w-full text-left">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[34%] text-left px-4">
             Reason
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
             Status
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] flex-1/9 w-full text-center">
+          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
             Actions
           </h1>
         </div>
@@ -517,6 +710,49 @@ const AttendanceLeave = () => {
           onEditLeave={handleOpenEditModal}
           onDeleteLeave={handleDeleteLeave}
         />
+
+
+
+                  <div className="flex items-center justify-center gap-2 mt-6 mb-6">
+
+                          <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((prev) => prev - 1)}
+                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+                          >
+                            Previous
+                          </button>
+
+                          {[...Array(totalPages)].map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentPage(index + 1)}
+                              className={`px-4 py-2 rounded font-medium ${
+                                currentPage === index + 1
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-gray-200 hover:bg-gray-300"
+                              }`}
+                            >
+                              {index + 1}
+                            </button>
+                          ))}
+
+                          <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage((prev) => prev + 1)}
+                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+                          >
+                            Next
+                          </button>
+
+                  </div>
+
+
+
+
+
+
+
       </div>
       <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5  w-full px-5 sm:px-10 ">
         <h1 className="flex items-center justify-center w-full text-2xl text-black dark:text-white font-bold">
@@ -533,15 +769,16 @@ const AttendanceLeave = () => {
 
       <button
         onClick={handleOpenCreateModal}
-        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-7 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover"
+        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-6 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover flex items-center gap-2 shadow-lg"
       >
-        <p>Apply Leave</p>
+        <Plus className="size-5 lg:size-6" />
+        <span>Apply Leave</span>
       </button>
 
       {openModel && (
         <LeaveModel
           onClose={handleCloseLeaveModal}
-          setLeaveData={setLeaveData}
+          setLeaveData={syncLeavesToStorage}
           editingLeave={leaveToEdit}
         />
       )}
