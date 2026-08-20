@@ -7,6 +7,24 @@ const Header = ({ setOpen }) => {
   const { t, i18n } = useTranslation();
   const user = useSelector((state) => state.auth.user);
 
+  const getRoleName = () => {
+    switch (user?.role?.toLowerCase()) {
+      case "admin":
+        return "Admin";
+
+      case "co-admin":
+      case "co_admin":
+      case "coadmin":
+        return "Co-Admin";
+
+      case "user":
+        return "User";
+
+      default:
+        return "User";
+    }
+  };
+
   const today = new Date();
 
   const formattedDate = today.toLocaleDateString(i18n.language || "en", {
@@ -42,15 +60,15 @@ const Header = ({ setOpen }) => {
                 <h1 className="font-light text-base sm:text-lg">Hello!</h1>
                 <h1 className="font-semibold text-base sm:text-lg">
                   {/* {user?.name || "User"} */}
-                  
-                   {user?.first_name
-    ? `${user.first_name} ${user.last_name || ""}`
-    : user?.name || "John Doe"}
+
+                  {user?.first_name
+                    ? `${user.first_name} ${user.last_name || ""}`
+                    : user?.name || "John Doe"}
                 </h1>
               </div>
 
-              <div className="text-[#989696] font-semibold text-xs sm:text-sm -mt-1">
-                User
+              <div className="text-[#989696] dark:text-gray-400 font-semibold text-xs sm:text-sm mt-1 truncate">
+                {getRoleName()}
               </div>
             </div>
           </div>
