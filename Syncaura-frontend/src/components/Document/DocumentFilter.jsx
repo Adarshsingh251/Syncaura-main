@@ -11,6 +11,16 @@ export default function DocumentFilter({ onClose, onApply }) {
   const [date, setDate] = useState("");
 
   const items = ["Final", "Draft", "Revised"];
+
+  const applyFilter = (changes = {}) => {
+  onApply({
+    status: changes.status ?? status,
+    type: changes.type ?? type,
+    version: changes.version ?? version,
+    versionNo: changes.versionNo ?? versionNo,
+    date: changes.date ?? date,
+  });
+};
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10">
       <motion.div
@@ -53,7 +63,11 @@ export default function DocumentFilter({ onClose, onApply }) {
             <input
               type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+             onChange={(e) => {
+             const value = e.target.value;
+             setDate(value);
+             applyFilter({ date: value });
+             }}
               className="
         w-full rounded-full border border-gray-200
         px-4 py-2 text-sm
@@ -69,7 +83,10 @@ export default function DocumentFilter({ onClose, onApply }) {
             options={["PDF", "XLS", "DOC", "ZIP"]}
             startVal={type}
             label="Type"
-            onChange={setType}
+           onChange={(value) => {
+           setType(value);
+           applyFilter({ type: value });
+           }}
           />
 
           {/* Version */}
@@ -77,7 +94,10 @@ export default function DocumentFilter({ onClose, onApply }) {
             options={["Above", "Below"]}
             startVal={version}
             label="Version"
-            onChange={setVersion}
+            onChange={(value) => {
+            setVersion(value);
+            applyFilter({ version: value });
+            }}
           />
 
           {/* Version No (full width on tablet, normal on desktop) */}
@@ -98,7 +118,10 @@ export default function DocumentFilter({ onClose, onApply }) {
             ]}
             startVal={versionNo}
             label="Version No"
-            onChange={setVersionNo}
+            onChange={(value) => {
+            setVersionNo(value);
+            applyFilter({ versionNo: value });
+            }}
           />
         </div>
 
@@ -110,7 +133,10 @@ export default function DocumentFilter({ onClose, onApply }) {
           <div className="flex flex-wrap  gap-2">
             {items.map((item) => (
               <button
-                onClick={() => setStatus(item)}
+               onClick={() => {
+                setStatus(item);
+                applyFilter({ status: item });
+                }}
                 key={item}
                 className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]" : "border-gray-300 text-gray-500"}`}
               >
@@ -118,27 +144,6 @@ export default function DocumentFilter({ onClose, onApply }) {
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="w-full lg:w-auto flex items-end lg:justify-center lg:flex-1/9 ">
-          <motion.button
-            onClick={() => {
-              onApply({
-                status,
-                type,
-                version,
-                versionNo,
-                date,
-              });
-              onClose();
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="w-full  lg:w-30  bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium px-5 py-3 rounded-full shadow-sm text-sm"
-          >
-            Apply Filters
-          </motion.button>
         </div>
       </motion.div>
     </div>
