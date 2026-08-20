@@ -1,12 +1,17 @@
 import { motion } from "framer-motion";
 import { Eye, Download, FileText,  Calendar } from "lucide-react";
-
 export default function NotificationRow({title, about, date, bgColor, docColor}) {
-    function formatDateYYYYMMDD(isoDate) {
-  const d = new Date(isoDate);
+    function formatDateYYYYMMDD(date) {
+  if (!date) return "N/A";
+
+  const d = new Date(date);
+
+  if (isNaN(d.getTime())) {
+    console.error("Invalid notification date:", date);
+    return "N/A";
+  }
   return d.toISOString().split("T")[0];
 }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

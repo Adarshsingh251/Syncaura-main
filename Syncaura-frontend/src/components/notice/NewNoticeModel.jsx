@@ -120,8 +120,8 @@ export default function NewNoticeModal({ onClose, addNotice }) {
                 Date
               </label>
               <input
+                type="date"
                 {...register("date", { required: true })}
-                placeholder="Notice issued on"
                 className="
                   mt-1 w-full rounded-full px-4 py-2 text-sm outline-none
                   bg-white dark:bg-[#1f1f1f]
