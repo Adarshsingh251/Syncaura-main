@@ -11,9 +11,14 @@ import { toast } from "react-toastify";
 
 const Projects = () => {
   const userRole = useSelector((state) => state.auth?.user?.role);
-  const isAdmin = userRole === "admin" || userRole === "co-admin" || true; // allow creation & editing for demo
-
-  const [projectsList, setProjectsList] = useState(PROJECTS);
+  const isAdmin = userRole === "admin" || userRole === "co-admin";
+  const [projectsList, setProjectsList] = useState(() => {
+    const savedProjects = localStorage.getItem("projectsList");
+    return savedProjects ? JSON.parse(savedProjects) : PROJECTS;
+  });
+  useEffect(() => {
+    localStorage.setItem("projectsList", JSON.stringify(projectsList));
+  }, [projectsList]);
   const [currTab, setCurrTab] = useState("All Projects");
   const [showModel, setShowModel] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -141,7 +146,10 @@ const Projects = () => {
       );
       toast.info(`Updated status for "${projectData.title}" to ${newStatus}`);
     } else if (actionType === "delete") {
-      setProjectsList((prev) => prev.filter((p) => p.title !== projectData.title));
+      setProjectsList((prev) =>
+        prev.filter((p) => p.id !== projectData.id)
+      );
+
       toast.warn(`Deleted project "${projectData.title}"`);
     }
   };
@@ -313,11 +321,10 @@ const Projects = () => {
           >
             {sortedProjects.map(
               (
-                { title, department, priority, progress, dueDate, avatars },
-                idx
-              ) => (
+                { id, title, department, priority, progress, dueDate, avatars }) => (
                 <ProjectCard
-                  key={title + idx}
+                  key={id}
+                  id={id}
                   title={title}
                   department={department}
                   priority={priority}
