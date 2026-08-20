@@ -19,6 +19,12 @@ const initialState = {
   authChecking: true,
   profileLoading: false,
 };
+const getPhotoStorageKey = (user) => {
+  if (!user) return null;
+  const identifier = user.id || user._id || user.email || "default";
+  return `profile_photo_${identifier}`;
+};
+
 
 const authSlice = createSlice({
   name: "auth",
@@ -36,6 +42,10 @@ const authSlice = createSlice({
         localStorage.setItem("accessToken", token);
         localStorage.setItem("token", token);
       }
+      const key = getPhotoStorageKey(user);
+      if (key && state.user) {
+        state.user.profilePic = localStorage.getItem(key);
+      }
     },
     logout(state) {
       state.isLoading = true;
@@ -48,6 +58,20 @@ const authSlice = createSlice({
       localStorage.removeItem("refreshToken");
       state.isLoading = false;
     },
+    updateFrontendProfilePhoto(state, action) {
+      if (state.user) {
+        const key = getPhotoStorageKey(state.user);
+        if (key) {
+          if (action.payload) {
+            localStorage.setItem(key, action.payload);
+            state.user.profilePic = action.payload;
+          } else {
+            localStorage.removeItem(key);
+            state.user.profilePic = null;
+          }
+        }
+      }
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -64,6 +88,8 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         localStorage.setItem("accessToken", tokens.accessToken);
         localStorage.setItem("refreshToken", tokens.refreshToken);
+        const key = getPhotoStorageKey(user);
+        if (key) state.user.profilePic = localStorage.getItem(key);
       })
 
       .addCase(registerUser.rejected, (state, action) => {
@@ -85,6 +111,8 @@ const authSlice = createSlice({
 
         localStorage.setItem("accessToken", tokens.accessToken);
         localStorage.setItem("refreshToken", tokens.refreshToken);
+        const key = getPhotoStorageKey(user);
+        if (key) state.user.profilePic = localStorage.getItem(key);
       })
 
       .addCase(loginUser.rejected, (state, action) => {
@@ -121,7 +149,13 @@ const authSlice = createSlice({
       action.payload;
 
     state.user = profile;
-    state.authChecking = false;   
+    state.authChecking = false;  
+    if (state.user) {
+    const key = getPhotoStorageKey(profile);
+    if (key) {
+      state.user.profilePic = localStorage.getItem(key); // Restores your image string instantly!
+    }
+  } 
 })
      .addCase(fetchUserProfile.rejected, (state) => {
     state.profileLoading = false;
@@ -138,6 +172,10 @@ const authSlice = createSlice({
           ...state.user,
           ...profile,
         };
+        const key = getPhotoStorageKey(state.user);
+        if (key && state.user) {
+          state.user.profilePic = localStorage.getItem(key);
+        }
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.profileLoading = false;
@@ -161,5 +199,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearAuthError, setCredentials, logout } = authSlice.actions;
+export const { clearAuthError, setCredentials, logout, updateFrontendProfilePhoto } = authSlice.actions;
 export default authSlice.reducer;
