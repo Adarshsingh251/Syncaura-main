@@ -41,6 +41,12 @@ ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT 'en';
 ADD CONSTRAINT users_role_check
 CHECK (role IN ('admin', 'co-admin', 'user'));
 
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS invitation_token_hash TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS invitation_token_expires_at TIMESTAMP DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS invited_at TIMESTAMP DEFAULT NULL;
+
+
 -- Projects
 CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

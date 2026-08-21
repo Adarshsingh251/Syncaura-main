@@ -32,6 +32,9 @@ import googleAuthRoutes from "./routes/googleAuth.route.js";
 import githubRoutes from "./routes/github.routes.js";
 import { initSlackBot } from "./services/slackBot.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
+import adminRoutes from './routes/adminRoutes.js';
+import coAdminRoutes from './routes/coAdminRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // dotenv.config();
 
@@ -64,6 +67,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
+
+app.use('/api/admin', adminRoutes);
+app.use('/api/co-admin', coAdminRoutes);
+app.use('/api/users', userRoutes);
+
 app.use('/api/tasks', taskRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use('/api/channels', channelRoutes);
