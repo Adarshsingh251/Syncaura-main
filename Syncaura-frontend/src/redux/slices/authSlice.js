@@ -58,12 +58,20 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        const { user, tokens } = action.payload;
+        const user = action.payload?.user;
+        const token = action.payload?.token || action.payload?.tokens?.accessToken || action.payload?.accessToken;
+        const refreshToken = action.payload?.refreshToken || action.payload?.tokens?.refreshToken;
         state.user = user;
-        state.token = tokens.accessToken;
+        state.token = token;
         state.isAuthenticated = true;
-        localStorage.setItem("accessToken", tokens.accessToken);
-        localStorage.setItem("refreshToken", tokens.refreshToken);
+
+        if (token) {
+          localStorage.setItem("accessToken", token);
+          localStorage.setItem("token", token);
+        }
+        if (refreshToken) {
+          localStorage.setItem("refreshToken", refreshToken);
+        }
       })
 
       .addCase(registerUser.rejected, (state, action) => {
@@ -78,13 +86,20 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        const { user, tokens } = action.payload;
+        const user = action.payload?.user;
+        const token = action.payload?.token || action.payload?.tokens?.accessToken || action.payload?.accessToken;
+        const refreshToken = action.payload?.refreshToken || action.payload?.tokens?.refreshToken;
         state.user = user;
-        state.token = tokens.accessToken;
+        state.token = token;
         state.isAuthenticated = true;
 
-        localStorage.setItem("accessToken", tokens.accessToken);
-        localStorage.setItem("refreshToken", tokens.refreshToken);
+        if (token) {
+          localStorage.setItem("accessToken", token);
+          localStorage.setItem("token", token);
+        }
+        if (refreshToken) {
+          localStorage.setItem("refreshToken", refreshToken);
+        }
       })
 
       .addCase(loginUser.rejected, (state, action) => {
