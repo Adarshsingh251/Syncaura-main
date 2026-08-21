@@ -6,23 +6,22 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-);
-
-// console.log("GOOGLE_CLIENT_ID =", process.env.GOOGLE_CLIENT_ID);
-
-// console.log("GOOGLE_CLIENT_SECRET =", process.env.GOOGLE_CLIENT_SECRET);
-
-// console.log("GOOGLE_REDIRECT_URI =http://localhost:5000/auth/google/callback", process.env.GOOGLE_REDIRECT_URI);
+const getOAuth2Client = () => {
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:5000/auth/google/callback";
+  console.log("Creating OAuth2Client with redirectUri:", redirectUri);
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    redirectUri
+  );
+};
 
 router.get("/google", auth, async (req, res) => {
   try {
+    const oauth2Client = getOAuth2Client();
     const state = jwt.sign(
       { id: req.user.id },
-      process.env.JWT_ACCESS_SECRET,
+      process.env.JWT_ACCESS_SECRET || "default_jwt_secret",
       { expiresIn: "10m" }
     );
 
@@ -37,6 +36,7 @@ router.get("/google", auth, async (req, res) => {
       state,
     });
 
+    console.log("Generated Google Auth URL:", authUrl);
     return res.redirect(authUrl);
   } catch (error) {
     console.error("Google OAuth Error:", error);
@@ -75,7 +75,7 @@ router.get("/google/callback", async (req, res) => {
     let decoded;
 
     try {
-      decoded = jwt.verify(state, process.env.JWT_ACCESS_SECRET);
+      decoded = jwt.verify(state, process.env.JWT_ACCESS_SECRET || "default_jwt_secret");
       console.log("State token verified successfully. User ID:", decoded.sub || decoded.id);
     } catch (err) {
       console.error("JWT Verification failed for state parameter:", err.message);
@@ -85,7 +85,7 @@ router.get("/google/callback", async (req, res) => {
       });
     }
 
-    console.log("Exchanging auth code for tokens using redirect URI:", process.env.GOOGLE_REDIRECT_URI);
+    const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
     
     console.log("Tokens received from Google:", {
@@ -103,18 +103,18 @@ router.get("/google/callback", async (req, res) => {
     const dbResult = await pool.query(
       `UPDATE users SET 
         google_access_token = $1, 
-        google_refresh_token = $2, 
-        google_scope = $3, 
-        google_token_type = $4, 
-        google_expiry_date = $5,
+        google_refresh_token = COALESCE($2, google_refresh_token), 
+        google_scope = COALESCE($3, google_scope), 
+        google_token_type = COALESCE($4, google_token_type), 
+        google_expiry_date = COALESCE($5, google_expiry_date),
         updated_at = CURRENT_TIMESTAMP 
       WHERE id = $6`,
       [
         tokens.access_token,
-        tokens.refresh_token,
-        tokens.scope,
-        tokens.token_type,
-        tokens.expiry_date,
+        tokens.refresh_token || null,
+        tokens.scope || null,
+        tokens.token_type || null,
+        tokens.expiry_date || null,
         targetUserId,
       ]
     );
