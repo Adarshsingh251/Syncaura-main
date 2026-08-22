@@ -16,6 +16,7 @@ import { useDispatch } from "react-redux";
 import {
   updateTaskStatus,
   addSubtask,
+  toggleSubtaskStatus,
   deleteTask,
 } from "../../redux/features/taskThunks";
 
@@ -83,6 +84,21 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete }) => {
       setSubtaskInput("");
     } finally {
       setAddingSubtask(false);
+    }
+  };
+
+  const handleToggleSubtask = async (subtask) => {
+    const newStatus = subtask.status === "DONE" ? "TODO" : "DONE";
+    try {
+      await dispatch(
+        toggleSubtaskStatus({
+          taskId: task.id,
+          subtaskId: subtask.id,
+          status: newStatus,
+        }),
+      ).unwrap();
+    } catch {
+      // no-op — UI stays in previous state if the request fails
     }
   };
 
@@ -162,7 +178,7 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete }) => {
               </p>
               <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                 <User className="w-3.5 h-3.5 text-gray-400" />
-                {task.assignedTo || "Unassigned"}
+                {task.assignedTo || task.assigned_to || task.assigned_user_name || "Unassigned"}
               </div>
             </div>
           </div>
@@ -178,11 +194,10 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete }) => {
                   key={opt.value}
                   onClick={() => handleStatusChange(opt.value)}
                   disabled={statusLoading}
-                  className={`btn-hover flex-1 py-2 text-xs font-semibold rounded-xl ${
-                    task.status === opt.value
+                  className={`btn-hover flex-1 py-2 text-xs font-semibold rounded-xl ${task.status === opt.value
                       ? opt.color + "ring-2 ring-offset-1 ring-current"
                       : "bg-gray-100 dark:bg-[#2d2f33] text-gray-400 dark:text-gray-500 hover:opacity-80"
-                  } disabled:opacity-60`}
+                    } disabled:opacity-60`}
                 >
                   {opt.label}
                 </button>
@@ -223,9 +238,23 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete }) => {
                   className="flex items-center gap-2.5 py-2 border-b border-gray-50 dark:border-[#2d2f33] last:border-0"
                 >
                   {subtask.status === "DONE" ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSubtask(subtask)}
+                      className="flex-shrink-0"
+                      aria-label="Mark subtask as not done"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    </button>
                   ) : (
-                    <Circle className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSubtask(subtask)}
+                      className="flex-shrink-0"
+                      aria-label="Mark subtask as done"
+                    >
+                      <Circle className="w-4 h-4 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-400 transition-colors" />
+                    </button>
                   )}
                   <span
                     className={`text-sm ${subtask.status === "DONE" ? "line-through text-gray-400" : "text-gray-700 dark:text-gray-300"}`}

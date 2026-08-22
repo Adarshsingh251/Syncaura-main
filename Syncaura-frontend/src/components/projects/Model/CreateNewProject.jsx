@@ -239,7 +239,7 @@ const CreateNewProject = ({ onClose }) => {
                                             control={control}
                                             rules={{ required: true }}
                                             render={({ field }) => (
-                                                <MotionSelect {...field} startVal="Select Members.." options={members} />
+                                                <MotionSelect {...field} startVal="Select Members.." options={members} searchable />
                                             )}
                                         />
                                     </div>
@@ -254,7 +254,7 @@ const CreateNewProject = ({ onClose }) => {
                                             control={control}
                                             rules={{ required: true }}
                                             render={({ field }) => (
-                                                <MotionSelect {...field} startVal="Select owner.." options={owners} />
+                                                <MotionSelect {...field} startVal="Select owner.." options={owners} searchable/>
                                             )}
                                         />
                                     </div>

@@ -119,7 +119,7 @@ const ListRow = ({ task, onOpen, onDelete, canDelete }) => {
       </td>
       <td className="py-3 px-3 hidden lg:table-cell">
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {task.assignedTo || "—"}
+          {task.assignedTo || task.assigned_to || task.assigned_user_name || "Unassigned"}
         </span>
       </td>
       <td className="py-3 px-3">

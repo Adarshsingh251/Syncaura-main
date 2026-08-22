@@ -147,6 +147,43 @@ export default function App() {
               }
             >
               <Route path="/meet/:id" element={<CurrentMeet />} />
+            </Route>
+
+            <Route element={<ProtectRoute allowedRoles={["admin"]} />}>
+              <Route
+                path="/admin"
+                element={
+                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
+                    <Admin />
+                  </MainLayout>
+                }
+              />
+            </Route>
+
+            <Route element={<ProtectRoute allowedRoles={["co-admin"]} />}>
+              <Route
+                path="/co-admin"
+                element={
+                  <MainLayout SideBar={MobileSidebar} TopbarComponent={Header}>
+                    <CoAdmin />
+                  </MainLayout>
+                }
+              />
+            </Route>
+
+            <Route
+              element={
+                <ProtectRoute allowedRoles={["user", "admin", "co-admin"]} />
+              }
+            >
+              <Route
+                path="/user-dashboard"
+                element={
+                  <MainLayout TopbarComponent={Header} SideBar={MobileSidebar}>
+                    <UserDashboard />
+                  </MainLayout>
+                }
+              />
 
               <Route
                 path="/projects"
