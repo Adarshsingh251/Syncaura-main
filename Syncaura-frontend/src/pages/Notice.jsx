@@ -7,7 +7,7 @@ import NotificationRow from "../components/notice/NotificationRow";
 import NewNoticeModal from "../components/notice/NewNoticeModel";
 import { AnimatePresence, motion } from "framer-motion";
 import NoticeFilter from "../components/notice/NoticeFilter";
-import { fetchNotices, createNotice } from "../redux/features/noticeThunks";
+import { fetchNotices, createNotice, updateNotice, deleteNotice } from "../redux/features/noticeThunks";
 
 const Notice = () => {
   const dispatch = useDispatch();
@@ -15,6 +15,7 @@ const Notice = () => {
   const isdark = useSelector((state) => state.theme.isDark);
   const user = useSelector((state) => state.auth.user);
   const [showModel, setShowModal] = useState(false);
+  const [editingNotice, setEditingNotice] = useState(null);
   const [search, setSearch] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
   const [showFilter, setShowFilter] = useState(false);
@@ -60,7 +61,20 @@ const Notice = () => {
   const handleApplyFilters = (newFilters) => setAppliedFilters(newFilters);
 
   const handleAddNotice = (formData) => {
-    dispatch(createNotice(formData));
+    return dispatch(createNotice(formData));
+  };
+
+  const handleUpdateNotice = (formData) => {
+    return dispatch(updateNotice({ id: editingNotice.id ?? editingNotice._id, formData }));
+  };
+
+  const handleDeleteNotice = (id) => {
+    dispatch(deleteNotice(id));
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingNotice(null);
   };
 
   const containerVariants = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
@@ -123,9 +137,13 @@ const Notice = () => {
               <motion.div key={item._id} variants={itemVariants}>
                 <NotificationRow
                   key={item._id}
+                  id={item.id ?? item._id}
+                  attachments={item.attachments}
                   about={item.title}
                   title={item.description}
                   date={item.createdAt}
+                  onEdit={() => { setEditingNotice(item); setShowModal(true); }}
+                  onDelete={handleDeleteNotice}
                   bgColor={idx % 3 === 0 ? "bg-red-50" : idx % 3 === 1 ? "bg-purple-50" : "bg-blue-50"}
                   docColor={idx % 3 === 0 ? "text-red-500" : idx % 3 === 1 ? "text-purple-500" : "text-blue-500"}
                 />
@@ -155,7 +173,11 @@ const Notice = () => {
         </button>
       )}
       {showModel && (
-        <NewNoticeModal onClose={() => setShowModal(false)} addNotice={handleAddNotice} />
+        <NewNoticeModal
+          onClose={handleCloseModal}
+          addNotice={editingNotice ? handleUpdateNotice : handleAddNotice}
+          initialData={editingNotice}
+        />
       )}
     </div>
   );
