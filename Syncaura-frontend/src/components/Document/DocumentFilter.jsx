@@ -2,15 +2,16 @@ import { motion } from "framer-motion";
 import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function DocumentFilter({ onClose, onApply }) {
-  const [status, setStatus] = useState("Final");
-  const [type, setType] = useState("PDF");
+  const [status, setStatus] = useState("All");
+  const [type, setType] = useState("All");
   const [version, setVersion] = useState("Above");
-  const [versionNo, setVersionNo] = useState("v1.0");
+  const [versionNo, setVersionNo] = useState("All");
   const [date, setDate] = useState("");
 
-  const items = ["Final", "Draft", "Revised"];
+  const items = ["All", "Final", "Draft", "Revised"];
 
   const applyFilter = (changes = {}) => {
   onApply({
@@ -57,7 +58,7 @@ export default function DocumentFilter({ onClose, onApply }) {
         >
           <div className="flex flex-col gap-2 w-full">
             <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Date Range
+              {t("dateRange", "Date Range")}
             </label>
 
             <input
@@ -80,30 +81,24 @@ export default function DocumentFilter({ onClose, onApply }) {
 
           {/* Type */}
           <FilterDropdown
-            options={["PDF", "XLS", "DOC", "ZIP"]}
+            options={["All", "PDF", "XLS", "DOC", "ZIP"]}
             startVal={type}
-            label="Type"
-           onChange={(value) => {
-           setType(value);
-           applyFilter({ type: value });
-           }}
+            label={t("type", "Type")}
+            onChange={setType}
           />
 
           {/* Version */}
           <FilterDropdown
             options={["Above", "Below"]}
             startVal={version}
-            label="Version"
-            onChange={(value) => {
-            setVersion(value);
-            applyFilter({ version: value });
-            }}
+            label={t("documents_version", "Version")}
+            onChange={setVersion}
           />
 
-          {/* Version No (full width on tablet, normal on desktop) */}
-
+          {/* Version No */}
           <FilterDropdown
             options={[
+              "All",
               "v1.0",
               "v1.5",
               "v2.0",
@@ -113,22 +108,17 @@ export default function DocumentFilter({ onClose, onApply }) {
               "v4.0",
               "v4.5",
               "v5.0",
-              "v5.5",
-              "v6.0",
             ]}
             startVal={versionNo}
-            label="Version No"
-            onChange={(value) => {
-            setVersionNo(value);
-            applyFilter({ versionNo: value });
-            }}
+            label={t("versionNo", "Version No")}
+            onChange={setVersionNo}
           />
         </div>
 
         {/* Status */}
         <div className="flex flex-col items-start gap-2 w-full lg:w-2/9">
           <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Status
+            {t("status", "Status")}
           </label>
           <div className="flex flex-wrap  gap-2">
             {items.map((item) => (
@@ -140,10 +130,31 @@ export default function DocumentFilter({ onClose, onApply }) {
                 key={item}
                 className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]" : "border-gray-300 text-gray-500"}`}
               >
-                {item}
+                {t(`status_${item.toLowerCase()}`, item)}
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="w-full lg:w-auto flex items-end lg:justify-center lg:flex-1/9 ">
+          <motion.button
+            onClick={() => {
+              onApply({
+                status,
+                type,
+                version,
+                versionNo,
+                date,
+              });
+              onClose();
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="w-full  lg:w-30  bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium px-5 py-3 rounded-full shadow-sm text-sm"
+          >
+            {t("filter_applyFilters", "Apply Filters")}
+          </motion.button>
         </div>
       </motion.div>
     </div>

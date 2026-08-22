@@ -58,12 +58,20 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        const { user, tokens } = action.payload;
+        const user = action.payload?.user;
+        const token = action.payload?.token || action.payload?.tokens?.accessToken || action.payload?.accessToken;
+        const refreshToken = action.payload?.refreshToken || action.payload?.tokens?.refreshToken;
         state.user = user;
-        state.token = tokens.accessToken;
+        state.token = token;
         state.isAuthenticated = true;
-        localStorage.setItem("accessToken", tokens.accessToken);
-        localStorage.setItem("refreshToken", tokens.refreshToken);
+
+        if (token) {
+          localStorage.setItem("accessToken", token);
+          localStorage.setItem("token", token);
+        }
+        if (refreshToken) {
+          localStorage.setItem("refreshToken", refreshToken);
+        }
       })
 
       .addCase(registerUser.rejected, (state, action) => {
@@ -78,13 +86,20 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        const { user, tokens } = action.payload;
+        const user = action.payload?.user;
+        const token = action.payload?.token || action.payload?.tokens?.accessToken || action.payload?.accessToken;
+        const refreshToken = action.payload?.refreshToken || action.payload?.tokens?.refreshToken;
         state.user = user;
-        state.token = tokens.accessToken;
+        state.token = token;
         state.isAuthenticated = true;
 
-        localStorage.setItem("accessToken", tokens.accessToken);
-        localStorage.setItem("refreshToken", tokens.refreshToken);
+        if (token) {
+          localStorage.setItem("accessToken", token);
+          localStorage.setItem("token", token);
+        }
+        if (refreshToken) {
+          localStorage.setItem("refreshToken", refreshToken);
+        }
       })
 
       .addCase(loginUser.rejected, (state, action) => {
@@ -97,18 +112,14 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
         state.isLoading = false;
-        const {  accessToken } = action.payload;
-        // state.user = user;
-        state.token = accessToken;
+        state.token = action.payload.accessToken;
         state.isAuthenticated = true;
-        state.authChecking=false
-        localStorage.setItem("accessToken", accessToken);
       })
       .addCase(refreshAccessToken.rejected, (state) => {
         state.authChecking = false;
-        state.isLoading=false
-        state.isAuthenticated=false
-        state.user=null
+        state.isLoading = false
+        state.isAuthenticated = false
+        state.user = null
       })
 
       // User Profile
@@ -117,14 +128,20 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
-        state.profileLoading = false;
-        const profile = action.payload?.user || action.payload?.data || action.payload;
-        state.user = profile;
-      })
-      .addCase(fetchUserProfile.rejected, (state, action) => {
-        state.profileLoading = false;
-        state.error = action.payload;
-      })
+    state.profileLoading = false;
+
+    const profile =
+      action.payload?.user ||
+      action.payload?.data ||
+      action.payload;
+
+    state.user = profile;
+    state.authChecking = false;   
+})
+     .addCase(fetchUserProfile.rejected, (state) => {
+    state.profileLoading = false;
+    state.authChecking = false;
+})
       .addCase(updateUserProfile.pending, (state) => {
         state.profileLoading = true;
         state.error = null;
@@ -142,7 +159,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-     
+
       // Change Password
       .addCase(changePassword.pending, (state) => {
         state.isLoading = true;

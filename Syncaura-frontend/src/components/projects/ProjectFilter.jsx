@@ -2,10 +2,18 @@ import { motion } from "framer-motion";
 import FilterDropdown from "../common/FilterDropdown";
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function ProjectFilter({ onClose, onApply }) {
-  const [priority, setPriority] = useState("Low");
-  const [team, setTeam] = useState("All Members");
+  const { t } = useTranslation();
+  const items = [
+    t("projectFilter_priorityLow", "Low"),
+    t("projectFilter_priorityMedium", "Medium"),
+    t("projectFilter_priorityHigh", "High"),
+    t("projectFilter_priorityCritical", "Critical")
+  ];
+  const [priority, setPriority] = useState(items[0]);
+  const [team, setTeam] = useState(t("projectFilter_allMembers", "All Members"));
   const [date, setDate] = useState("");
 
   const items = ["Low", "Medium", "High", "Critical"];
@@ -63,7 +71,7 @@ export default function ProjectFilter({ onClose, onApply }) {
             {/* Date */}
             <div className="flex flex-col gap-2 w-full">
               <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
-                Date Range
+                {t("projectFilter_dateRange", "Date Range")}
               </label>
 
               <input
@@ -86,20 +94,17 @@ export default function ProjectFilter({ onClose, onApply }) {
 
             {/* Team */}
             <FilterDropdown
-              options={["All Members", ""]}
+              options={[t("projectFilter_allMembers", "All Members"), ""]}
               startVal={team}
-              label="TEAM / MEMBERS"
-              onChange={(value) => {
-                setTeam(value);
-                applyFilter({ team: value });
-              }}
+              label={t("projectFilter_teamMembers", "TEAM / MEMBERS")}
+              onChange={setTeam}
             />
           </div>
 
           {/* Priority */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
-              Priority
+              {t("projectFilter_priority", "Priority")}
             </label>
 
             <div className="flex flex-wrap gap-2">
@@ -119,6 +124,28 @@ export default function ProjectFilter({ onClose, onApply }) {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Apply */}
+          <div className="w-full flex items-end">
+            <motion.button
+              onClick={() => {
+                onApply({ priority, team, date });
+                onClose();
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="
+        w-full
+        bg-blue-600 dark:bg-[#73FBFD]
+        dark:text-black text-white
+        font-medium px-5 py-3
+        rounded-full shadow-sm text-sm
+      "
+            >
+              {t("projectFilter_applyFilters", "Apply Filters")}
+            </motion.button>
           </div>
         </div>
       </motion.div>

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import FilterDropdown from "../common/FilterDropdown";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 
 export default function AttendanceLeaveFilter({ onClose, onApply }) {
   const [status, setStatus] = useState("All");
@@ -21,18 +22,23 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
     "Casual",
     "Sick",
     "Earned",
-    "Paid",
-    "Unpaid",
     "Maternity",
     "Paternity",
     "Work From Home",
   ];
+   useEffect(() => {
+    onApply({
+      status,
+      type,
+      date,
+    });
+  }, [status, type, date, onApply]);
 
   const handleReset = () => {
     setStatus("All");
     setType("All");
     setDate("");
-    onApply(null);
+
   };
 
   return (
@@ -46,7 +52,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
        
         {/* Date Range */}
         <div className="flex flex-col items-center justify-center gap-2 w-full lg:w-1/4">
-          <label className="text-sm font-semibold w-full  text-gray-700 dark:text-gray-300">
+          <label className="text-sm font-semibold w-full text-gray-700 dark:text-gray-300">
             Date Range
           </label>
 
@@ -56,9 +62,11 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
             onChange={(e) => setDate(e.target.value)}
             className="w-full rounded-full border border-gray-200 px-4 py-2 pr-10 text-sm text-[#898888]
             bg-white dark:bg-[#2E2F2F]
-            dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 date-input "
+            dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 date-input"
           />
         </div>
+
+        {/* Type */}
         <div className="flex flex-col gap-2 w-full lg:w-1/4">
           <FilterDropdown
             options={typeOptions}
@@ -73,11 +81,13 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
           <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             Status
           </label>
+
           <div className="flex flex-wrap gap-2">
             {items.map((item) => (
               <button
-                onClick={() => setStatus(item)}
                 key={item}
+                onClick={() => setStatus(item)}
+                
                 className={`btn-hover px-3 py-1.5 rounded-full text-xs sm:text-sm border ${status === item ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD] font-semibold" : "border-gray-300 text-gray-500"}`}
               >
                 {item}
