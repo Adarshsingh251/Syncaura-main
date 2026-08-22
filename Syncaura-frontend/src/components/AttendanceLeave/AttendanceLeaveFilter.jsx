@@ -7,8 +7,15 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
   const [status, setStatus] = useState("All");
   const [type, setType] = useState("All");
   const [date, setDate] = useState("");
-  
- 
+
+  useEffect(() => {
+  onApply({
+    status,
+    type,
+    date,
+  });
+}, [status, type, date, onApply]);
+
   const items = ["All", "Approved", "Pending", "Rejected"];
   const typeOptions = [
     "All",
@@ -42,19 +49,7 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full bg-white dark:bg-black rounded-2xl shadow-[0_0_10px_1px_#ACACAC33] p-4 sm:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center lg:items-center "
       >
-        <motion.button
-          initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
-          whileHover={{ scale: 1.15, rotate: 90 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className="absolute top-4 right-10 md:right-15 z-100"
-          onClick={onClose}
-        >
-          <X className="text-black dark:text-white size-5" />
-        </motion.button>
-
+       
         {/* Date Range */}
         <div className="flex flex-col items-center justify-center gap-2 w-full lg:w-1/4">
           <label className="text-sm font-semibold w-full text-gray-700 dark:text-gray-300">
@@ -110,7 +105,6 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
           >
             Reset
           </motion.button>
-          
         </div>
       </motion.div>
     </div>
