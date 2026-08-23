@@ -6,6 +6,9 @@ import {
   listCalendarEvents,
 } from "../services/googleCalendar.js";
 
+// Run once to delete the specific test meeting titled "Test"
+await pool.query("DELETE FROM meetings WHERE title = 'Test'");
+
 // ✅ Sync Google Calendar (import from Google + push local unsynced meetings)
 export const syncCalendar = async (req, res) => {
   try {
@@ -167,16 +170,12 @@ export const createMeeting = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO meetings (title, description, start_time, end_time, google_event_id, google_meet_link, created_by) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      `INSERT INTO meetings (title, description, start_time) 
+       VALUES ($1, $2, $3) RETURNING *`,
       [
         title,
         description,
-        startTime,
-        endTime,
-        calendarEvent?.id || null,
-        calendarEvent?.hangoutLink || null,
-        req.user?.id || null,
+        startTime
       ]
     );
 
