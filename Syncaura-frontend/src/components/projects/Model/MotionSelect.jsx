@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, X, Check } from "lucide-react";
 
 
-const MotionSelect = ({ options, startVal, value, onChange,searchable = false, }) => {
+const MotionSelect = ({ options, startVal, value, onChange, searchable = false, multiple = false }) => {
     const [open, setOpen] = useState(false);
     // const [value, setValue] = useState(startVal);
     const [search, setSearch] = useState("");
@@ -25,9 +25,28 @@ const MotionSelect = ({ options, startVal, value, onChange,searchable = false, }
     );
 
     const handleSelect = (opt) => {
-        onChange(opt);
-        setOpen(false);
+        if (multiple) {
+            const currentValues = Array.isArray(value) ? value : [];
+            let nextValues;
+            if (currentValues.includes(opt)) {
+                nextValues = currentValues.filter((v) => v !== opt);
+            } else {
+                nextValues = [...currentValues, opt];
+            }
+            onChange(nextValues);
+        } else {
+            onChange(opt);
+            setOpen(false);
+        }
         setSearch("");
+    };
+
+    const handleRemove = (opt) => {
+        if (multiple) {
+            const currentValues = Array.isArray(value) ? value : [];
+            const nextValues = currentValues.filter((v) => v !== opt);
+            onChange(nextValues);
+        }
     };
 
     const handleOpen = () => {
@@ -41,12 +60,34 @@ const MotionSelect = ({ options, startVal, value, onChange,searchable = false, }
             <button
                 type="button"
                 onClick={handleOpen}
-                className="w-full flex items-center justify-between bg-white dark:bg-[#2E2F2F] py-2 px-5 rounded-2xl text-sm font-semibold text-[#898888] btn-hover"
+                className="w-full flex items-center justify-between bg-white dark:bg-[#2E2F2F] py-2 px-5 rounded-2xl text-sm font-semibold text-[#898888] btn-hover text-left"
             >
-                {value || startVal}
+                {multiple && Array.isArray(value) && value.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5 items-center w-full">
+                        {value.map((val) => (
+                            <span
+                                key={val}
+                                className="flex items-center gap-1 bg-[#2461E6]/10 dark:bg-[#73FBFD]/10 text-[#2461E6] dark:text-[#73FBFD] px-2.5 py-1 rounded-xl text-xs font-bold"
+                            >
+                                {val}
+                                <span
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemove(val);
+                                    }}
+                                    className="cursor-pointer hover:text-red-500 ml-0.5 flex items-center justify-center"
+                                >
+                                    <X size={12} />
+                                </span>
+                            </span>
+                        ))}
+                    </div>
+                ) : (
+                    <span>{value || startVal}</span>
+                )}
                 <ChevronDown
                     size={18}
-                    className={`transition-transform ${open ? "rotate-180" : ""}`}
+                    className={`transition-transform shrink-0 ${open ? "rotate-180" : ""}`}
                 />
             </button>
 
@@ -100,23 +141,33 @@ const MotionSelect = ({ options, startVal, value, onChange,searchable = false, }
                         {/* Options */}
                         <ul className="max-h-48 overflow-y-auto no-scrollbar">
                             {filteredOptions.length > 0 ? (
-                                filteredOptions.map((opt, idx) => (
-                                    <li
-                                        key={idx}
-                                        onClick={() => handleSelect(opt)}
-                                        className="
-                                            cursor-pointer
-                                            px-5 py-2
-                                            text-sm
-                                            text-black
-                                            dark:text-[#c4bfbf]
-                                            dark:hover:bg-[#525353]
-                                            hover:bg-gray-100
-                                        "
-                                    >
-                                        {opt}
-                                    </li>
-                                ))
+                                filteredOptions.map((opt, idx) => {
+                                    const isSelected = multiple
+                                        ? Array.isArray(value) && value.includes(opt)
+                                        : value === opt;
+                                    return (
+                                        <li
+                                            key={idx}
+                                            onClick={() => handleSelect(opt)}
+                                            className={`
+                                                cursor-pointer
+                                                px-5 py-2
+                                                text-sm
+                                                text-black
+                                                dark:text-[#c4bfbf]
+                                                dark:hover:bg-[#525353]
+                                                hover:bg-gray-100
+                                                flex items-center justify-between
+                                                ${isSelected ? "bg-gray-50 dark:bg-[#3A3B3B] font-semibold text-[#2461E6] dark:text-[#73FBFD]" : ""}
+                                            `}
+                                        >
+                                            <span>{opt}</span>
+                                            {isSelected && (
+                                                <Check size={16} className="text-[#2461E6] dark:text-[#73FBFD]" />
+                                            )}
+                                        </li>
+                                    );
+                                })
                             ) : (
                                 <li
                                     className="
