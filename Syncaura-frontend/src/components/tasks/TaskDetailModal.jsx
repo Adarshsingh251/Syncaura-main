@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -55,7 +55,7 @@ const formatDate = (dateStr) => {
   });
 };
 
-const TaskDetailModal = ({ task, onClose, onDeleted, canDelete }) => {
+const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false }) => {
   const dispatch = useDispatch();
   const [subtaskInput, setSubtaskInput] = useState("");
   const [addingSubtask, setAddingSubtask] = useState(false);
@@ -113,6 +113,28 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete }) => {
     task.subtasks?.filter((s) => s.status === "DONE").length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
 
+  // Calculate days remaining to complete the task (10-day deadline)
+  const daysInfo = useMemo(() => {
+    if (!task.deadline) return { daysLeft: null, totalDays: 10, isOverdue: false };
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const deadlineDate = new Date(task.deadline);
+    deadlineDate.setHours(0, 0, 0, 0);
+    const diffMs = deadlineDate - now;
+    const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    // Calculate total days from created to deadline
+    const createdDate = new Date(task.created_at || task.createdAt || now);
+    createdDate.setHours(0, 0, 0, 0);
+    const totalMs = deadlineDate - createdDate;
+    const totalDays = Math.max(Math.ceil(totalMs / (1000 * 60 * 60 * 24)), 1);
+    return {
+      daysLeft: Math.max(daysLeft, 0),
+      totalDays,
+      isOverdue: daysLeft < 0,
+      deadlineDate,
+    };
+  }, [task.deadline, task.created_at, task.createdAt]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm modal-backdrop"
@@ -165,12 +187,56 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-                Deadline
+                {isAdmin ? "Deadline" : "Days to Complete"}
               </p>
-              <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                {formatDate(task.deadline)}
-              </div>
+              {isAdmin ? (
+                /* Admin sees the full date */
+                <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                  {formatDate(task.deadline)}
+                </div>
+              ) : (
+                /* User sees days remaining countdown (read-only) */
+                <div className="flex flex-col gap-1.5">
+                  {daysInfo.daysLeft !== null ? (
+                    <>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-lg font-bold ${
+                            daysInfo.isOverdue
+                              ? "text-red-500"
+                              : daysInfo.daysLeft <= 2
+                              ? "text-amber-500"
+                              : "text-emerald-500"
+                          }`}
+                        >
+                          {daysInfo.isOverdue ? "Overdue" : `${daysInfo.daysLeft} day${daysInfo.daysLeft !== 1 ? "s" : ""} left`}
+                        </span>
+                      </div>
+                      {/* Progress bar for days */}
+                      <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            daysInfo.isOverdue
+                              ? "bg-red-500"
+                              : daysInfo.daysLeft <= 2
+                              ? "bg-amber-500"
+                              : "bg-emerald-500"
+                          }`}
+                          style={{
+                            width: `${Math.min((daysInfo.daysLeft / daysInfo.totalDays) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-gray-400">
+                        Deadline: {formatDate(task.deadline)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-400">No deadline set</span>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
