@@ -189,10 +189,18 @@ export const updateTask = async (req, res) => {
 
     const existingTask = taskCheck.rows[0];
 
-    // RBAC: Check if user is Admin OR assigned to this task
-    if (req.user?.role !== "admin" && existingTask.assigned_to !== req.user?.id) {
-      return res.status(403).json({ message: "Forbidden: Not authorized to update this task" });
-    }
+    const userRole = String(req.user?.role || "").toLowerCase();
+    const userId = String(req.user?.id || "");
+    const taskOwnerId = String(existingTask.assigned_to || "");
+
+    const isAdmin = userRole === "admin" || userRole === "co-admin";
+    const isOwner = taskOwnerId === userId;
+
+    if (!isAdmin && !isOwner) {
+       return res.status(403).json({
+        message: "Forbidden: Not authorized to update this task"
+      });
+  }
 
     const result = await pool.query(
       `UPDATE tasks SET 
@@ -243,10 +251,18 @@ export const deleteTask = async (req, res) => {
 
     const existingTask = taskCheck.rows[0];
 
-    // RBAC: Check if user is Admin OR assigned to this task
-    if (req.user?.role !== "admin" && existingTask.assigned_to !== req.user?.id) {
-      return res.status(403).json({ message: "Forbidden: Not authorized to delete this task" });
-    }
+    const userRole = String(req.user?.role || "").toLowerCase();
+    const userId = String(req.user?.id || "");
+    const taskOwnerId = String(existingTask.assigned_to || "");
+
+    const isAdmin = userRole === "admin" || userRole === "co-admin";
+    const isOwner = taskOwnerId === userId;
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({
+        message: "Forbidden: Not authorized to delete this task"
+     });
+  }
 
     const result = await pool.query("DELETE FROM tasks WHERE id = $1 RETURNING *", [id]);
 
