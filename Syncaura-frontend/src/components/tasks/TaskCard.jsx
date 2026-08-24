@@ -130,7 +130,14 @@ const TaskCard = ({ task, onOpen, onDelete, canDelete }) => {
             ) : (
               <Calendar className="w-3 h-3" />
             )}
-            {overdue ? "Overdue · " : ""}
+            {overdue ? "Overdue · " : (() => {
+              const now = new Date();
+              now.setHours(0, 0, 0, 0);
+              const dDate = new Date(deadline);
+              dDate.setHours(0, 0, 0, 0);
+              const diff = Math.ceil((dDate - now) / (1000 * 60 * 60 * 24));
+              return diff >= 0 ? `${diff}d left · ` : "";
+            })()}
             {formatDate(deadline)}
           </span>
         ) : (
