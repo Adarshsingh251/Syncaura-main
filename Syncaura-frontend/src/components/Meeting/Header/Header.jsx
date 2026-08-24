@@ -2,6 +2,7 @@ import ToggleSwitch from "../../dashboard/Header/ToggleSwitch";
 import { useSelector } from "react-redux";
 import { Menu } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AvatarManager from "../../common/AvatarManager";
 
 const Header = ({ setOpen, open }) => {
   const { t, i18n } = useTranslation();
@@ -57,9 +58,7 @@ const Header = ({ setOpen, open }) => {
           {/* Profile Section */}
           <div className="flex gap-2 items-center">
             {/* Avatar */}
-            <div className="size-10 sm:size-12 rounded-full bg-gradient-to-b from-red-600 to-red-900 text-white flex items-center justify-center font-semibold text-lg sm:text-xl">
-              {(user?.first_name || user?.name || "U").charAt(0).toUpperCase()}
-            </div>
+            <AvatarManager size="44px" editable={true} />
 
             {/* Profile Text */}
             <div className="flex flex-col">
