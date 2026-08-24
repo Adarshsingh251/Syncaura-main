@@ -1,4 +1,4 @@
-  import {
+import {
   Calendar,
   CircleCheckBig,
   Clock,
@@ -260,10 +260,29 @@ const AttendanceLeave = () => {
   
 };
 
+  const fetchLeaves = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
 
+      if (!token) {
+        throw new Error("Access token not found");
+      }
 
+      const isAdminOrCoAdmin =
+        user?.role === "admin" ||
+        user?.role === "co-admin";
 
+      const endpoint = isAdminOrCoAdmin
+        ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
+        : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
 
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
 const fetchLeaves = useCallback(async () => {
   try {
@@ -288,17 +307,19 @@ const fetchLeaves = useCallback(async () => {
       ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
       : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
 
-    const response = await fetch(endpoint, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+      const formattedLeaves = (data.leaves || []).map((leave) => ({
+        ...leave,
+        startDate: leave.from_date,
+        endDate: leave.to_date,
+        type: leave.leave_type || "Leave",
+      }));
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch leaves: ${response.status}`);
+      setLeaveData(formattedLeaves);
+    } catch (error) {
+      console.error("Error fetching leaves:", error);
+      toast.error("Failed to load leave requests");
     }
+  }, [user?.role, currentPage]);
 
     const data = await response.json();
     setTotalPages(data.totalPages || 1);
@@ -439,18 +460,20 @@ useEffect(() => {
 
   return (
     <div className="relative w-full min-h-[calc(92vh)] flex flex-col bg-[#FFFFFF] dark:bg-[#000000]">
-      <div className="flex flex-col sm:flex-row gap-y-3 items-center justify-between px-5 py-5 border-b border-[#EDEDED]">
-        <h1 className="text-2xl flex-2/5 xl:flex-3/5 font-medium text-[#000000] dark:text-[#FFFFFF]">
+      {/* Header Section Updated for Perfect Alignment */}
+      <div className="relative flex flex-col lg:flex-row gap-y-3 items-center justify-between px-5 py-5 border-b border-[#EDEDED] dark:border-[#575757]">
+        <h1 className="text-xl lg:text-2xl font-medium text-[#000000] dark:text-[#FFFFFF] w-full lg:w-auto">
           Attendance And Leave Management
         </h1>
         <div className="flex w-full flex-3/5 md:flex-2/5 2xl:flex-3/5 items-center justify-center gap-2 ">
           <Link
             to="/my-attendance"
-            className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-4xl font-semibold text-sm transition-transform active:scale-95 shadow-sm"
+            className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-4xl font-semibold text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap"
           >
             <UserCheck className="size-4" />
             <span>My Attendance</span>
           </Link>
+          
           <button
             onClick={() => setShowFilter((prev) => !prev)}
             className={`btn-hover px-4 py-2 bg-white dark:bg-[#000000] flex items-center gap-2 border rounded-4xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#989696] dark:border-[#989696]"} `}
@@ -458,39 +481,43 @@ useEffect(() => {
             <Funnel
               className={`size-5 ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"} `}
             />
-            <h1
-              className={`text-base ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#575757] dark:text-[#8f8e8e]"}  font-semibold`}
+            <span
+              className={`text-base ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#575757] dark:text-[#8f8e8e]"} font-semibold`}
             >
               Filter
-            </h1>
+            </span>
           </button>
-          <AnimatePresence mode="wait">
-            {showFilter && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="w-full absolute left-0 top-30 md:top-20 z-100"
-              >
-                <AttendanceLeaveFilter
-                  onClose={() => setShowFilter(false)}
-                  onApply={handleApplyFilters}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div className="flex w-full items-center gap-2 bg-[#EDEDED] dark:bg-[#2E2F2F]  px-3 py-2 rounded-4xl">
-            <Search className="size-6 text-gray-500 dark:text-[#A19C9C]" />
+
+          {/* Search bar width optimized */}
+          <div className="flex items-center gap-2 bg-[#EDEDED] dark:bg-[#2E2F2F] px-3 py-2 rounded-4xl w-[160px] sm:w-[180px] lg:w-[200px]">
+            <Search className="size-5 text-gray-500 dark:text-[#A19C9C] shrink-0" />
             <input
               onChange={(e) => setSearch(e.target.value)}
               value={search}
               placeholder="Search"
-              className="bg-transparent  dark:text-[#A19C9C] dark:placeholder:text-[#A19C9C] text-[#5C5C5C] placeholder:text-[#5C5C5C] outline-none text-sm w-full"
+              className="bg-transparent dark:text-[#A19C9C] dark:placeholder:text-[#A19C9C] text-[#5C5C5C] placeholder:text-[#5C5C5C] outline-none text-sm w-full"
             />
           </div>
         </div>
+
+        <AnimatePresence mode="wait">
+          {showFilter && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="absolute left-0 top-full mt-1 w-full z-50 px-5"
+            >
+              <AttendanceLeaveFilter
+                onClose={() => setShowFilter(false)}
+                onApply={handleApplyFilters}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
       <motion.div
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
@@ -502,27 +529,7 @@ useEffect(() => {
             <AttendanceCard {...item} />
           </div>
         ))}
-{/* 5th CARD: MARK THE PRESENCE */}
-{/* <div className="relative w-full flex justify-center">
-  <motion.div
-    onClick={() => setShowPopup((prev) => !prev)}
-    ref={triggerRef}
-    whileTap={{ scale: 0.97 }}
-    className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED]"
-  >
-    <h1
-      className={`font-semibold text-xs sm:text-sm ${
-        checkInTime ? 'text-[#29C339]' : 'text-[#FF0000]'
-      }`}
-    >
-      {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
-    </h1>
 
-    <div className="flex items-center justify-between mt-2">
-      ...
-    </div>
-  </motion.div>
-</div> */}
         <div className="relative w-full flex justify-center">
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
@@ -549,22 +556,10 @@ useEffect(() => {
           <AnimatePresence>
             {showPopup && (
               <motion.div
-                // initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                // animate={{ opacity: 1, y: 8, scale: 1 }}
-                // exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                
                 initial={{ opacity: 0, x: 10, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 10, scale: 0.95 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
-                // className="
-                //     absolute 
-                //     right-0 sm:right-auto xl:right-0
-                //     top-full
-                //     mt-2
-                //     z-50
-                //     w-[90vw] sm:w-[380px] md:w-[400px] 
-                //   "
                 className="
                   absolute
                   right-full
@@ -711,50 +706,40 @@ useEffect(() => {
           onDeleteLeave={handleDeleteLeave}
         />
 
+        <div className="flex items-center justify-center gap-2 mt-6 mb-6">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+          >
+            Previous
+          </button>
 
+          {[...Array(totalPages)].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`px-4 py-2 rounded font-medium ${
+                currentPage === index + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 hover:bg-gray-300"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
 
-                  <div className="flex items-center justify-center gap-2 mt-6 mb-6">
-
-                          <button
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage((prev) => prev - 1)}
-                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
-                          >
-                            Previous
-                          </button>
-
-                          {[...Array(totalPages)].map((_, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setCurrentPage(index + 1)}
-                              className={`px-4 py-2 rounded font-medium ${
-                                currentPage === index + 1
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-gray-200 hover:bg-gray-300"
-                              }`}
-                            >
-                              {index + 1}
-                            </button>
-                          ))}
-
-                          <button
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage((prev) => prev + 1)}
-                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
-                          >
-                            Next
-                          </button>
-
-                  </div>
-
-
-
-
-
-
-
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+          >
+            Next
+          </button>
+        </div>
       </div>
-      <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5  w-full px-5 sm:px-10 ">
+
+      <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5 w-full px-5 sm:px-10">
         <h1 className="flex items-center justify-center w-full text-2xl text-black dark:text-white font-bold">
           Leave List
         </h1>
