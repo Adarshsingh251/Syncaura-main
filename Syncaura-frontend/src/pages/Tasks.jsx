@@ -497,6 +497,7 @@ const Tasks = () => {
             onClose={() => setShowCreate(false)}
             onSubmit={handleCreate}
             isLoading={createLoading}
+            isAdmin={isAdmin}
           />
         )}
         {selectedTask && (
@@ -506,6 +507,7 @@ const Tasks = () => {
             onClose={() => setSelectedTask(null)}
             onDeleted={() => setSelectedTask(null)}
             canDelete={canDeleteTask(selectedTask)}
+            isAdmin={isAdmin}
           />
         )}
       </AnimatePresence>

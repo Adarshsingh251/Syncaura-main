@@ -60,12 +60,6 @@ export default function MobileSidebar({ open, setOpen }) {
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  useEffect(() => {
-    if (isDesktop && open) {
-      setOpen(false);
-    }
-  }, [isDesktop, open, setOpen]);
-
   const logOutHandle = useCallback(() => {
     setShowLogoutModal(true); // Opens the popup overlay modal
   }, []);
@@ -83,32 +77,46 @@ export default function MobileSidebar({ open, setOpen }) {
         data-theme={isDark ? "dark" : "light"}
         className={`
         bg-[#F8F8F8] dark:bg-[#2E2F2F]
-        w-[240px]
         h-screen flex flex-col
-        fixed md:static
+        fixed md:relative
         top-0 left-0 z-50 border-r border-[#E0DDDD] dark:border-[#575757]
-        transform transition-transform duration-300
-        ${open ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0
+        transition-all duration-300 ease-in-out shrink-0
+        ${
+          open
+            ? "w-[240px] translate-x-0 opacity-100"
+            : "w-0 -translate-x-full opacity-0 pointer-events-none border-none overflow-hidden"
+        }
       `}
       >
-        <div className="flex md:hidden items-center justify-between px-4 py-4">
-          <button onClick={() => setOpen(false)}>
-            <X size={20} className="text-[#000000] dark:text-[#F8F8F8]" />
+        <div className="flex items-center justify-between px-4 py-4 min-w-[240px]">
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-[#575757] transition-colors btn-hover cursor-pointer"
+            aria-label="Toggle sidebar"
+          >
+            <Menu size={28} className="text-[#000000] dark:text-[#F8F8F8]" />
           </button>
-        </div>
-        <div className="md:flex hidden items-center justify-between px-4 py-4">
-          <Menu size={30} className="text-[#000000] dark:text-[#F8F8F8]" />
+          {!isDesktop && (
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-[#575757] transition-colors btn-hover cursor-pointer"
+              aria-label="Close sidebar"
+            >
+              <X size={20} className="text-[#000000] dark:text-[#F8F8F8]" />
+            </button>
+          )}
         </div>
 
-        <nav className="px-1 space-y-1 flex-1 overflow-y-auto">
+        <nav className="px-1 space-y-1 flex-1 overflow-y-auto min-w-[238px]">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.label}
                 to={item.path}
-                onClick={() => setOpen(false)}
+                onClick={() => !isDesktop && setOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2 rounded-lg text-xl cursor-pointer
          text-black dark:text-[#F8F8F8]

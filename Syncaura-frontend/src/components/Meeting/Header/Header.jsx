@@ -2,8 +2,9 @@ import ToggleSwitch from "../../dashboard/Header/ToggleSwitch";
 import { useSelector } from "react-redux";
 import { Menu } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AvatarManager from "../../common/AvatarManager";
 
-const Header = ({ setOpen }) => {
+const Header = ({ setOpen, open }) => {
   const { t, i18n } = useTranslation();
   const user = useSelector((state) => state.auth.user);
 
@@ -42,17 +43,22 @@ const Header = ({ setOpen }) => {
       <div className="w-full flex items-center justify-between px-3 sm:px-4 lg:px-6">
         {/* LEFT SECTION */}
         <div className="flex items-center gap-3 sm:gap-5">
-          {/* Mobile Menu Button */}
-          <button className="lg:hidden" onClick={() => setOpen(true)}>
-            <Menu size={28} className="text-black dark:text-white" />
-          </button>
+          {/* Menu Button - Only shown when sidebar is closed */}
+          {!open && (
+            <button
+              type="button"
+              onClick={() => setOpen?.(true)}
+              className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors btn-hover cursor-pointer"
+              aria-label="Open menu"
+            >
+              <Menu size={26} className="text-black dark:text-white" />
+            </button>
+          )}
 
           {/* Profile Section */}
           <div className="flex gap-2 items-center">
             {/* Avatar */}
-            <div className="size-10 sm:size-12 rounded-full bg-gradient-to-b from-red-600 to-red-900 text-white flex items-center justify-center font-semibold text-lg sm:text-xl">
-              {(user?.first_name || user?.name || "U").charAt(0).toUpperCase()}
-            </div>
+            <AvatarManager size="44px" editable={true} />
 
             {/* Profile Text */}
             <div className="flex flex-col">
@@ -89,14 +95,16 @@ const Header = ({ setOpen }) => {
           {/* Mobile controls */}
           <div className="flex sm:hidden items-center gap-2">
             <ToggleSwitch />
-            <button
-              type="button"
-              onClick={() => setOpen?.(true)}
-              className="inline-flex items-center justify-center rounded-full p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
-              aria-label="Open sidebar"
-            >
-              <Menu size={22} />
-            </button>
+            {!open && (
+              <button
+                type="button"
+                onClick={() => setOpen?.(true)}
+                className="inline-flex items-center justify-center rounded-full p-2 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+                aria-label="Open sidebar"
+              >
+                <Menu size={22} />
+              </button>
+            )}
           </div>
         </div>
       </div>

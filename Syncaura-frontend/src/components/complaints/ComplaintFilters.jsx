@@ -26,7 +26,7 @@ export default function ComplaintFilters({ onClose, onApply }) {
   });
 }, [status, order, date, onApply]);
 
-  const items = ["Resolved", "In Progress", "Open"];
+  const statusItems = ["Resolved", "In Progress", "Open"];
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10">
