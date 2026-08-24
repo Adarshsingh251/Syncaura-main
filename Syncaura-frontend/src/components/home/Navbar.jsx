@@ -13,33 +13,35 @@ const isAboutActive = location.pathname === "/about-us";
 const isLearnMoreActive = location.pathname === "/learn-more";
   const [activeSection, setActiveSection] = useState('home');
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = ['home', 'features', 'contact'];
-      const scrollPosition = window.scrollY + 100;
-
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (
-            scrollPosition >= offsetTop &&
-            scrollPosition < offsetTop + offsetHeight
-          ) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-useEffect(() => {
+ useEffect(() => {
     if (location.pathname !== "/") {
       setActiveSection("");
+      return;
     }
+
+    const sections = ["home", "features", "contact"];
+    const elements = sections
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id);
+        }
+      },
+      { threshold: [0.3, 0.5, 0.7], rootMargin: "-100px 0px -100px 0px" }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
   }, [location.pathname]);
   const scrollToSection = (e, sectionId) => {
     e.preventDefault();

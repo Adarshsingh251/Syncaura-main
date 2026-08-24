@@ -4,13 +4,13 @@ const RoleSelector = ({ selectedRole, onRoleChange }) => {
   const roles = [
     { id: 'admin', label: 'Admin', sub: 'Register as an admin' },
     { id: 'coadmin', label: 'Co-Admin', sub: 'Register as a co-admin' },
-    { id: 'user', label: 'User (Intern)', sub: 'Register as an intern' }
+    { id: 'user', label: 'User', sub: 'Register as a user' }
   ];
 
   return (
     <div className="w-full mb-6 font-poppin-reg">
       {/* Label for the selection group */}
-      <label className="block text-sm font-medium text-gray-300 dark:text-gray-300 mb-2">
+      <label className="block text-sm font-medium mb-2 role-label-text">
         Select Registration Role
       </label>
       
@@ -24,18 +24,12 @@ const RoleSelector = ({ selectedRole, onRoleChange }) => {
               key={role.id}
               type="button"
               onClick={() => onRoleChange(role.id)}
-              className={`
-                flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all duration-200 btn-hover
-                ${isActive 
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-md dark:bg-blue-500 dark:border-blue-500' 
-                  : 'bg-white text-gray-700 border-gray-300 dark:bg-zinc-900 dark:text-gray-300 dark:border-zinc-700'
-                }
-              `}
+              className={`role-btn ${isActive ? 'active' : ''}`}
             >
-              <span className={`text-sm font-medium ${isActive ? 'font-semibold' : ''}`}>
+              <span className={`role-label ${isActive ? 'font-semibold' : ''}`}>
                 {role.label}
               </span>
-              <span className={`text-[10px] mt-0.5 ${isActive ? 'text-blue-100' : 'text-gray-400 dark:text-gray-500'}`}>
+              <span className="role-sub">
                 {role.sub}
               </span>
             </button>

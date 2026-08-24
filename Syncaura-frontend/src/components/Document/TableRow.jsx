@@ -1,6 +1,17 @@
 import { FileText } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-const TableRow = ({ name, type, version, date, status, docColor }) => {
+const TableRow = ({
+  name,
+  type,
+  version,
+  date,
+  status,
+  docColor,
+  document,
+}) => {
+  const { t } = useTranslation();
+
   function formatDateYYYYMMDD(isoDate) {
     return new Date(isoDate).toISOString().split("T")[0];
   }
@@ -13,44 +24,73 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
 
   return (
     <>
+      {/* Desktop */}
       <div className="hidden md:flex items-center justify-center w-full px-10">
-        <div className="flex items-center gap-5 w-full flex-4/13">
+        {/* Name */}
+        <div className="flex items-center gap-5 w-full flex-3/13">
           <FileText className={`size-8 ${docColor}`} />
-          <h1 className="text-base font-medium text-black dark:text-[#FFFFFF]">{name}</h1>
+          <h1 className="text-base font-medium text-black dark:text-[#FFFFFF]">
+            {name}
+          </h1>
         </div>
 
+        {/* Type */}
         <div className="flex-2/13 w-full">
-          <h1 className="uppercase text-base text-black font-medium dark:text-[#FFFFFF]">{type}</h1>
+          <h1 className="uppercase text-base text-black font-medium dark:text-[#FFFFFF]">
+            {type}
+          </h1>
         </div>
 
+        {/* Version */}
         <div className="flex-2/13 w-full">
-          <h1 className="text-base font-medium text-black dark:text-white">{version}</h1>
+          <h1 className="text-base font-medium text-black dark:text-white">
+            {version}
+          </h1>
         </div>
 
+        {/* Date */}
         <div className="flex-2/13 w-full">
           <h1 className="text-base font-medium text-black dark:text-white">
             {formatDateYYYYMMDD(date)}
           </h1>
         </div>
 
+        {/* Status */}
         <div className="flex-2/13 w-full flex items-center justify-center">
           <div
-            className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium  ${statusColor[status]}`}
+            className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium ${
+              statusColor[status]
+            }`}
           >
-            {status}
+            {t(`status_${status.toLowerCase()}`, status)}
           </div>
         </div>
 
+        {/* Document */}
+        <div className="flex-2/13 w-full flex items-center justify-center">
+          {document ? (
+            <button className="text-[#2461E6] hover:underline font-medium btn-hover">
+              {document}
+            </button>
+          ) : (
+            <button className="text-[#2461E6] hover:underline font-medium btn-hover">
+              {t("view_document", "View Document")}
+            </button>
+          )}
+        </div>
+
+        {/* Edit */}
         <div className="flex-1/13 w-full flex justify-end">
           <button className="text-[#2461E6] hover:underline font-medium btn-hover">
-            Edit
+            {t("edit", "Edit")}
           </button>
         </div>
       </div>
 
+      {/* Mobile */}
       <div className="md:hidden w-full px-4">
         <div className="flex flex-col gap-3 rounded-xl border bg-white dark:bg-black p-4 shadow-sm">
-        
+
           <div className="flex items-center gap-3">
             <FileText className={`size-7 ${docColor}`} />
             <h1 className="font-semibold text-black dark:text-white text-sm break-all">
@@ -58,37 +98,64 @@ const TableRow = ({ name, type, version, date, status, docColor }) => {
             </h1>
           </div>
 
+          {/* Details */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-gray-500">Type</p>
-              <p className="font-medium uppercase text-black dark:text-white">{type}</p>
+              <p className="text-gray-500">
+                {t("type", "Type")}
+              </p>
+              <p className="font-medium uppercase text-black dark:text-white">
+                {type}
+              </p>
             </div>
 
             <div>
-              <p className="text-gray-500">Version</p>
-              <p className="font-medium text-black dark:text-white">{version}</p>
+              <p className="text-gray-500">
+                {t("version", "Version")}
+              </p>
+              <p className="font-medium text-black dark:text-white">
+                {version}
+              </p>
             </div>
 
             <div>
-              <p className="text-gray-500">Last Modified</p>
+              <p className="text-gray-500">
+                {t("last_modified", "Last Modified")}
+              </p>
               <p className="font-medium text-black dark:text-white">
                 {formatDateYYYYMMDD(date)}
               </p>
             </div>
 
             <div>
-              <p className="text-gray-500">Status</p>
+              <p className="text-gray-500">
+                {t("status", "Status")}
+              </p>
               <span
-                className={`inline-block px-5 py-1 mt-2 rounded-md text-xs font-medium ${statusColor[status]}`}
+                className={`inline-block px-5 py-1 mt-2 rounded-md text-xs font-medium ${
+                  statusColor[status]
+                }`}
               >
-                {status}
+                {t(`status_${status.toLowerCase()}`, status)}
               </span>
             </div>
           </div>
 
-          <div className="flex justify-end pt-2">
+          {/* Document */}
+          <div className="flex items-center justify-between pt-2">
+            <p className="text-gray-500 text-sm">
+              {t("document", "Document")}
+            </p>
+
             <button className="text-sm font-medium text-[#2461E6] hover:underline btn-hover">
-              Edit
+              {document || t("view_document", "View Document")}
+            </button>
+          </div>
+
+          {/* Edit */}
+          <div className="flex justify-end pt-1">
+            <button className="text-sm font-medium text-[#2461E6] hover:underline btn-hover">
+              {t("edit", "Edit")}
             </button>
           </div>
         </div>

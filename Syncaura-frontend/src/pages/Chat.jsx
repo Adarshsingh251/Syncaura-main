@@ -25,7 +25,7 @@ export default function Chat() {
       "
     >
       {/* SIDEBAR */}
-      <div className="w-full md:w-[280px] lg:w-[320px] border-r border-gray-200 dark:border-gray-800">
+      <div className="w-full md:w-[280px] lg:w-[320px] border-r border-gray-200 dark:border-gray-800 overflow-y-auto h-full">
         <Sidebar
           chats={CHATS}
           selectedChat={selectedChat}

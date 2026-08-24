@@ -7,7 +7,15 @@ export default function AttendanceLeaveFilter({ onClose, onApply }) {
   const [status, setStatus] = useState("All");
   const [type, setType] = useState("All");
   const [date, setDate] = useState("");
-  
+
+  useEffect(() => {
+  onApply({
+    status,
+    type,
+    date,
+  });
+}, [status, type, date, onApply]);
+
   const items = ["All", "Approved", "Pending", "Rejected"];
   const typeOptions = [
     "All",

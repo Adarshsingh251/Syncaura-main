@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AttendanceCard from "../components/AttendanceLeave/AttendanceCard";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
@@ -72,7 +72,7 @@ const AttendanceLeave = () => {
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
-
+  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Check-In");
   const popupRef = useRef(null);
@@ -81,13 +81,13 @@ const AttendanceLeave = () => {
   const [debouncedValue, setDebouncedValue] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [attendanceDate] = useState(getToday);
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const attendanceStateRef = useRef(getInitialAttendanceState());
   const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
@@ -168,19 +168,40 @@ const AttendanceLeave = () => {
   const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In" && !canCheckIn) {
-      toast.info(`You have already checked in today at ${checkInTime}`);
-      setShowPopup(false);
-      return;
-    }
-    if (selectedTab === "CheckOut" && !canCheckOut) {
-      if (checkOutTime) {
-        toast.info(`You have already checked out today at ${checkOutTime}`);
-        setShowPopup(false);
-        return;
-      }
-      toast.error("Please check in before checking out!");
-      return;
+    if (selectedTab === "Check-In") {
+      const nextState = {
+        presentDays: attendanceStateRef.current.presentDays + 1,
+        records: {
+          ...attendanceStateRef.current.records,
+          [attendanceDate]: { ...currentRecord, checkInTime: timeString },
+        },
+      };
+
+      saveAttendanceState(nextState);
+
+      setAttendanceStats((previousStats) =>
+        previousStats.map((stat) =>
+          stat.title === "Present Days"
+            ? { ...stat, value: nextState.presentDays }
+            : stat,
+        ),
+      );
+
+      setSelectedTab("CheckOut");
+
+      toast.success(t("attendance_marked_success", { date: attendanceDate }));
+    } else if (selectedTab === "CheckOut") {
+      setCheckOutTime(timeString);
+
+      saveAttendanceState({
+        ...attendanceStateRef.current,
+        records: {
+          ...attendanceStateRef.current.records,
+          [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
+        },
+      });
+
+      toast.success(t("attendance_checkout_success"));
     }
 
     setIsSubmitting(true);
@@ -196,32 +217,48 @@ const AttendanceLeave = () => {
           presentDays: attendanceStateRef.current.presentDays + 1,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: { ...currentRecord, checkInTime: timeString },
+            [attendanceDate]: {
+              ...currentRecord,
+              checkInTime: timeString,
+            },
           },
         };
+
         saveAttendanceState(nextState);
+
         setAttendanceStats((previousStats) =>
           previousStats.map((stat) =>
-            stat.title === "Present Days" ? { ...stat, value: nextState.presentDays } : stat,
+            stat.title === "Present Days"
+              ? { ...stat, value: nextState.presentDays }
+              : stat,
           ),
         );
+
         setSelectedTab("CheckOut");
-        toast.success(`Attendance marked successfully for ${attendanceDate}!`);
+
+        toast.success(t("attendance_marked_success", { date: attendanceDate }));
+
       } else if (selectedTab === "CheckOut") {
         setCheckOutTime(timeString);
+
         saveAttendanceState({
           ...attendanceStateRef.current,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
+            [attendanceDate]: {
+              ...currentRecord,
+              checkOutTime: timeString,
+            },
           },
         });
-        toast.success("Check-out recorded successfully!");
+
+        toast.success(t("attendance_checkout_success"));
       }
       setIsSubmitting(false);
       setShowPopup(false);
     }, 1000);
-  };
+  
+};
 
   const fetchLeaves = useCallback(async () => {
     try {
@@ -247,12 +284,28 @@ const AttendanceLeave = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch leaves: ${response.status}`);
-      }
+const fetchLeaves = useCallback(async () => {
+  try {
+    const token = localStorage.getItem("accessToken");
 
-      const data = await response.json();
-      setTotalPages(data.totalPages || 1);
+    if (!token) {
+      // Fallback to localStorage if no token
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          setLeaveData(JSON.parse(stored));
+        }
+      } catch {}
+      return;
+    }
+
+    const isAdminOrCoAdmin =
+      user?.role === "admin" ||
+      user?.role === "co-admin";
+
+    const endpoint = isAdminOrCoAdmin
+      ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
+      : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
 
       const formattedLeaves = (data.leaves || []).map((leave) => ({
         ...leave,
@@ -268,9 +321,47 @@ const AttendanceLeave = () => {
     }
   }, [user?.role, currentPage]);
 
-  useEffect(() => {
-    fetchLeaves();
-  }, [fetchLeaves]);
+    const data = await response.json();
+    setTotalPages(data.totalPages || 1);
+
+    if (data.leaves && data.leaves.length > 0) {
+      const formattedLeaves = data.leaves.map((leave) => ({
+        ...leave,
+        startDate: leave.from_date || leave.startDate,
+        endDate: leave.to_date || leave.endDate,
+        type: leave.leave_type || leave.type || "Leave",
+      }));
+      setLeaveData(formattedLeaves);
+    } else {
+      // If backend returns empty leaves list, fallback to local storage
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          const localLeaves = JSON.parse(stored);
+          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+            setLeaveData(localLeaves);
+          }
+        }
+      } catch {}
+    }
+  } catch (error) {
+    console.warn("Error fetching leaves from backend, using local fallback:", error.message);
+    try {
+      const stored = localStorage.getItem(leaveStorageKey);
+      if (stored) {
+        const localLeaves = JSON.parse(stored);
+        if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+          setLeaveData(localLeaves);
+        }
+      }
+    } catch {}
+  }
+}, [user?.role, currentPage, leaveStorageKey]);
+
+useEffect(() => {
+  fetchLeaves();
+}, [fetchLeaves,]);
+
 
   useEffect(() => {
     const timer = setTimeout(
@@ -285,11 +376,11 @@ const AttendanceLeave = () => {
 
     if (debouncedValue) {
       result = result.filter(
-        (item) =>
-          item.reason.toLowerCase().includes(debouncedValue) ||
-          item.status.toLowerCase().includes(debouncedValue) ||
-          item.type.toLowerCase().includes(debouncedValue),
-      );
+      (item) =>
+            (item.reason || "").toLowerCase().includes(debouncedValue) ||
+            (item.status || "").toLowerCase().includes(debouncedValue) ||
+            (item.type || "").toLowerCase().includes(debouncedValue),
+        );
     }
 
     if (appliedFilters) {
@@ -307,8 +398,11 @@ const AttendanceLeave = () => {
           const startStr = item.startDate ? item.startDate.split("T")[0] : "";
           const endStr = item.endDate ? item.endDate.split("T")[0] : "";
           if (!startStr) return false;
-          if (!endStr) return selectedDateStr >= startStr;
-          return selectedDateStr >= startStr && selectedDateStr <= endStr;
+          return (
+            selectedDateStr >= startStr &&
+            (!endStr || selectedDateStr <= endStr)
+            );
+          
         });
       }
     }
@@ -337,9 +431,9 @@ const AttendanceLeave = () => {
     };
   }, [showPopup]);
 
-  const handleApplyFilters = useCallback((newFilters) => {
-    setAppliedFilters(newFilters);
-  }, []);
+  const handleApplyFilters = (newFilters) => {
+  setAppliedFilters(newFilters);
+};
 
   const handleOpenCreateModal = () => {
     setLeaveToEdit(null);
@@ -371,8 +465,7 @@ const AttendanceLeave = () => {
         <h1 className="text-xl lg:text-2xl font-medium text-[#000000] dark:text-[#FFFFFF] w-full lg:w-auto">
           Attendance And Leave Management
         </h1>
-        
-        <div className="flex flex-wrap w-full lg:w-auto items-center justify-end gap-2.5">
+        <div className="flex w-full flex-3/5 md:flex-2/5 2xl:flex-3/5 items-center justify-center gap-2 ">
           <Link
             to="/my-attendance"
             className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-4xl font-semibold text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap"
@@ -458,7 +551,8 @@ const AttendanceLeave = () => {
               </p>
             </div>
           </motion.div>
-
+    
+          {/* POPUP */}
           <AnimatePresence>
             {showPopup && (
               <motion.div
@@ -560,8 +654,14 @@ const AttendanceLeave = () => {
                         </>
                       ) : (
                         selectedTab === "Check-In"
-                          ? canCheckIn ? "Check In" : "Checked In"
-                          : canCheckOut ? "Check Out" : checkOutTime ? "Attendance Complete" : "Check In First"
+                          ? canCheckIn
+                            ? "Check In"
+                            : "Checked In"
+                          : canCheckOut
+                            ? "Check Out"
+                            : checkOutTime
+                              ? "Attendance Complete"
+                              : t("attendance_check_in_required")
                       )}
                     </button>
                   </div>
