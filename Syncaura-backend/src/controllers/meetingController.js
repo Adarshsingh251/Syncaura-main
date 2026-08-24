@@ -80,7 +80,20 @@ export const syncCalendar = async (req, res) => {
 // ✅ Create meeting
 export const createMeeting = async (req, res) => {
   try {
+
+    console.log("REQ BODY:", req.body);
+    console.log("GOOGLE TOKENS:", req.googleTokens);
+
     const { title, description, startTime, endTime, participants } = req.body;
+
+    console.log("Meeting Data:");
+    console.log({
+      title,
+      description,
+      startTime,
+      endTime,
+      participants
+    });
 
     if (!title || !startTime || !endTime) {
       return res.status(400).json({ message: "Required fields missing" });
@@ -111,11 +124,12 @@ export const createMeeting = async (req, res) => {
     }
 
     const cleanStartTime = parseToLocalString(startTime);
+    const cleanEndTime = new Date(endTime);
 
     const result = await pool.query(
-      `INSERT INTO meetings (title, description, start_time) 
-       VALUES ($1, $2, $3) RETURNING *`,
-      [title, description, cleanStartTime]
+      `INSERT INTO meetings (title, description, start_time, end_time) 
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [title, description, cleanStartTime, cleanEndTime]
     );
 
     const meeting = result.rows[0];
