@@ -31,7 +31,7 @@ const Header = ({ setOpen }) => {
           <div className="flex gap-2 items-center">
             {/* Avatar */}
             <div className="size-10 sm:size-12 rounded-full bg-gradient-to-b from-red-600 to-red-900 text-white flex items-center justify-center font-semibold text-lg sm:text-xl">
-              J
+              {(user?.first_name || user?.name || "U").charAt(0).toUpperCase()}
             </div>
 
             {/* Profile Text */}
@@ -39,12 +39,20 @@ const Header = ({ setOpen }) => {
               <div className="flex gap-1 items-center text-black dark:text-white">
                 <h1 className="font-light text-base sm:text-lg">Hello!</h1>
                 <h1 className="font-semibold text-base sm:text-lg">
-                  {user?.name || "John Doe"}
+                  {/* {user?.name || "User"} */}
+                  
+                   {user?.first_name
+                    ? `${user.first_name} ${user.last_name || ""}`
+                    : user?.name || "John Doe"}
                 </h1>
               </div>
 
               <div className="text-[#989696] font-semibold text-xs sm:text-sm -mt-1">
-                Employee
+                {user?.role === "admin"
+                  ? "Admin"
+                  : user?.role === "co-admin"
+                  ? "Co-Admin"
+                  : "User"}
               </div>
             </div>
           </div>
