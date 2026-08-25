@@ -273,6 +273,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
             {/* Footer */}
             <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6">
               <button
+                type="button"
                 onClick={onClose}
                 className="text-sm text-black dark:text-white btn-hover"
               >

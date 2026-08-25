@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-//import { getMeetings } from "../redux/features/meetingThunks";
+import { getMeetings, syncCalendarEvents, createMeeting } from "../redux/features/meetingThunks";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -19,6 +19,7 @@ export default function Meetings() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const reduxMeetings = useSelector((state) => state.meeting?.meetings || []);
+  const isSyncing = useSelector((state) => state.meeting?.isSyncing || false);
   const userRole = useSelector((state) => state.auth?.user?.role);
   const [modalOpen, setModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -29,11 +30,16 @@ export default function Meetings() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
+    dispatch(getMeetings());
+  }, [dispatch]);
+
+  useEffect(() => {
     const isGoogleConnected = searchParams.get("google_connected");
     const errorMsg = searchParams.get("error");
 
     if (isGoogleConnected === "true") {
       toast.success("Google Calendar connected successfully! 🎉");
+      dispatch(syncCalendarEvents());
       searchParams.delete("google_connected");
       setSearchParams(searchParams);
     } else if (errorMsg) {
@@ -41,16 +47,59 @@ export default function Meetings() {
       searchParams.delete("error");
       setSearchParams(searchParams);
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, dispatch]);
 
-  const handleSyncCalendar = () => {
-    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+  const reduxAuthToken = useSelector((state) => state.auth?.token);
+
+  const handleSyncCalendar = async () => {
+    let token = localStorage.getItem("accessToken") || localStorage.getItem("token") || reduxAuthToken;
+    if (reduxAuthToken && (!localStorage.getItem("accessToken") || !localStorage.getItem("token"))) {
+      localStorage.setItem("accessToken", reduxAuthToken);
+      localStorage.setItem("token", reduxAuthToken);
+    }
+
     if (!token) {
       toast.error("Please log in first.");
       return;
     }
-    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    window.location.href = `${apiBase}/auth/google?token=${token}`;
+
+    try {
+      const resultAction = await dispatch(syncCalendarEvents());
+      if (syncCalendarEvents.fulfilled.match(resultAction)) {
+        toast.success(resultAction.payload?.message || "Calendar synced successfully! 📅");
+      } else {
+        const errMsg = resultAction.payload || "";
+        if (typeof errMsg === "string" && (errMsg.includes("not connected") || errMsg.includes("400"))) {
+          const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+          window.location.href = `${apiBase}/auth/google?token=${token}`;
+        } else {
+          toast.error(errMsg || "Sync failed. Redirecting to reconnect Google Calendar...");
+          const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+          window.location.href = `${apiBase}/auth/google?token=${token}`;
+        }
+      }
+    } catch (err) {
+      console.error("Calendar sync error:", err);
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      window.location.href = `${apiBase}/auth/google?token=${token}`;
+    }
+  };
+
+  const handleCreateMeeting = async (meetingData) => {
+    try {
+      const resultAction = await dispatch(createMeeting(meetingData));
+
+      if (createMeeting.fulfilled.match(resultAction)) {
+        toast.success("Meeting created successfully! 🎉");
+        dispatch(getMeetings());
+        setModalOpen(false);
+      } else {
+        toast.error(resultAction.payload || "Failed to create meeting");
+      }
+    } catch (error) {
+      console.error("Create meeting error:", error);
+      toast.error("Failed to create meeting");
+    }
   };
 
   const getMeetingType = useCallback((startTime, endTime) => {
@@ -180,29 +229,7 @@ export default function Meetings() {
         <div className="flex-1 flex flex-col ">
           {/* Header */}
           <div className="w-full bg-white dark:bg-[#1a1a1a] border-b border-[#e5e7eb] dark:border-[#2c2c2c] px-4 py-2 shadow-sm">
-            {/* Mobile Header */}
-            <div className="flex items-center gap-2">
-              {userRole === "admin" && (
-                <button
-                  onClick={() => setModalOpen(true)}
-                  className="flex items-center gap-1 bg-[#2563eb] text-white px-3 py-2 rounded-2xl shadow-sm btn-hover"
-                >
-                  <span className="text-xs font-medium">+ Create</span>
-                </button>
-              )}
-
-              <button
-                onClick={handleSyncCalendar}
-                className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-4 py-2 rounded-2xl shadow-sm border border-[#e5e7eb] dark:border-[#3a3a3a] text-[#111827] dark:text-white btn-hover"
-              >
-                <RefreshCcw
-                  size={16}
-                  className="text-[#111827] dark:text-white"
-                />
-
-                <span className="text-sm font-medium">Sync Calendar</span>
-              </button>
-            </div>
+            
 
             {/* Desktop Header */}
             <div className="hidden lg:flex items-start justify-between">
@@ -228,15 +255,16 @@ export default function Meetings() {
 
                 <button
                   onClick={handleSyncCalendar}
-                  className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-3.5 py-1.5 rounded-full border border-[#f1f1f1] dark:border-[#2f2f2f] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.06)] transition text-[#4b5563] dark:text-white btn-hover"
+                  disabled={isSyncing}
+                  className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-3.5 py-1.5 rounded-full border border-[#f1f1f1] dark:border-[#2f2f2f] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.06)] transition text-[#4b5563] dark:text-white btn-hover disabled:opacity-50"
                 >
                   <RefreshCcw
                     size={14}
-                    className="text-[#111827] dark:text-white"
+                    className={`text-[#111827] dark:text-white ${isSyncing ? "animate-spin" : ""}`}
                   />
 
                   <span className="text-[13px] font-medium">
-                    Sync Calendar
+                    {isSyncing ? "Syncing..." : "Sync Calendar"}
                   </span>
                 </button>
               </div>
@@ -359,7 +387,10 @@ export default function Meetings() {
         </div>
 
         {modalOpen && (
-          <ScheduleMeetingModal onClose={() => setModalOpen(false)} />
+          <ScheduleMeetingModal 
+            onClose={() => setModalOpen(false)} 
+            onSave={handleCreateMeeting}
+          />
         )}
       </div>
     </>

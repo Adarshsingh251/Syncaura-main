@@ -5,10 +5,11 @@ import pool from "../config/db.js";
 import { generateAccessToken, generateRefreshToken, assignRefreshId } from "../utils/generateTokens.js";
 import { getAccessToken as getGithubAccessToken } from "../services/githubAPI.js";
 
-// Scopes for Google OAuth Login
+// Scopes for Google OAuth Login & Calendar
 const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/userinfo.profile",
+  "https://www.googleapis.com/auth/calendar",
 ];
 
 // Instantiating local oauthClient for auth login/signup flow
@@ -81,6 +82,26 @@ export const handleGoogleCallback = async (req, res) => {
       );
       user = insertRes.rows[0];
     }
+
+    // Save Google OAuth tokens for calendar sync
+    await pool.query(
+      `UPDATE users SET 
+        google_access_token = $1, 
+        google_refresh_token = COALESCE($2, google_refresh_token), 
+        google_scope = COALESCE($3, google_scope), 
+        google_token_type = COALESCE($4, google_token_type), 
+        google_expiry_date = COALESCE($5, google_expiry_date),
+        updated_at = CURRENT_TIMESTAMP 
+      WHERE id = $6`,
+      [
+        tokens.access_token,
+        tokens.refresh_token || null,
+        tokens.scope || null,
+        tokens.token_type || null,
+        tokens.expiry_date || null,
+        user.id,
+      ]
+    );
 
     // Generate JWT access & refresh tokens
     const rid = assignRefreshId(user);

@@ -66,20 +66,46 @@ function getMeetingStatus(startTime, endTime, t) {
   };
 }
 
+// function formatMeetingTime(startTime, endTime) {
+//   const start = new Date(startTime);
+//   const end = endTime ? new Date(endTime) : null;
+
+//   const format = (date) =>
+//     date.toLocaleTimeString([], {
+//       hour: "2-digit",
+//       minute: "2-digit",
+//     });
+
+//   if (!end) return format(start);
+
+//   return `${format(start)} - ${format(end)}`;
+// }
+
 function formatMeetingTime(startTime, endTime) {
   const start = new Date(startTime);
   const end = endTime ? new Date(endTime) : null;
 
-  const format = (date) =>
-    date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
+  const formatDate = (date) =>
+    date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
 
-  if (!end) return format(start);
+  const formatTime = (date) =>
+    date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
 
-  return `${format(start)} - ${format(end)}`;
+  if (!end) {
+    return `${formatDate(start)} • ${formatTime(start)}`;
+  }
+
+  return `${formatDate(start)} • ${formatTime(start)} - ${formatTime(end)}`;
 }
+
 
 const MeetingCard = memo(function MeetingCard({
   platform,
@@ -91,6 +117,16 @@ const MeetingCard = memo(function MeetingCard({
 }) {
   const { t } = useTranslation();
   const isDark = useSelector((state) => state.theme.isDark);
+
+  console.log("Meeting time received by MeetingCard:", {
+    startTime,
+    endTime,
+    parsedStart: new Date(startTime),
+    parsedEnd: new Date(endTime),
+    localStart: new Date(startTime).toLocaleString("en-IN"),
+    localEnd: new Date(endTime).toLocaleString("en-IN"),
+  });
+
   const status = getMeetingStatus(startTime, endTime, t);
 
   const MAX_VISIBLE = 3;
