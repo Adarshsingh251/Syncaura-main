@@ -4,9 +4,13 @@ import { Menu } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AvatarManager from "../../common/AvatarManager";
 
+import { useState } from "react";
+import MyProfileModal from "../../profile/MyProfileModal";
+
 const Header = ({ setOpen, open }) => {
   const { t, i18n } = useTranslation();
   const user = useSelector((state) => state.auth.user);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const getRoleName = () => {
     switch (user?.role?.toLowerCase()) {
@@ -15,7 +19,6 @@ const Header = ({ setOpen, open }) => {
 
       case "co-admin":
       case "co_admin":
-      case "coadmin":
         return "Co-Admin";
 
       case "user":
@@ -56,9 +59,20 @@ const Header = ({ setOpen, open }) => {
           )}
 
           {/* Profile Section */}
-          <div className="flex gap-2 items-center">
+          <div 
+            className="flex gap-2 items-center cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 p-1.5 rounded-xl transition-colors"
+            onClick={() => setShowProfileModal(true)}
+          >
             {/* Avatar */}
-            <AvatarManager size="44px" editable={true} />
+            <div className="relative size-[44px] rounded-full overflow-hidden bg-gradient-to-b from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0 shadow-sm">
+              {user?.profilePic || user?.profile_pic ? (
+                <img src={user.profilePic || user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white font-semibold text-lg">
+                  {(user?.first_name || user?.name || "U").charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
 
             {/* Profile Text */}
             <div className="flex flex-col">
@@ -108,6 +122,7 @@ const Header = ({ setOpen, open }) => {
           </div>
         </div>
       </div>
+      <MyProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </div>
   );
 };

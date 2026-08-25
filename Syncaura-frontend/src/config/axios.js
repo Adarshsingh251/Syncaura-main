@@ -85,11 +85,11 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         
         // Refresh token failed -> clear auth data and redirect to login
+        // Refresh token failed -> clear auth data and redirect to login
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         
-        // Dispatch custom event to notify Redux/App or trigger window redirect
-        window.dispatchEvent(new Event("auth_session_expired"));
+        window.location.href = "/login";
         
         return Promise.reject(refreshError);
       } finally {
