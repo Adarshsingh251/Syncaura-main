@@ -122,22 +122,31 @@ const Profile = () => {
   });
 
   const handleSave = async (field) => {
-    try {
-      setSavingField(field);
-      await dispatch(updateUserProfile(buildProfilePayload())).unwrap();
+  try {
+    setSavingField(field);
 
-      if (field === "language") {
-        i18n.changeLanguage(formData.language);
-      }
-
-      setIsEditing((prev) => ({ ...prev, [field]: false }));
-      toast.success(t("notif_profileUpdated") || "Profile updated successfully");
-    } catch (err) {
-      toast.error(err || "Failed to update profile");
-    } finally {
-      setSavingField(null);
+    // Language ko pehle immediately change karo
+    if (field === "language") {
+      await i18n.changeLanguage(formData.language);
     }
-  };
+
+    // Profile data backend me save karo
+    await dispatch(updateUserProfile(buildProfilePayload())).unwrap();
+
+    setIsEditing((prev) => ({
+      ...prev,
+      [field]: false,
+    }));
+
+    toast.success(
+      t("notif_profileUpdated") || "Profile updated successfully"
+    );
+  } catch (err) {
+    toast.error(err?.message || err || "Failed to update profile");
+  } finally {
+    setSavingField(null);
+  }
+};
 
   const fieldRow = (field, type = "text") => (
     <div className="flex items-center">
@@ -197,7 +206,10 @@ const Profile = () => {
                 <>
                   <select
                     value={formData.language}
-                    onChange={(e) => handleChange("language", e.target.value)}
+                    onChange={(e) => {
+                    const newLanguage = e.target.value;
+                    handleChange("language", newLanguage);
+                  }}
                     className="w-full h-[54px] px-5 border border-gray-300 dark:border-[#2A2A2A] rounded-xl text-base text-gray-900 dark:text-white bg-white dark:bg-[#0B0B0B]
                     focus:outline-none focus:border-[#2461E6] dark:focus:border-[#73FBFD] focus:ring-2 focus:ring-[#2461E6]/10 dark:focus:ring-[#73FBFD]/10
                     appearance-none transition-all duration-200"

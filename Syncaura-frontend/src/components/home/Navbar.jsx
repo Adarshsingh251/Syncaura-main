@@ -170,7 +170,7 @@ const isLearnMoreActive = location.pathname === "/learn-more";
             onClick={() => navigate("/sign-up")}
             className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl hover:-translate-y-0.5 transition-all duration-300 bg-blue-600 dark:bg-[#4FE6E6] text-white dark:text-gray-900 shadow-[0_4px_14px_0_rgba(51,102,255,0.39)] hover:shadow-[0_6px_20px_rgba(51,102,255,0.23)] dark:shadow-[0_4px_14px_0_rgba(79,230,230,0.39)] dark:hover:shadow-[0_6px_20px_rgba(79,230,230,0.23)]"
           >
-            Start Free
+            {t("start_free")}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -216,7 +216,7 @@ const isLearnMoreActive = location.pathname === "/learn-more";
                     : 'transparent',
               }}
             >
-              Home
+              {t("nav_home")}
             </a>
 
             <a
@@ -230,7 +230,7 @@ const isLearnMoreActive = location.pathname === "/learn-more";
                     : 'var(--text-secondary)',
               }}
             >
-              Features
+              {t("nav_features")}
             </a>
 
             <a
@@ -244,7 +244,7 @@ const isLearnMoreActive = location.pathname === "/learn-more";
                     : 'var(--text-secondary)',
               }}
             >
-              Contact
+              {t("nav_contact")}
             </a>
             <Link
               to="/about-us"
