@@ -178,6 +178,28 @@
   scrollbar-width: none; /* Firefox */
 }
 
+/* Custom Scrollbar for Chat */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.2) transparent;
+}
+.dark .chat-scroll {
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+.chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+}
+.dark .chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+}
+
 :root {
   --budget-chart-color: #1e88e5; /* Light mode color */
 }

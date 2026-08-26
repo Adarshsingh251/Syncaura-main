@@ -54,9 +54,18 @@ const menuItems = [
 
 export default function MobileSidebar({ open, setOpen }) {
   const isDark = useSelector((state) => state.theme.isDark);
+  const { channels } = useSelector((state) => state.chat || { channels: [] });
   const isDesktop = useIsDesktop();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Calculate total unread messages from channels
+  const totalUnreadChats = channels?.reduce((acc, chat) => acc + (parseInt(chat.unread) || 0), 0) || 0;
+
+  // Dynamically update the Chat menu item's count
+  const dynamicMenuItems = menuItems.map(item => 
+    item.label === "Chat" ? { ...item, count: totalUnreadChats } : item
+  );
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -110,7 +119,7 @@ export default function MobileSidebar({ open, setOpen }) {
         </div>
 
         <nav className="px-1 space-y-1 flex-1 overflow-y-auto min-w-[238px]">
-          {menuItems.map((item) => {
+          {dynamicMenuItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
