@@ -22,12 +22,15 @@ export default function DocumentModal({ onClose, addReport }) {
   const fileRef = useRef(null);
 
   const onSubmit = (data) => {
-    const id = `#${Date.now().toString().slice(0, 4)}`;
-    const category = data.category;
-    const title = data.description
-    const type = data.type;
-    addReport((prev) => [{ id, category, type, title }, ...prev])
-    onClose()
+  const reportPayload = {
+      category: data.category,
+      type: data.type,
+      title: data.type, 
+      content: data.description,
+      attachments: data.attachments ? Array.from(data.attachments) : []
+    };
+
+    addReport(reportPayload);
   };
   const onError = (formErrors) => {
     console.log("Form Errors:", formErrors);
@@ -98,7 +101,7 @@ export default function DocumentModal({ onClose, addReport }) {
                 <h1 className="text-base font-medium w-full text-[#000000] dark:text-[#F8F8F8]">
                   Name
                 </h1>
-                <div className="flex w-full rounded-xl px-1 md:px-3 py-1 dark:bg-[#2E2F2F] ">
+                <div className={`flex w-full rounded-xl px-1 md:px-3 py-1 dark:bg-[#2E2F2F] border ${ errors.category ? "border-red-500" : "border-transparent" }`}>
                   <Controller
                     name="category"
                     control={control}
@@ -108,7 +111,9 @@ export default function DocumentModal({ onClose, addReport }) {
                     )}
                   />
                 </div>
-
+                {errors.category && (
+                  <p className="text-xs text-red-500 mt-1 font-medium">Category name selection is required.</p>
+                )}
 
               </div>
             </div>
@@ -120,15 +125,18 @@ export default function DocumentModal({ onClose, addReport }) {
               <input
                 {...register("type", { required: true })}
                 placeholder="Notice issued on"
-                className="
+                className={`
                   mt-1 w-full rounded-full px-4 py-2 text-sm outline-none
                   bg-white dark:bg-[#1f1f1f]
                   text-black dark:text-white 
-                  border border-gray-300 dark:border-gray-600
+                  border ${errors.type ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
                   focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40
                   transition-all
-                "
+                `}
               />
+              {errors.type && (
+                <p className="text-xs text-red-500 mt-1 font-medium">Document/Report type is required.</p>
+              )}
             </div>
 
             <div>
@@ -139,15 +147,18 @@ export default function DocumentModal({ onClose, addReport }) {
                 {...register("description", { required: true })}
                 rows={3}
                 placeholder="Describe the issue in detail..."
-                className="
-                  mt-1 w-full rounded-xl px-4 py-2 text-sm resize-none outline-none
+                className={`
+                  mt-1 w-full rounded-full px-4 py-2 text-sm outline-none
                   bg-white dark:bg-[#1f1f1f]
-                  text-black dark:text-white
-                  border border-gray-300 dark:border-gray-600
+                  text-black dark:text-white 
+                  border ${errors.description ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
                   focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40
                   transition-all
-                "
+                `}
               />
+              {errors.description && (
+                <p className="text-xs text-red-500 mt-1 font-medium">Please enter a detailed description.</p>
+              )}
             </div>
 
             {/* Attachment */}

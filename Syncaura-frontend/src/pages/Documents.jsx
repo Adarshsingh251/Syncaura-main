@@ -11,7 +11,7 @@ import DocumentFilter from "../components/Document/DocumentFilter";
 export default function Documents() {
   const dispatch = useDispatch();
   const { documents = [], loading = false, error = null } = useSelector((state) => state.documents || {});
-
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const tab = ["All Files", "Recent", "Shared with me", "Archived"];
   const [selectedTab, setSelectedTab] = useState("All Files");
   const [showModal, setShowModal] = useState(false);
@@ -117,17 +117,47 @@ export default function Documents() {
   }, [safeDocuments, selectedTab, debouncedValue, appliedFilters]);
 
   useEffect(() => {
-    setSelectedDocList(filteredDocuments.slice(0, 8));
-  }, [filteredDocuments]);
+  setSelectedDocList((prevList) => {
+    const currentLength = prevList?.length || 8;
+    const targetLength = filteredDocuments.length > currentLength ? filteredDocuments.length : Math.max(currentLength, 8);
+    return filteredDocuments.slice(0, targetLength);
+  });
+}, [filteredDocuments]);
 
   const handleApplyFilters = (newFilters) => {
     setAppliedFilters(newFilters);
   };
 
-  const handleAddDocument = (docData) => {
-    dispatch(createDocument(docData));
-  };
+  const handleAddDocument = async (docData) => {
+    const optimisticId = `temp-${Date.now()}`;
+    const optimisticItem = {
+      _id: optimisticId,
+      id: optimisticId,
+      title: docData.title || "New Report",
+      type: docData.type || "DOCUMENT",
+      status: "Active",
+      created_at: new Date().toISOString(),
+      versions: []
+    };
+    setSelectedDocList((prev) => [optimisticItem, ...(prev || [])]);
+    setShowModal(false);
+    setSelectedTab("All Files");
 
+    setToast({ show: true, message: "Report added successfully!", type: "success" });
+    setTimeout(() => setToast({ show: false, message: "", type: "success" }), 3000);
+
+    try {
+      await dispatch(createDocument(docData)).unwrap();
+      dispatch(fetchDocuments());
+    }
+    catch (err) {
+      console.error("Background save failed: ", err);
+      setSelectedDocList((prev) => prev.filter(item => item._id !== optimisticId));
+      const errorMessage = typeof err === 'string' ? err : (err?.message || "Sync failed.");
+      setToast({ show: true, message: `Sync Failed: ${errorMessage}`, type: "error" });
+      setTimeout(() => setToast({ show: false, message: "", type: "error" }), 4000);
+    }
+  };
   return (
     <div className="relative w-full transition-colors duration-500 border-t dark:border-[#000000] h-full bg-[#FFFFFF] dark:bg-black pt-6 pb-24 overflow-y-auto">
       <div className="flex items-center justify-between w-full px-2 sm:px-7">
@@ -287,6 +317,24 @@ export default function Documents() {
       {currId && (
         <VersionHistoryDrawer open={currId !== null} onClose={() => setCurrId(null)} />
       )}
+
+      {/* Error Toast Notification Banner */}
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-150 px-6 py-3 rounded-full shadow-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+              toast.type === "success"
+                ? "bg-green-50 border-green-200 text-green-700 dark:bg-zinc-900 dark:border-[#73FBFD] dark:text-[#73FBFD]"
+                : "bg-red-50 border-red-200 text-red-700 dark:bg-zinc-900 dark:border-red-500 dark:text-red-400"
+            }`}
+          >
+            {toast.type === "success" ? "✓" : "⚠️"} {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
