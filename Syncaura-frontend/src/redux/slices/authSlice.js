@@ -16,7 +16,7 @@ const initialState = {
   isLoading: false,
   error: null,
   isAuthenticated: !!storedToken,
-  authChecking: true,
+  authChecking: !!storedToken,
   profileLoading: false,
   localProfilePic: localStorage.getItem("syncaura_global_photo") || null, // 👈 Independent photo state
 };

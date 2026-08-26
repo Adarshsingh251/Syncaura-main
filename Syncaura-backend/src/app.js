@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 dotenv.config();
@@ -40,6 +41,8 @@ import userRoutes from './routes/userRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const frontendDistPath = path.resolve(__dirname, '../../Syncaura-frontend/dist');
+const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
 const app = express();
 
@@ -112,6 +115,46 @@ app.get("/", (req, res) => {
 
 // Health check route
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// Serve the React app for frontend routes when users open the backend URL.
+app.use(express.static(frontendDistPath));
+
+const frontendRoutes = [
+  '/login',
+  '/signin',
+  '/sign-in',
+  '/role-selection',
+  '/signup',
+  '/sign-up',
+  '/auth/callback',
+  '/auth/github/callback',
+  '/learn-more',
+  '/about-us',
+  '/meet/:id',
+  '/admin',
+  '/co-admin',
+  '/user-dashboard',
+  '/projects',
+  '/attendance-leave',
+  '/my-attendance',
+  '/tasks',
+  '/meetings',
+  '/profile',
+  '/chat',
+  '/notice',
+  '/documents',
+  '/complaints',
+  '/settings',
+];
+
+app.get(frontendRoutes, (req, res) => {
+  if (fs.existsSync(frontendIndexPath)) {
+    return res.sendFile(frontendIndexPath);
+  }
+
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  return res.redirect(`${clientUrl}${req.originalUrl}`);
+});
 
 // 404 handler
 app.use((req, res) => {
