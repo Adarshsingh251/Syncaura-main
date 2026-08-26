@@ -20,6 +20,8 @@ const TableRow = ({
     Final: "bg-[#DCFCE7] text-[#29CC39]",
     Draft: "bg-[#FEF9C3] text-[#954D4E]",
     Revised: "bg-[#DBEAFE] text-[#3053B4]",
+    Active: "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400",
+    active: "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
   };
 
   return (
