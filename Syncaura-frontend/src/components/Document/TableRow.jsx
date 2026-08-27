@@ -27,49 +27,49 @@ const TableRow = ({
   return (
     <>
       {/* Desktop */}
-      <div className="hidden md:flex items-center justify-center w-full px-10">
+      <div className="hidden md:flex items-center w-full px-10">
+
         {/* Name */}
-        <div className="flex items-center gap-5 w-full flex-3/13">
+        <div className="w-[30%] flex items-center gap-5 justify-start">
           <FileText className={`size-8 ${docColor}`} />
-          <h1 className="text-base font-medium text-black dark:text-[#FFFFFF]">
+          <h1 className="text-base font-medium text-black dark:text-white">
             {name}
           </h1>
         </div>
 
         {/* Type */}
-        <div className="flex-2/13 w-full">
-          <h1 className="uppercase text-base text-black font-medium dark:text-[#FFFFFF]">
+        <div className="w-[12%] flex items-center justify-start">
+          <h1 className="uppercase text-base text-black font-medium dark:text-white">
             {type}
           </h1>
         </div>
 
         {/* Version */}
-        <div className="flex-2/13 w-full">
+        <div className="w-[10%] flex items-center justify-start">
           <h1 className="text-base font-medium text-black dark:text-white">
             {version}
           </h1>
         </div>
 
         {/* Date */}
-        <div className="flex-2/13 w-full">
+        <div className="w-[15%] flex items-center justify-start">
           <h1 className="text-base font-medium text-black dark:text-white">
             {formatDateYYYYMMDD(date)}
           </h1>
         </div>
 
         {/* Status */}
-        <div className="flex-2/13 w-full flex items-center justify-center">
+        <div className="w-[11%] flex items-center justify-center">
           <div
-            className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium ${
-              statusColor[status]
-            }`}
+            className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium ${statusColor[status]
+              }`}
           >
             {t(`status_${status.toLowerCase()}`, status)}
           </div>
         </div>
 
         {/* Document */}
-        <div className="flex-2/13 w-full flex items-center justify-center">
+        <div className="w-[14%] flex items-center justify-center">
           {document ? (
             <button className="text-[#2461E6] hover:underline font-medium btn-hover">
               {document}
@@ -82,11 +82,12 @@ const TableRow = ({
         </div>
 
         {/* Edit */}
-        <div className="flex-1/13 w-full flex justify-end">
+        <div className="w-[8%] flex items-center justify-center">
           <button className="text-[#2461E6] hover:underline font-medium btn-hover">
             {t("edit", "Edit")}
           </button>
         </div>
+
       </div>
 
       {/* Mobile */}
@@ -134,9 +135,8 @@ const TableRow = ({
                 {t("status", "Status")}
               </p>
               <span
-                className={`inline-block px-5 py-1 mt-2 rounded-md text-xs font-medium ${
-                  statusColor[status]
-                }`}
+                className={`inline-block px-5 py-1 mt-2 rounded-md text-xs font-medium ${statusColor[status]
+                  }`}
               >
                 {t(`status_${status.toLowerCase()}`, status)}
               </span>
