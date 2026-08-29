@@ -84,12 +84,14 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         
-        // Refresh token failed -> clear auth data and redirect to login
+        // Refresh token failed -> clear auth data and redirect to sign in
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
         
-        // Dispatch custom event to notify Redux/App or trigger window redirect
-        window.dispatchEvent(new Event("auth_session_expired"));
+        if (window.location.pathname !== "/sign-in" && window.location.pathname !== "/signin" && window.location.pathname !== "/login") {
+          window.location.href = "/sign-in";
+        }
         
         return Promise.reject(refreshError);
       } finally {
@@ -100,5 +102,27 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+
+
+
+// //  new changes .
+
+// const api = axios.create({
+//   baseURL: "http://localhost:5000/api",
+// });
+
+// api.interceptors.request.use(
+//   (config) => {
+//     const token = localStorage.getItem("accessToken");
+
+//     if (token) {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+
+//     return config;
+//   },
+//   (error) => Promise.reject(error)
+// );
 
 export default api;

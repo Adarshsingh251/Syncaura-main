@@ -11,7 +11,7 @@ import {
  */
 export const createComplaint = async (req, res, next) => {
   try {
-    const { title, description, category, severity, priority, isAnonymous, attachments } = req.body;
+    const { title, description, category, severity, priority, isAnonymous, attachments = [] } = req.body || {};
 
     if (!title || !description || !category) {
       return res.status(400).json({
@@ -38,14 +38,17 @@ export const createComplaint = async (req, res, next) => {
     const complaint = result.rows[0];
 
     // Handle attachments
-    if (attachments && Array.isArray(attachments)) {
-      for (const url of attachments) {
+    const attachmentUrls = req.files?.map((file) => `/uploads/${file.filename}`)
+      || (Array.isArray(attachments) ? attachments : []);
+
+    if (attachmentUrls.length) {
+      for (const url of attachmentUrls) {
         await pool.query(
           "INSERT INTO complaint_attachments (complaint_id, file_url) VALUES ($1, $2)",
           [complaint.id, url]
         );
       }
-      complaint.attachments = attachments;
+      complaint.attachments = attachmentUrls;
     }
 
     // Notify admins about new complaint
@@ -124,21 +127,56 @@ export const getMyComplaints = async (req, res, next) => {
   try {
     const { status, limit = 20, page = 1 } = req.query;
 
-    let query = "SELECT * FROM complaints WHERE filed_by = $1";
+    let query = `
+      SELECT 
+        c.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'file_url', ca.file_url
+            )
+          ) FILTER (WHERE ca.id IS NOT NULL),
+          '[]'
+        ) AS attachments
+      FROM complaints c
+      LEFT JOIN complaint_attachments ca
+        ON c.id = ca.complaint_id
+      WHERE c.filed_by = $1
+    `;
+
     let params = [req.user.id];
 
     if (status) {
-      query += " AND status = $2";
+      query += " AND c.status = $2";
       params.push(status);
     }
 
     const skip = (page - 1) * limit;
-    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+
+    query += `
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+      LIMIT $${params.length + 1}
+      OFFSET $${params.length + 2}
+    `;
+
     params.push(limit, skip);
 
     const result = await pool.query(query, params);
-    
-    const totalResult = await pool.query("SELECT COUNT(*) FROM complaints WHERE filed_by = $1", [req.user.id]);
+
+    const totalQuery = `
+      SELECT COUNT(*)
+      FROM complaints
+      WHERE filed_by = $1
+      ${status ? "AND status = $2" : ""}
+    `;
+
+    const totalParams = status
+      ? [req.user.id, status]
+      : [req.user.id];
+
+    const totalResult = await pool.query(totalQuery, totalParams);
+
     const total = parseInt(totalResult.rows[0].count);
 
     res.status(200).json({
