@@ -57,6 +57,7 @@ const AttendanceLeave = () => {
   const [appliedFilters, setAppliedFilters] = useState(null);
 
   const [attendanceDate, setAttendanceDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const dateInputRef = useRef(null);
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,11 +69,11 @@ const AttendanceLeave = () => {
       setShowPopup(false);
       return;
     }
-    if (selectedTab === "CheckOut" && !checkInTime) {
+    if (selectedTab === "Check-Out" && !checkInTime) {
       toast.error("Please check in before checking out!");
       return;
     }
-    if (selectedTab === "CheckOut" && checkOutTime) {
+    if (selectedTab === "Check-Out" && checkOutTime) {
       toast.info(`You have already checked out today at ${checkOutTime}`);
       setShowPopup(false);
       return;
@@ -91,7 +92,7 @@ const AttendanceLeave = () => {
           stat.title === "Present Days" ? { ...stat, value: stat.value + 1 } : stat
         ));
         toast.success(`Attendance marked successfully for ${attendanceDate}!`);
-      } else if (selectedTab === "CheckOut") {
+      } else if (selectedTab === "Check-Out") {
         setCheckOutTime(timeString);
         toast.success("Check-out recorded successfully!");
       }
@@ -294,44 +295,57 @@ const AttendanceLeave = () => {
                   </div>
 
                   <div className="flex flex-col px-5 py-1 w-full gap-4">
-                    <div className="flex w-full items-center justify-center border border-[#E0DDDD] dark:border-[#000000]">
-                      <input
-                        type="date"
-                        value={attendanceDate}
-                        onChange={(e) => setAttendanceDate(e.target.value)}
-                        className="w-full h-full text-[#898888] px-3 py-1 bg-white dark:bg-[#000000] dark:text-gray-200 outline-none date-input"
-                      />
-                    </div>
+                    <div className="flex w-full items-center gap-3 border border-[#E0DDDD] dark:border-[#575757] rounded-lg px-3 py-2 bg-white dark:bg-[#000000]">
+                  <Calendar
+                    className="size-5 text-[#898888] dark:text-gray-300 shrink-0 cursor-pointer"
+                    onClick={() => dateInputRef.current?.showPicker?.()}
+                  />
 
-                    <div className="flex items-center justify-between gap-2">
-                      {["Check-In", "CheckOut"].map((item, idx) => (
-                        <motion.div
-                          onClick={() => setSelectedTab(item)}
-                          key={idx}
-                          whileTap={{ scale: 0.95 }}
-                          layout
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                          }}
-                          className={`flex flex-1 items-center justify-center border ${
-                            selectedTab === item
-                              ? "border-[#2461E6] dark:border-[#73FBFD]"
-                              : "border-[#EDEDED] dark:border-[#575757] cursor-pointer"
-                          } px-5 py-2 rounded-lg`}
-                        >
-                          <p
-                            className={`font-bold text-xs ${
-                              selectedTab === item
-                                ? "text-[#2461E6] dark:text-[#73FBFD]"
-                                : "text-[#554d4d] dark:text-gray-400"
-                            }`}
-                          >
-                            {item}
-                          </p>
-                        </motion.div>
-                      ))}
+                 <input
+                  ref={dateInputRef}
+                  type="date"
+                  value={attendanceDate}
+                  onChange={(e) => setAttendanceDate(e.target.value)}
+                  className="date-input w-full bg-transparent text-[#898888] dark:text-gray-200 outline-none cursor-pointer"
+                  />
+                  </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                          {["Check-In", "Check-Out"].map((item) => {
+                          const isSelected = selectedTab === item;
+                          const isCheckOut = item === "Check-Out";
+
+                         return (
+                                <motion.button
+                                     type="button"
+                                     key={item}
+                                     onClick={() => setSelectedTab(item)}
+                                     whileTap={{ scale: 0.97 }}
+                                     transition={{
+                                     type: "spring",
+                                     stiffness: 300,
+                                     damping: 20,
+                               }}
+                          disabled={isCheckOut && !checkInTime}
+                          className={`flex-1 flex items-center justify-center
+                          px-5 py-3 rounded-xl border
+                          font-bold text-sm transition-all duration-200
+                         ${
+                             isSelected
+                                 ? "border-[#2461E6] bg-[#EEF4FF] text-[#2461E6] dark:border-[#73FBFD] dark:bg-[#73FBFD]/10 dark:text-[#73FBFD]"
+                                      : "border-[#E0E0E0] bg-transparent text-[#554D4D] dark:border-[#575757] dark:text-gray-400"
+                                         }
+                       ${
+                              isCheckOut && !checkInTime
+                                ? "opacity-50 cursor-not-allowed"
+                                  : "cursor-pointer hover:border-[#2461E6] dark:hover:border-[#73FBFD]"
+                                }
+                              `}
+                            >
+                          {item}
+                     </motion.button>
+                        );
+                        })}
                     </div>
 
                     <button

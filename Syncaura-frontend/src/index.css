@@ -140,10 +140,7 @@
 
 
 .date-input::-webkit-calendar-picker-indicator {
-  filter: invert(0.5); 
-  cursor: pointer;
-  transform: scale(1.2); 
-
+  display: none;
 }
 
 .dark .date-input::-webkit-calendar-picker-indicator {
@@ -261,4 +258,4 @@
 /* Dark glow: richer */
 [data-theme="dark"] .dark-glow {
   opacity: 0.35;
-}
+}
