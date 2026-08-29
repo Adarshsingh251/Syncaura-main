@@ -9,11 +9,18 @@ const TableRow = ({
   status,
   docColor,
   document,
+  onView,
+  onEdit,
 }) => {
   const { t } = useTranslation();
 
   function formatDateYYYYMMDD(isoDate) {
-    return new Date(isoDate).toISOString().split("T")[0];
+    if (!isoDate) return "—";
+    try {
+      return new Date(isoDate).toISOString().split("T")[0];
+    } catch {
+      return String(isoDate);
+    }
   }
 
   const statusColor = {
@@ -30,16 +37,16 @@ const TableRow = ({
       <div className="hidden md:flex items-center w-full px-10">
 
         {/* Name */}
-        <div className="w-[30%] flex items-center gap-5 justify-start">
-          <FileText className={`size-8 ${docColor}`} />
-          <h1 className="text-base font-medium text-black dark:text-white">
+        <div className="w-[30%] flex items-center gap-5 justify-start min-w-0 pr-2">
+          <FileText className={`size-8 flex-shrink-0 ${docColor}`} />
+          <h1 className="text-base font-medium text-black dark:text-white truncate">
             {name}
           </h1>
         </div>
 
         {/* Type */}
         <div className="w-[12%] flex items-center justify-start">
-          <h1 className="uppercase text-base text-black font-medium dark:text-white">
+          <h1 className="uppercase text-base text-black font-medium dark:text-white truncate">
             {type}
           </h1>
         </div>
@@ -61,29 +68,37 @@ const TableRow = ({
         {/* Status */}
         <div className="w-[11%] flex items-center justify-center">
           <div
-            className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium ${statusColor[status]
+            className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium ${statusColor[status] || "bg-gray-100 text-gray-700"
               }`}
           >
-            {t(`status_${status.toLowerCase()}`, status)}
+            {t(`status_${(status || "active").toLowerCase()}`, status || "Active")}
           </div>
         </div>
 
-        {/* Document */}
+        {/* Document (View Action) */}
         <div className="w-[14%] flex items-center justify-center">
-          {document ? (
-            <button className="text-[#2461E6] hover:underline font-medium btn-hover">
-              {document}
-            </button>
-          ) : (
-            <button className="text-[#2461E6] hover:underline font-medium btn-hover">
-              {t("view_document", "View Document")}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onView?.();
+            }}
+            className="text-[#2461E6] dark:text-[#73FBFD] hover:underline font-semibold text-sm cursor-pointer btn-hover"
+          >
+            {t("view_document", "View Document")}
+          </button>
         </div>
 
         {/* Edit */}
         <div className="w-[8%] flex items-center justify-center">
-          <button className="text-[#2461E6] hover:underline font-medium btn-hover">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.();
+            }}
+            className="text-[#2461E6] dark:text-[#73FBFD] hover:underline font-medium text-sm cursor-pointer btn-hover"
+          >
             {t("edit", "Edit")}
           </button>
         </div>
@@ -135,28 +150,42 @@ const TableRow = ({
                 {t("status", "Status")}
               </p>
               <span
-                className={`inline-block px-5 py-1 mt-2 rounded-md text-xs font-medium ${statusColor[status]
+                className={`inline-block px-5 py-1 mt-2 rounded-md text-xs font-medium ${statusColor[status] || "bg-gray-100 text-gray-700"
                   }`}
               >
-                {t(`status_${status.toLowerCase()}`, status)}
+                {t(`status_${(status || "active").toLowerCase()}`, status || "Active")}
               </span>
             </div>
           </div>
 
           {/* Document */}
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
             <p className="text-gray-500 text-sm">
               {t("document", "Document")}
             </p>
 
-            <button className="text-sm font-medium text-[#2461E6] hover:underline btn-hover">
-              {document || t("view_document", "View Document")}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView?.();
+              }}
+              className="text-sm font-semibold text-[#2461E6] dark:text-[#73FBFD] hover:underline cursor-pointer btn-hover"
+            >
+              {t("view_document", "View Document")}
             </button>
           </div>
 
           {/* Edit */}
           <div className="flex justify-end pt-1">
-            <button className="text-sm font-medium text-[#2461E6] hover:underline btn-hover">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.();
+              }}
+              className="text-sm font-medium text-[#2461E6] dark:text-[#73FBFD] hover:underline cursor-pointer btn-hover"
+            >
               {t("edit", "Edit")}
             </button>
           </div>
