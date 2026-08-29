@@ -1,9 +1,10 @@
-import { Download, ListFilter, Plus, Search } from "lucide-react";
+import { Download, ListFilter, Plus, Search, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDocuments, createDocument } from "../redux/features/documentThunks";
 import TableRow from "../components/Document/TableRow";
 import DocumentModal from "../components/Document/DocumentModel";
+import ViewDocumentModal from "../components/Document/ViewDocumentModal";
 import VersionHistoryDrawer from "../components/Document/DetailAboutDcument/VersionHistoryDrawer";
 import { AnimatePresence, motion } from "framer-motion";
 import DocumentFilter from "../components/Document/DocumentFilter";
@@ -11,11 +12,23 @@ import DocumentFilter from "../components/Document/DocumentFilter";
 export default function Documents() {
   const dispatch = useDispatch();
   const { documents = [], loading = false, error = null } = useSelector((state) => state.documents || {});
+  const LOCAL_STORAGE_KEY = "syncaura_uploaded_documents";
+
+  const [localDocs, setLocalDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const tab = ["All Files", "Recent", "Shared with me", "Archived"];
   const [selectedTab, setSelectedTab] = useState("All Files");
   const [showModal, setShowModal] = useState(false);
   const [currId, setCurrId] = useState(null);
+  const [viewingDoc, setViewingDoc] = useState(null);
 
   const [showFilter, setShowFilter] = useState(false);
 
@@ -29,8 +42,16 @@ export default function Documents() {
   }, [dispatch]);
 
   const safeDocuments = useMemo(() => {
-    return Array.isArray(documents) ? documents : [];
-  }, [documents]);
+    const backendDocs = Array.isArray(documents) ? documents : [];
+    const combined = [...localDocs];
+    backendDocs.forEach((bDoc) => {
+      const bId = bDoc._id || bDoc.id;
+      if (!combined.some((lDoc) => (lDoc._id || lDoc.id) === bId)) {
+        combined.push(bDoc);
+      }
+    });
+    return combined;
+  }, [documents, localDocs]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -62,6 +83,7 @@ export default function Documents() {
       result = result.filter(
         (item) =>
           item.title?.toLowerCase().includes(debouncedValue) ||
+          item.name?.toLowerCase().includes(debouncedValue) ||
           item.content?.toLowerCase().includes(debouncedValue) ||
           item.type?.toLowerCase().includes(debouncedValue) ||
           item.category?.toLowerCase().includes(debouncedValue)
@@ -117,11 +139,7 @@ export default function Documents() {
   }, [safeDocuments, selectedTab, debouncedValue, appliedFilters]);
 
   useEffect(() => {
-    setSelectedDocList((prevList) => {
-      const currentLength = prevList?.length || 8;
-      const targetLength = filteredDocuments.length > currentLength ? filteredDocuments.length : Math.max(currentLength, 8);
-      return filteredDocuments.slice(0, targetLength);
-    });
+    setSelectedDocList(filteredDocuments);
   }, [filteredDocuments]);
 
   const handleApplyFilters = (newFilters) => {
@@ -129,33 +147,48 @@ export default function Documents() {
   };
 
   const handleAddDocument = async (docData) => {
-    const optimisticId = `temp-${Date.now()}`;
-    const optimisticItem = {
+    const optimisticId = `doc-${Date.now()}`;
+    const newDocItem = {
       _id: optimisticId,
       id: optimisticId,
-      title: docData.title || "New Report",
+      title: docData.title || "Uploaded Document",
+      name: docData.title || "Uploaded Document",
       type: docData.type || "DOCUMENT",
+      category: docData.category || "GENERAL",
+      content: docData.description || "",
+      description: docData.description || "",
       status: "Active",
       created_at: new Date().toISOString(),
-      versions: []
+      updated_at: new Date().toISOString(),
+      attachments: docData.attachments || [],
+      file_url: docData.file_url || null,
+      file_name: docData.file_name || null,
+      versions: docData.versions || [{ version: "v1.0", date: new Date().toISOString() }],
     };
-    setSelectedDocList((prev) => [optimisticItem, ...(prev || [])]);
+
+    const updatedLocal = [newDocItem, ...localDocs];
+    setLocalDocs(updatedLocal);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal.slice(0, 30)));
+    } catch (e) {
+      console.warn("Storage limit notice:", e);
+    }
+
     setShowModal(false);
     setSelectedTab("All Files");
 
-    setToast({ show: true, message: "Report added successfully!", type: "success" });
-    setTimeout(() => setToast({ show: false, message: "", type: "success" }), 3000);
+    setToast({ show: true, message: "Document uploaded successfully!", type: "success" });
+    setTimeout(() => setToast({ show: false, message: "", type: "success" }), 3500);
 
     try {
-      await dispatch(createDocument(docData)).unwrap();
-      dispatch(fetchDocuments());
-    }
-    catch (err) {
-      console.error("Background save failed: ", err);
-      setSelectedDocList((prev) => prev.filter(item => item._id !== optimisticId));
-      const errorMessage = typeof err === 'string' ? err : (err?.message || "Sync failed.");
-      setToast({ show: true, message: `Sync Failed: ${errorMessage}`, type: "error" });
-      setTimeout(() => setToast({ show: false, message: "", type: "error" }), 4000);
+      await dispatch(createDocument({
+        title: docData.title,
+        content: docData.description,
+        category: docData.category,
+        type: docData.type,
+      })).unwrap();
+    } catch (err) {
+      console.error("Backend sync notice: ", err);
     }
   };
   return (
@@ -317,7 +350,7 @@ export default function Documents() {
 
             {(selectedDocList || []).map((item, idx) => (
               <div
-                onClick={() => setCurrId(item._id || item.id)}
+                onClick={() => setViewingDoc(item)}
                 key={item._id || item.id || idx}
                 className={`flex relative transition-all duration-300 items-center justify-between w-full bg-[#FFFFFF] dark:bg-[#000000] py-6 ${currId === (item._id || item.id)
                   ? "bg-blue-50 dark:bg-[#1C3939]"
@@ -332,12 +365,14 @@ export default function Documents() {
                 />
 
                 <TableRow
-                  name={item.title || "Untitled"}
+                  name={item.title || item.name || "Untitled"}
                   type={item.type || (item.content ? "Document" : "—")}
                   date={item.updated_at || item.updatedAt || item.created_at}
                   status={item.status || "Active"}
-                  version={item.versions?.length ? `v${item.versions.length}` : "v1"}
-                  document={item.content ? item.title : "—"}
+                  version={item.versions?.length ? `v${item.versions.length}` : "v1.0"}
+                  document={item.attachments?.[0]?.name || item.file_name || (item.content ? item.title : "View Document")}
+                  onView={() => setViewingDoc(item)}
+                  onEdit={() => setCurrId(item._id || item.id)}
                   docColor={
                     idx % 3 === 0
                       ? "text-[#DC2626]"
@@ -376,10 +411,10 @@ export default function Documents() {
 
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-500 px-6 py-3 text-white shadow-lg hover:bg-blue-400 dark:hover:bg-[#2cc4c7] btn-hover"
+        className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-500 px-6 py-3 text-white shadow-lg hover:bg-blue-500 dark:hover:bg-[#2cc4c7] btn-hover font-semibold cursor-pointer z-20"
       >
-        <Plus size={18} />
-        New Report
+        <Upload size={18} />
+        <span>Upload Document</span>
       </button>
 
       {showModal && (
@@ -387,6 +422,12 @@ export default function Documents() {
       )}
       {currId && (
         <VersionHistoryDrawer open={currId !== null} onClose={() => setCurrId(null)} />
+      )}
+      {viewingDoc && (
+        <ViewDocumentModal
+          document={viewingDoc}
+          onClose={() => setViewingDoc(null)}
+        />
       )}
 
       {/* Error Toast Notification Banner */}
