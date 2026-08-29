@@ -64,14 +64,8 @@ const Header = ({ setOpen, open }) => {
             onClick={() => setShowProfileModal(true)}
           >
             {/* Avatar */}
-            <div className="relative size-[44px] rounded-full overflow-hidden bg-gradient-to-b from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0 shadow-sm">
-              {user?.profilePic || user?.profile_pic ? (
-                <img src={user.profilePic || user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-white font-semibold text-lg">
-                  {(user?.first_name || user?.name || "U").charAt(0).toUpperCase()}
-                </span>
-              )}
+            <div className="size-10 sm:size-12 rounded-full bg-gradient-to-b from-red-600 to-red-900 text-white flex items-center justify-center font-semibold text-lg sm:text-xl">
+              {(user?.first_name || user?.name || "U").charAt(0).toUpperCase()}
             </div>
 
             {/* Profile Text */}
