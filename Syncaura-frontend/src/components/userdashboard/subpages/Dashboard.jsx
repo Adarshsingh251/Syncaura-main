@@ -5,16 +5,21 @@ import {
   EllipsisIcon,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import api from "../../../config/axios";
+import { fetchNotifications } from "../../../redux/features/notificationThunks";
 import TopCard from "../TopCard";
 import CircularProgress from "../CircularProgress";
 import TaskStatusDistribution from "../TaskGraph/TaskStatusDistribution";
 import SprintContribution from "./Dashboard/SprintContribution";
 import { motion, AnimatePresence } from "framer-motion";
 import Deadlines from "./Dashboard/Deadlines";
+import { IoAlert } from "react-icons/io5";
 import RecentActivityCard from "../RecentActivityCard";
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
+  const { notifications, loading: notificationsLoading, error: notificationsError } = useSelector((state) => state.notification);
   const [deadlineFilter, setDeadlineFilter] = useState("ALL");
   const [workload, setWorkload] = useState(null);
   const [workloadLoading, setWorkloadLoading] = useState(true);
@@ -22,15 +27,17 @@ const Dashboard = () => {
 
   useEffect(() => {
     let active = true;
-    api
-      .get("/dashboard/my-workload")
-      .then((response) => {
+    Promise.allSettled([
+      api.get("/dashboard/my-workload"),
+      dispatch(fetchNotifications({ limit: 5 })).unwrap(),
+    ])
+      .then(([workloadResult]) => {
         if (!active) return;
-        setWorkload(response.data);
-      })
-      .catch((requestError) => {
-        if (!active) return;
-        setWorkloadError(requestError.response?.data?.message || requestError.message || "Unable to load dashboard data");
+        if (workloadResult.status === "fulfilled") {
+          setWorkload(workloadResult.value.data);
+        } else {
+          setWorkloadError(workloadResult.reason?.response?.data?.message || workloadResult.reason?.message || "Unable to load dashboard data");
+        }
       })
       .finally(() => {
         if (active) setWorkloadLoading(false);
@@ -39,7 +46,7 @@ const Dashboard = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [dispatch]);
 
   const tasks = workload?.tasks || [];
   const completedTasks = workload?.completed || 0;
@@ -70,7 +77,7 @@ const Dashboard = () => {
 
   // --- FILTER LOGIC ---
   const filteredDeadlines = deadlineFilter === "ALL"
-    ? deadlineTask
+    ? deadlineTask 
     : deadlineTask.filter(task => task.status === deadlineFilter);
 
   const cardData = [
@@ -82,30 +89,31 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col items-center justify-center w-full gap-y-8 overflow-y-auto no-scrollbar min-h-screen py-6 px-4">
-
+      
       {/* 0. Top Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 w-full">
-        {cardData.map((item) => (
-          <motion.div
-            key={item.title}
-            whileHover={{
-              scale: 1.03,
-              y: -5,
-              transition: { duration: 0.2 },
-            }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full flex justify-center cursor-pointer group"
-          >
-            <div className="w-full transition-shadow duration-300 hover:shadow-xl dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.4)] rounded-xl">
-              <TopCard
-                title={item.title}
-                count={item.count}
-                IconData={item.iconData}
-              />
-            </div>
-          </motion.div>
-        ))}
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 w-full">
+  {cardData.map((item) => (
+    <motion.div
+      key={item.title}
+      
+      whileHover={{ 
+        scale: 1.03, 
+        y: -5, 
+        transition: { duration: 0.2 } 
+      }}
+      whileTap={{ scale: 0.98 }} 
+      className="w-full flex justify-center cursor-pointer group"
+    >
+      <div className="w-full transition-shadow duration-300 hover:shadow-xl dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.4)] rounded-xl">
+        <TopCard 
+          title={item.title} 
+          count={item.count} 
+          IconData={item.iconData} 
+        />
       </div>
+    </motion.div>
+  ))}
+</div>
 
       {/* 1. Health Status */}
       <div className="flex flex-col w-full gap-4 sm:gap-5 py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#2d2f31] shadow-none">
@@ -146,7 +154,7 @@ const Dashboard = () => {
           <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-2xl">Upcoming Deadlines</h1>
           <div className="flex items-center gap-4">
             {/* Filter Dropdown/Toggle Simulation */}
-            <select
+            <select 
               className="bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-sm font-medium text-gray-600 dark:text-gray-300 outline-none"
               onChange={(e) => setDeadlineFilter(e.target.value)}
             >
@@ -161,11 +169,11 @@ const Dashboard = () => {
         <div className="flex flex-wrap items-center justify-start w-full gap-6 px-0 min-h-[100px]">
           <AnimatePresence mode="popLayout">
             {filteredDeadlines.map((item) => (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
+              <motion.div 
+                layout 
+                initial={{ opacity: 0, scale: 0.9 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                exit={{ opacity: 0, scale: 0.9 }} 
                 key={item.title}
               >
                 <Deadlines {...item} />
@@ -182,6 +190,37 @@ const Dashboard = () => {
       {/* 5. Recent Activity */}
       <div className="flex flex-col items-center justify-start w-full shadow-[0_0_10px_0_#54545440]">
         <RecentActivityCard tasks={tasks} loading={workloadLoading} />
+      </div>
+
+      {/* 6. Issues & Alerts with Dismiss Logic */}
+      <div className="flex flex-col items-center justify-start w-full gap-y-7 shadow-[0_0_10px_0_#54545440] dark:shadow-[0_0_12px_#00000080] py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-transparent dark:border-[#2A2A2A]">
+        <div className="flex items-center justify-between w-full">
+          <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-2xl">Issues & Alerts</h1>
+          <motion.p whileHover={{ scale: 1.08, x: 6 }} className="text-[#C05328] dark:text-blue-400 text-lg font-medium cursor-pointer hover:underline">View All</motion.p>
+        </div>
+        <div className="flex flex-wrap gap-4 md:gap-5 w-full justify-center xl:justify-start">
+          <AnimatePresence>
+            {notifications.map((notification) => (
+              <motion.div 
+                key={notification.id || notification._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="group relative flex items-center w-[228px] h-[64px] bg-[#E7F2FD] dark:bg-[#0F1C2E] border-[#BDDEFF] dark:border-[#1E3A5F] border rounded-lg px-2 gap-2 transition-all"
+              >
+                <div className="flex items-center justify-center">
+                  <IoAlert className="size-6 text-[#007CEC] dark:text-[#38BDF8]" />
+                </div>
+                <div className="flex flex-col items-start justify-center overflow-hidden">
+                  <p className="text-xs font-semibold truncate w-full text-[#007CEC] dark:text-[#38BDF8]">{notification.title}</p>
+                  <p className="font-medium text-[10px] text-[#007CEC] dark:text-[#38BDF8] truncate w-full">{notification.message}</p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {!notificationsLoading && !notificationsError && notifications.length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">No alerts.</p>}
+          {notificationsError && <p className="text-sm text-red-500">Unable to load alerts.</p>}
+        </div>
       </div>
     </div>
   );
