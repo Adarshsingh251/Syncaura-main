@@ -77,17 +77,21 @@ const AttendanceLeave = () => {
   const [selectedTab, setSelectedTab] = useState("Check-In");
   const popupRef = useRef(null);
   const triggerRef = useRef(null);
+  const dateInputRef = useRef(null);
   const [search, setSearch] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [attendanceDate] = useState(getToday);
+
+  // Editable attendance date (feature/attendance-date-picker-ui) — defaults to today,
+  // but the user can pick another date to mark/view attendance for.
+  const [attendanceDate, setAttendanceDate] = useState(getToday);
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const attendanceStateRef = useRef(getInitialAttendanceState());
   const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
@@ -96,7 +100,7 @@ const AttendanceLeave = () => {
   // Load leave data from localStorage (persists across refreshes)
   const [leaveData, setLeaveData] = useState(() => {
     try {
-      const stored = localStorage.getItem(`${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`);
+      const stored = localStorage.getItem(leaveStorageKey);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -104,17 +108,20 @@ const AttendanceLeave = () => {
   });
 
   // Persist leave data to localStorage whenever it changes
-  const syncLeavesToStorage = useCallback((updater) => {
-    setLeaveData((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      try {
-        localStorage.setItem(leaveStorageKey, JSON.stringify(next));
-      } catch {
-        // storage quota exceeded — silently ignore
-      }
-      return next;
-    });
-  }, [leaveStorageKey]);
+  const syncLeavesToStorage = useCallback(
+    (updater) => {
+      setLeaveData((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        try {
+          localStorage.setItem(leaveStorageKey, JSON.stringify(next));
+        } catch {
+          // storage quota exceeded — silently ignore
+        }
+        return next;
+      });
+    },
+    [leaveStorageKey],
+  );
 
   // Until an attendance API exists, this keeps a user's daily status stable across
   // refreshes, logins, and logouts. Replace this with a GET attendance-status call
@@ -129,9 +136,10 @@ const AttendanceLeave = () => {
         presentDays: Number.isFinite(storedState.presentDays)
           ? storedState.presentDays
           : emptyState.presentDays,
-        records: storedState.records && typeof storedState.records === "object"
-          ? storedState.records
-          : {},
+        records:
+          storedState.records && typeof storedState.records === "object"
+            ? storedState.records
+            : {},
       };
     } catch {
       attendanceStateRef.current = emptyState;
@@ -159,68 +167,57 @@ const AttendanceLeave = () => {
     };
   }, [attendanceStorageKey]);
 
+  // Whenever the selected attendance date changes (via the date picker), reflect
+  // that date's stored check-in/check-out times instead of always showing today's.
+  useEffect(() => {
+    const record = attendanceStateRef.current.records[attendanceDate] || {};
+    setCheckInTime(record.checkInTime || null);
+    setCheckOutTime(record.checkOutTime || null);
+    setSelectedTab(record.checkInTime ? "Check-Out" : "Check-In");
+  }, [attendanceDate]);
+
   const saveAttendanceState = (nextState) => {
     attendanceStateRef.current = nextState;
-    localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
+    try {
+      localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
+    } catch {
+      // storage quota exceeded — silently ignore
+    }
   };
 
   const canCheckIn = !checkInTime && !checkOutTime;
   const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In") {
-      const nextState = {
-        presentDays: attendanceStateRef.current.presentDays + 1,
-        records: {
-          ...attendanceStateRef.current.records,
-          [attendanceDate]: { ...currentRecord, checkInTime: timeString },
-        },
-      };
-
-      saveAttendanceState(nextState);
-
-      setAttendanceStats((previousStats) =>
-        previousStats.map((stat) =>
-          stat.title === "Present Days"
-            ? { ...stat, value: nextState.presentDays }
-            : stat,
-        ),
-      );
-
-      setSelectedTab("CheckOut");
-
-      toast.success(t("attendance_marked_success", { date: attendanceDate }));
-    } else if (selectedTab === "CheckOut") {
-      setCheckOutTime(timeString);
-
-      saveAttendanceState({
-        ...attendanceStateRef.current,
-        records: {
-          ...attendanceStateRef.current.records,
-          [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
-        },
-      });
-
-      toast.success(t("attendance_checkout_success"));
+    if (selectedTab === "Check-In" && !canCheckIn) return;
+    if (selectedTab === "Check-Out" && !canCheckOut) {
+      if (!checkInTime) {
+        toast.error("Please check in before checking out!");
+      } else if (checkOutTime) {
+        toast.info(`You have already checked out today at ${checkOutTime}`);
+      }
+      setShowPopup(false);
+      return;
     }
 
     setIsSubmitting(true);
     // This is UI-only until the backend provides attendance endpoints.
     setTimeout(() => {
       const now = new Date();
-      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const timeString = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
       const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
 
       if (selectedTab === "Check-In") {
         setCheckInTime(timeString);
+
         const nextState = {
           presentDays: attendanceStateRef.current.presentDays + 1,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: {
-              ...currentRecord,
-              checkInTime: timeString,
-            },
+            [attendanceDate]: { ...currentRecord, checkInTime: timeString },
           },
         };
 
@@ -234,43 +231,45 @@ const AttendanceLeave = () => {
           ),
         );
 
-        setSelectedTab("CheckOut");
-
-        toast.success(t("attendance_marked_success", { date: attendanceDate }));
-
-      } else if (selectedTab === "CheckOut") {
+        setSelectedTab("Check-Out");
+        toast.success(`Attendance marked successfully for ${attendanceDate}!`);
+      } else if (selectedTab === "Check-Out") {
         setCheckOutTime(timeString);
 
         saveAttendanceState({
           ...attendanceStateRef.current,
           records: {
             ...attendanceStateRef.current.records,
-            [attendanceDate]: {
-              ...currentRecord,
-              checkOutTime: timeString,
-            },
+            [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
           },
         });
 
-        toast.success(t("attendance_checkout_success"));
+        toast.success("Checked out successfully!");
       }
+
       setIsSubmitting(false);
       setShowPopup(false);
     }, 1000);
-  
-};
+  };
 
   const fetchLeaves = useCallback(async () => {
     try {
       const token = localStorage.getItem("accessToken");
 
       if (!token) {
-        throw new Error("Access token not found");
+        // Fallback to localStorage if no token
+        try {
+          const stored = localStorage.getItem(leaveStorageKey);
+          if (stored) {
+            setLeaveData(JSON.parse(stored));
+          }
+        } catch {
+          // ignore malformed local data
+        }
+        return;
       }
 
-      const isAdminOrCoAdmin =
-        user?.role === "admin" ||
-        user?.role === "co-admin";
+      const isAdminOrCoAdmin = user?.role === "admin" || user?.role === "co-admin";
 
       const endpoint = isAdminOrCoAdmin
         ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
@@ -284,56 +283,34 @@ const AttendanceLeave = () => {
         },
       });
 
-const fetchLeaves = useCallback(async () => {
-  try {
-    const token = localStorage.getItem("accessToken");
+      const data = await response.json();
+      setTotalPages(data.totalPages || 1);
 
-    if (!token) {
-      // Fallback to localStorage if no token
-      try {
-        const stored = localStorage.getItem(leaveStorageKey);
-        if (stored) {
-          setLeaveData(JSON.parse(stored));
+      if (data.leaves && data.leaves.length > 0) {
+        const formattedLeaves = data.leaves.map((leave) => ({
+          ...leave,
+          startDate: leave.from_date || leave.startDate,
+          endDate: leave.to_date || leave.endDate,
+          type: leave.leave_type || leave.type || "Leave",
+        }));
+        setLeaveData(formattedLeaves);
+      } else {
+        // If backend returns an empty leaves list, fall back to local storage
+        try {
+          const stored = localStorage.getItem(leaveStorageKey);
+          if (stored) {
+            const localLeaves = JSON.parse(stored);
+            if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+              setLeaveData(localLeaves);
+            }
+          }
+        } catch {
+          // ignore malformed local data
         }
-      } catch {}
-      return;
-    }
-
-    const isAdminOrCoAdmin =
-      user?.role === "admin" ||
-      user?.role === "co-admin";
-
-    const endpoint = isAdminOrCoAdmin
-      ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
-      : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
-
-      const formattedLeaves = (data.leaves || []).map((leave) => ({
-        ...leave,
-        startDate: leave.from_date,
-        endDate: leave.to_date,
-        type: leave.leave_type || "Leave",
-      }));
-
-      setLeaveData(formattedLeaves);
+      }
     } catch (error) {
-      console.error("Error fetching leaves:", error);
-      toast.error("Failed to load leave requests");
-    }
-  }, [user?.role, currentPage]);
-
-    const data = await response.json();
-    setTotalPages(data.totalPages || 1);
-
-    if (data.leaves && data.leaves.length > 0) {
-      const formattedLeaves = data.leaves.map((leave) => ({
-        ...leave,
-        startDate: leave.from_date || leave.startDate,
-        endDate: leave.to_date || leave.endDate,
-        type: leave.leave_type || leave.type || "Leave",
-      }));
-      setLeaveData(formattedLeaves);
-    } else {
-      // If backend returns empty leaves list, fallback to local storage
+      console.warn("Error fetching leaves from backend, using local fallback:", error.message);
+      toast.error("Failed to load leave requests from the server — showing local data.");
       try {
         const stored = localStorage.getItem(leaveStorageKey);
         if (stored) {
@@ -342,32 +319,18 @@ const fetchLeaves = useCallback(async () => {
             setLeaveData(localLeaves);
           }
         }
-      } catch {}
-    }
-  } catch (error) {
-    console.warn("Error fetching leaves from backend, using local fallback:", error.message);
-    try {
-      const stored = localStorage.getItem(leaveStorageKey);
-      if (stored) {
-        const localLeaves = JSON.parse(stored);
-        if (Array.isArray(localLeaves) && localLeaves.length > 0) {
-          setLeaveData(localLeaves);
-        }
+      } catch {
+        // ignore malformed local data
       }
-    } catch {}
-  }
-}, [user?.role, currentPage, leaveStorageKey]);
-
-useEffect(() => {
-  fetchLeaves();
-}, [fetchLeaves,]);
-
+    }
+  }, [user?.role, currentPage, leaveStorageKey]);
 
   useEffect(() => {
-    const timer = setTimeout(
-      () => setDebouncedValue(search.toLowerCase()),
-      500,
-    );
+    fetchLeaves();
+  }, [fetchLeaves]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(search.toLowerCase()), 500);
     return () => clearTimeout(timer);
   }, [search]);
 
@@ -376,11 +339,11 @@ useEffect(() => {
 
     if (debouncedValue) {
       result = result.filter(
-      (item) =>
-            (item.reason || "").toLowerCase().includes(debouncedValue) ||
-            (item.status || "").toLowerCase().includes(debouncedValue) ||
-            (item.type || "").toLowerCase().includes(debouncedValue),
-        );
+        (item) =>
+          (item.reason || "").toLowerCase().includes(debouncedValue) ||
+          (item.status || "").toLowerCase().includes(debouncedValue) ||
+          (item.type || "").toLowerCase().includes(debouncedValue),
+      );
     }
 
     if (appliedFilters) {
@@ -398,11 +361,7 @@ useEffect(() => {
           const startStr = item.startDate ? item.startDate.split("T")[0] : "";
           const endStr = item.endDate ? item.endDate.split("T")[0] : "";
           if (!startStr) return false;
-          return (
-            selectedDateStr >= startStr &&
-            (!endStr || selectedDateStr <= endStr)
-            );
-          
+          return selectedDateStr >= startStr && (!endStr || selectedDateStr <= endStr);
         });
       }
     }
@@ -432,8 +391,8 @@ useEffect(() => {
   }, [showPopup]);
 
   const handleApplyFilters = (newFilters) => {
-  setAppliedFilters(newFilters);
-};
+    setAppliedFilters(newFilters);
+  };
 
   const handleOpenCreateModal = () => {
     setLeaveToEdit(null);
@@ -473,7 +432,7 @@ useEffect(() => {
             <UserCheck className="size-4" />
             <span>My Attendance</span>
           </Link>
-          
+
           <button
             onClick={() => setShowFilter((prev) => !prev)}
             className={`btn-hover px-4 py-2 bg-white dark:bg-[#000000] flex items-center gap-2 border rounded-4xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#989696] dark:border-[#989696]"} `}
@@ -509,10 +468,7 @@ useEffect(() => {
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="absolute left-0 top-full mt-1 w-full z-50 px-5"
             >
-              <AttendanceLeaveFilter
-                onClose={() => setShowFilter(false)}
-                onApply={handleApplyFilters}
-              />
+              <AttendanceLeaveFilter onClose={() => setShowFilter(false)} onApply={handleApplyFilters} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -537,21 +493,21 @@ useEffect(() => {
             whileTap={{ scale: 0.97 }}
             className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
           >
-            <h1 className={`font-semibold text-xs sm:text-sm ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
-              {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
+            <h1 className={`font-semibold text-xs sm:text-sm ${checkInTime ? "text-[#29CC39]" : "text-[#FF0000]"}`}>
+              {checkInTime ? "Presence Marked" : "Mark the Presence"}
             </h1>
 
             <div className="flex items-center justify-between mt-2">
               <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
-                In: <span className="font-semibold">{checkInTime || '-'}</span>
+                In: <span className="font-semibold">{checkInTime || "-"}</span>
               </p>
 
               <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
-                Out: <span className="font-semibold">{checkOutTime || '-'}</span>
+                Out: <span className="font-semibold">{checkOutTime || "-"}</span>
               </p>
             </div>
           </motion.div>
-    
+
           {/* POPUP */}
           <AnimatePresence>
             {showPopup && (
@@ -585,59 +541,67 @@ useEffect(() => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Clock className="size-5 text-[#000000] dark:text-[#F8F8F8]" />
-                      <h1 className="font-medium text-xl text-[#000000] dark:text-[#F8F8F8]">
-                        Daily Attendance
-                      </h1>
+                      <h1 className="font-medium text-xl text-[#000000] dark:text-[#F8F8F8]">Daily Attendance</h1>
                     </div>
 
-                    <div className={`flex items-center justify-center px-3 py-1 rounded-2xl ${checkInTime ? 'bg-[#D1FAE5]' : 'bg-[#FFE2E2D1]'}`}>
-                      <p className={`text-sm font-normal ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
-                        {checkInTime ? 'Present' : 'Absent'}
+                    <div
+                      className={`flex items-center justify-center px-3 py-1 rounded-2xl ${checkInTime ? "bg-[#D1FAE5]" : "bg-[#FFE2E2D1]"}`}
+                    >
+                      <p className={`text-sm font-normal ${checkInTime ? "text-[#29CC39]" : "text-[#FF0000]"}`}>
+                        {checkInTime ? "Present" : "Absent"}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex flex-col px-5 py-1 w-full gap-4">
-                    <div className="flex w-full items-center justify-center border border-[#E0DDDD] dark:border-[#000000]">
+                    {/* Editable date picker (feature/attendance-date-picker-ui) */}
+                    <div className="flex w-full items-center gap-3 border border-[#E0DDDD] dark:border-[#575757] rounded-lg px-3 py-2 bg-white dark:bg-[#000000]">
+                      <Calendar
+                        className="size-5 text-[#898888] dark:text-gray-300 shrink-0 cursor-pointer"
+                        onClick={() => dateInputRef.current?.showPicker?.()}
+                      />
+
                       <input
+                        ref={dateInputRef}
                         type="date"
                         value={attendanceDate}
-                        disabled
+                        max={getToday()}
+                        onChange={(e) => setAttendanceDate(e.target.value)}
                         aria-label="Attendance date"
-                        className="w-full h-full text-[#898888] px-3 py-1 bg-white dark:bg-[#000000] dark:text-gray-200 outline-none date-input disabled:cursor-not-allowed disabled:opacity-80"
+                        className="date-input w-full bg-transparent text-[#898888] dark:text-gray-200 outline-none cursor-pointer"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between gap-2">
-                      {["Check-In", "CheckOut"].map((item, idx) => {
+                    <div className="flex items-center justify-between gap-3">
+                      {["Check-In", "Check-Out"].map((item) => {
+                        const isSelected = selectedTab === item;
                         const isDisabled = item === "Check-In" ? !canCheckIn : !canCheckOut;
 
                         return (
-                          <motion.div
-                            onClick={() => !isDisabled && setSelectedTab(item)}
-                            key={idx}
-                            whileTap={{ scale: 0.95 }}
-                            layout
-                            transition={{
-                              type: "spring",
-                              stiffness: 300,
-                              damping: 20,
-                            }}
-                            aria-disabled={isDisabled}
-                            className={`flex flex-1 items-center justify-center border ${selectedTab === item
-                                ? "border-[#2461E6] dark:border-[#73FBFD]"
-                                : "border-[#EDEDED] dark:border-[#575757]"
-                              } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
+                          <motion.button
+                            type="button"
+                            key={item}
+                            onClick={() => setSelectedTab(item)}
+                            whileTap={{ scale: 0.97 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                            disabled={isDisabled}
+                            className={`flex-1 flex items-center justify-center
+                              px-5 py-3 rounded-xl border
+                              font-bold text-sm transition-all duration-200
+                              ${
+                                isSelected
+                                  ? "border-[#2461E6] bg-[#EEF4FF] text-[#2461E6] dark:border-[#73FBFD] dark:bg-[#73FBFD]/10 dark:text-[#73FBFD]"
+                                  : "border-[#E0E0E0] bg-transparent text-[#554D4D] dark:border-[#575757] dark:text-gray-400"
+                              }
+                              ${
+                                isDisabled
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "cursor-pointer hover:border-[#2461E6] dark:hover:border-[#73FBFD]"
+                              }
+                            `}
                           >
-                            <p
-                              className={`font-bold text-xs ${selectedTab === item
-                                  ? "text-[#2461E6] dark:text-[#73FBFD]"
-                                  : "text-[#554d4d] dark:text-gray-400"
-                                }`}
-                            >
-                              {item}
-                            </p>
-                          </motion.div>
+                            {item}
+                          </motion.button>
                         );
                       })}
                     </div>
@@ -652,16 +616,18 @@ useEffect(() => {
                           <Loader className="size-4 animate-spin" />
                           Confirming...
                         </>
+                      ) : selectedTab === "Check-In" ? (
+                        canCheckIn ? (
+                          "Check In"
+                        ) : (
+                          "Checked In"
+                        )
+                      ) : canCheckOut ? (
+                        "Check Out"
+                      ) : checkOutTime ? (
+                        "Attendance Complete"
                       ) : (
-                        selectedTab === "Check-In"
-                          ? canCheckIn
-                            ? "Check In"
-                            : "Checked In"
-                          : canCheckOut
-                            ? "Check Out"
-                            : checkOutTime
-                              ? "Attendance Complete"
-                              : t("attendance_check_in_required")
+                        "Check-in required first"
                       )}
                     </button>
                   </div>
@@ -720,9 +686,7 @@ useEffect(() => {
               key={index}
               onClick={() => setCurrentPage(index + 1)}
               className={`px-4 py-2 rounded font-medium ${
-                currentPage === index + 1
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
+                currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
               }`}
             >
               {index + 1}
@@ -761,11 +725,7 @@ useEffect(() => {
       </button>
 
       {openModel && (
-        <LeaveModel
-          onClose={handleCloseLeaveModal}
-          setLeaveData={syncLeavesToStorage}
-          editingLeave={leaveToEdit}
-        />
+        <LeaveModel onClose={handleCloseLeaveModal} setLeaveData={syncLeavesToStorage} editingLeave={leaveToEdit} />
       )}
     </div>
   );
