@@ -63,7 +63,11 @@ export const refreshAccessToken = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) throw new Error("No refresh token");
+      if (!refreshToken) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("token");
+        return rejectWithValue("Session expired");
+      }
 
       const res = await api.post("/auth/refresh", { refreshToken });
 

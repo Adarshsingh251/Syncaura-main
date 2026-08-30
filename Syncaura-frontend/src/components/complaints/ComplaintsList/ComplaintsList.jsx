@@ -21,6 +21,20 @@ export default function ComplaintsList({
   statusIcon,
 }) {
   const { t } = useTranslation();
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+  const getDocumentUrl = (url) => {
+    if (!url || url === "#") return null;
+
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    }
+
+    const baseUrl = API_URL.replace(/\/api\/?$/, "");
+
+    return `${baseUrl}/${url.replace(/^\/+/, "")}`;
+  };
   const formatDate = (dateString) => {
     if (!dateString) return "";
 
@@ -69,8 +83,8 @@ export default function ComplaintsList({
       Array.isArray(item.attachments) && item.attachments.length > 1
         ? item.attachments.length
         : Array.isArray(item.documents) && item.documents.length > 1
-        ? item.documents.length
-        : 1;
+          ? item.documents.length
+          : 1;
 
     return { url, name, count };
   };
@@ -172,8 +186,10 @@ export default function ComplaintsList({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (docInfo.url && docInfo.url !== "#") {
-                          window.open(docInfo.url, "_blank");
+                        const documentUrl = getDocumentUrl(docInfo.url);
+
+                        if (documentUrl) {
+                          window.open(documentUrl, "_blank", "noopener,noreferrer");
                         } else {
                           setActiveId(id);
                         }
@@ -279,8 +295,10 @@ export default function ComplaintsList({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (docInfo.url && docInfo.url !== "#") {
-                        window.open(docInfo.url, "_blank");
+                      const documentUrl = getDocumentUrl(docInfo.url);
+
+                      if (documentUrl) {
+                        window.open(documentUrl, "_blank", "noopener,noreferrer");
                       } else {
                         setActiveId(id);
                       }

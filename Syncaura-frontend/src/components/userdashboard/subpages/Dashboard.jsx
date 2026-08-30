@@ -5,129 +5,79 @@ import {
   EllipsisIcon,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import api from "../../../config/axios";
 import TopCard from "../TopCard";
 import CircularProgress from "../CircularProgress";
 import TaskStatusDistribution from "../TaskGraph/TaskStatusDistribution";
-import { TASK_STATUS } from "../../../constant/constant";
 import SprintContribution from "./Dashboard/SprintContribution";
 import { motion, AnimatePresence } from "framer-motion";
 import Deadlines from "./Dashboard/Deadlines";
 import RecentActivityCard from "../RecentActivityCard";
 
 const Dashboard = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // --- FUNCTIONAL STATES ---
   const [deadlineFilter, setDeadlineFilter] = useState("ALL");
+  const [workload, setWorkload] = useState(null);
+  const [workloadLoading, setWorkloadLoading] = useState(true);
+  const [workloadError, setWorkloadError] = useState(null);
 
   useEffect(() => {
-    const checkTheme = () => {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
+    let active = true;
+    api
+      .get("/dashboard/my-workload")
+      .then((response) => {
+        if (!active) return;
+        setWorkload(response.data);
+      })
+      .catch((requestError) => {
+        if (!active) return;
+        setWorkloadError(requestError.response?.data?.message || requestError.message || "Unable to load dashboard data");
+      })
+      .finally(() => {
+        if (active) setWorkloadLoading(false);
+      });
+
+    return () => {
+      active = false;
     };
-
-    checkTheme();
-
-    const observer = new MutationObserver(checkTheme);
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
   }, []);
 
-  const CONTRIBUTIONS = [
-    {
-      id: "dev",
-      title: "DEV",
-      subtitle: "QA",
-      value: 75,
-      lightColor: "bg-[#137FEC]",
-      darkColor: "dark:bg-blue-400",
-    },
-    {
-      id: "doc",
-      title: "DOC",
-      subtitle: "UAT",
-      value: 45,
-      lightColor: "bg-[#A1CCF7]",
-      darkColor: "dark:bg-blue-300",
-    },
+  const tasks = workload?.tasks || [];
+  const completedTasks = workload?.completed || 0;
+  const totalTasks = workload?.totalTasks || 0;
+  const inProgressTasks = tasks.filter((task) => task.status === "IN_PROGRESS").length;
+  const overdueTasks = tasks.filter((task) => task.status !== "DONE" && task.deadline && new Date(task.deadline) < new Date()).length;
+  const completionPercentage = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const statusData = [
+    { id: "todo", label: "To Do", count: tasks.filter((task) => task.status === "TODO").length, color: "#94A3B8" },
+    { id: "in-progress", label: "In Progress", count: inProgressTasks, color: "#FBB309" },
+    { id: "blocked", label: "Blocked", count: tasks.filter((task) => task.status === "BLOCKED").length, color: "#EF4444" },
+    { id: "done", label: "Done", count: completedTasks, color: "#1BC963" },
   ];
 
-  const deadlineTask = [
-    {
-      title: "API Auth Bug",
-      status: "HIGH",
-      due: "Due Today, 5:00 PM",
-      bgColor: "bg-[#FEF2F2] dark:bg-[#3A1F1F]",
-      borderColor: "border-[#FCC0C4] dark:border-[#7F1D1D]",
-      titleColor: "text-[#B60000] dark:text-[#FF4D4F]",
-      descColor: "text-[#E76060] dark:text-[#F87171]",
-      statusColor: "bg-[#EF4444]",
-    },
-    {
-      title: "UAT Testing",
-      status: "MEDIUM",
-      due: "Tomorrow, 10:00 AM",
-      bgColor: "bg-[#FEFCE8] dark:bg-[#4A3514]",
-      borderColor: "border-[#FFF7A6] dark:border-[#A16207]",
-      titleColor: "text-[#9F5E00] dark:text-[#FBBF24]",
-      descColor: "text-[#DBAE4B] dark:text-[#FCD34D]",
-      statusColor: "bg-[#EAB308]",
-    },
-    {
-      title: "Refactor Login",
-      status: "LOW",
-      due: "Apr 24, 2024",
-      bgColor: "bg-[#F6F7F8] dark:bg-[#121212]",
-      borderColor: "border-[#C8E3FE] dark:border-[#2A2A2A]",
-      titleColor: "text-[#000000] dark:text-[#E5E7EB]",
-      descColor: "text-[#8897A5] dark:text-[#9CA3AF]",
-      statusColor: "bg-[#6B7280]",
-    },
-  ];
+  const deadlineTask = tasks
+    .filter((task) => task.status !== "DONE" && task.deadline)
+    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+    .map((task) => {
+      const priority = (task.priority || "LOW").toUpperCase();
+      const priorityStyles = {
+        HIGH: { bgColor: "bg-[#FEF2F2] dark:bg-[#3A1F1F]", borderColor: "border-[#FCC0C4] dark:border-[#7F1D1D]", titleColor: "text-[#B60000] dark:text-[#FF4D4F]", descColor: "text-[#E76060] dark:text-[#F87171]", statusColor: "bg-[#EF4444]" },
+        MEDIUM: { bgColor: "bg-[#FEFCE8] dark:bg-[#4A3514]", borderColor: "border-[#FFF7A6] dark:border-[#A16207]", titleColor: "text-[#9F5E00] dark:text-[#FBBF24]", descColor: "text-[#DBAE4B] dark:text-[#FCD34D]", statusColor: "bg-[#EAB308]" },
+        LOW: { bgColor: "bg-[#F6F7F8] dark:bg-[#121212]", borderColor: "border-[#C8E3FE] dark:border-[#2A2A2A]", titleColor: "text-[#000000] dark:text-[#E5E7EB]", descColor: "text-[#8897A5] dark:text-[#9CA3AF]", statusColor: "bg-[#6B7280]" },
+      };
+      return { title: task.title, status: priority, due: new Date(task.deadline).toLocaleString(), ...priorityStyles[priority] || priorityStyles.LOW };
+    });
 
   // --- FILTER LOGIC ---
-  const filteredDeadlines =
-    deadlineFilter === "ALL"
-      ? deadlineTask
-      : deadlineTask.filter((task) => task.status === deadlineFilter);
+  const filteredDeadlines = deadlineFilter === "ALL"
+    ? deadlineTask
+    : deadlineTask.filter(task => task.status === deadlineFilter);
 
   const cardData = [
-    {
-      title: "Total Tasks",
-      count: 24,
-      iconData: (
-        <ClipboardListIcon className="text-white dark:text-gray-900 fill-blue-600 size-10" />
-      ),
-    },
-    {
-      title: "Completed",
-      count: 12,
-      iconData: (
-        <div className="flex items-center justify-center p-2 rounded-full bg-[#1BC963]">
-          <Check className="size-5 text-white dark:text-gray-900" />
-        </div>
-      ),
-    },
-    {
-      title: "in Progress",
-      count: 8,
-      iconData: (
-        <div className="flex items-center justify-center p-2 rounded-full bg-[#FBB309]">
-          <EllipsisIcon className="size-5 text-white dark:text-gray-900" />
-        </div>
-      ),
-    },
-    {
-      title: "Overdue",
-      count: 4,
-      iconData: (
-        <CircleAlert className="size-10 text-white dark:text-gray-900 fill-[#EF4444]" />
-      ),
-    },
+    { title: "Total Tasks", count: workloadLoading ? "..." : totalTasks, iconData: <ClipboardListIcon className="text-white dark:text-gray-900 fill-blue-600 size-10" /> },
+    { title: "Completed", count: workloadLoading ? "..." : completedTasks, iconData: <div className="flex items-center justify-center p-2 rounded-full bg-[#1BC963]"><Check className="size-5 text-white dark:text-gray-900" /></div> },
+    { title: "in Progress", count: workloadLoading ? "..." : inProgressTasks, iconData: <div className="flex items-center justify-center p-2 rounded-full bg-[#FBB309]"><EllipsisIcon className="size-5 text-white dark:text-gray-900" /></div> },
+    { title: "Overdue", count: workloadLoading ? "..." : overdueTasks, iconData: <CircleAlert className="size-10 text-white dark:text-gray-900 fill-[#EF4444]" /> },
   ];
 
   return (
@@ -160,70 +110,40 @@ const Dashboard = () => {
       {/* 1. Health Status */}
       <div className="flex flex-col w-full gap-4 sm:gap-5 py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#2d2f31] shadow-none">
         <div className="flex items-center justify-start w-full">
-          <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-xl sm:text-2xl">
-            Health Status
-          </h1>
+          <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-xl sm:text-2xl">Health Status</h1>
         </div>
-
         <div className="flex flex-col xsm:flex-row items-center md:items-center justify-center md:justify-start w-full gap-6 sm:gap-10 md:gap-20 px-2 sm:px-6 md:px-10 py-2">
           <div className="[--chart-text:#000000] dark:[--chart-text:#FFFFFF]">
-            <CircularProgress
-              percentage={60}
-              startAngle={20}
-              size={160}
-              label="PROJECTS"
-              data={12}
-              fontSize={32}
-              textSize={14}
-              textColor="var(--chart-text)"
-              labelColor="#94A3B8"
-              progressColor="#127FEC"
-              trackColor="#E5E7EB"
-              className="text-[#E5E7EB] dark:text-[#2A2A2A]"
-              innerBg="bg-white dark:bg-[#1E1E1E]"
-            />
+            <CircularProgress percentage={completionPercentage} startAngle={20} size={160} label="TASKS DONE" data={workloadLoading ? "..." : `${completionPercentage}%`} fontSize={28} textSize={12} textColor="var(--chart-text)" labelColor="#94A3B8" progressColor="#127FEC" trackColor="#E5E7EB" className="text-[#E5E7EB] dark:text-[#2A2A2A]" innerBg="bg-white dark:bg-[#1E1E1E]" />
           </div>
-
           <div className="flex flex-col items-center md:items-start justify-center gap-2 text-center md:text-left">
-            <h1 className="text-[#94A3B8] dark:text-gray-400 font-semibold text-base sm:text-lg">
-              Spiral Goal Progress
-            </h1>
-
+            <h1 className="text-[#94A3B8] dark:text-gray-400 font-semibold text-base sm:text-lg">Personal Task Progress</h1>
             <div className="flex items-center gap-3">
-              <h1 className="text-black dark:text-white font-bold text-xl sm:text-3xl">
-                +5%
-              </h1>
-
+              <h1 className="text-black dark:text-white font-bold text-xl sm:text-3xl">{workloadLoading ? "..." : `${completedTasks}/${totalTasks}`}</h1>
               <div className="flex items-center justify-center px-3 py-1 rounded-full bg-[#ECFDF5] dark:bg-green-900/20 border border-[#D1FAE5]">
-                <p className="text-[#10B981] dark:text-green-400 font-bold text-[9px] sm:text-[10px] tracking-wide uppercase">
-                  UP FROM LAST WEEK
-                </p>
+                <p className="text-[#10B981] dark:text-green-400 font-bold text-[9px] sm:text-[10px] tracking-wide uppercase">COMPLETED</p>
               </div>
             </div>
-
-            <h1 className="text-[#CBD5E1] dark:text-gray-500 font-medium text-xs sm:text-sm tracking-wide">
-              Target: 80% by Friday
-            </h1>
+            <h1 className="text-[#CBD5E1] dark:text-gray-500 font-medium text-xs sm:text-sm tracking-wide">{workloadError || (totalTasks ? `${completionPercentage}% of assigned tasks` : "No assigned tasks")}</h1>
           </div>
         </div>
       </div>
 
       {/* 2. Sprint Contribution */}
-      <SprintContribution CONTRIBUTIONS={CONTRIBUTIONS} />
+      <SprintContribution CONTRIBUTIONS={[]} />
 
       {/* 3. Task Status Distribution */}
       <div className="flex items-center justify-start w-full shadow-[0_0_10px_0_#54545440]">
-        <TaskStatusDistribution task={TASK_STATUS} />
+        {workloadLoading && <p className="w-full p-6 text-sm text-gray-500 dark:text-gray-400">Loading task status...</p>}
+        {!workloadLoading && workloadError && <p className="w-full p-6 text-sm text-red-500">{workloadError}</p>}
+        {!workloadLoading && !workloadError && totalTasks === 0 && <p className="w-full p-6 text-sm text-gray-500 dark:text-gray-400">No assigned tasks.</p>}
+        {!workloadLoading && !workloadError && totalTasks > 0 && <TaskStatusDistribution task={statusData} />}
       </div>
 
       {/* 4. Upcoming Deadlines with Filter Functionality */}
       <div className="flex flex-col items-center justify-start w-full gap-y-7 shadow-[0_0_10px_0_#54545440] dark:shadow-[0_0_12px_#00000080] py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-transparent dark:border-[#2A2A2A]">
-
         <div className="flex items-center justify-between w-full">
-          <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-2xl">
-            Upcoming Deadlines
-          </h1>
-
+          <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-2xl">Upcoming Deadlines</h1>
           <div className="flex items-center gap-4">
             {/* Filter Dropdown/Toggle Simulation */}
             <select
@@ -235,16 +155,9 @@ const Dashboard = () => {
               <option value="MEDIUM">Medium Only</option>
               <option value="LOW">Low Only</option>
             </select>
-
-            <motion.p
-              whileHover={{ scale: 1.08, x: 6 }}
-              className="text-[#C05328] dark:text-blue-400 text-lg font-medium cursor-pointer hover:underline"
-            >
-              View All
-            </motion.p>
+            <motion.p whileHover={{ scale: 1.08, x: 6 }} className="text-[#C05328] dark:text-blue-400 text-lg font-medium cursor-pointer hover:underline">View All</motion.p>
           </div>
         </div>
-
         <div className="flex flex-wrap items-center justify-start w-full gap-6 px-0 min-h-[100px]">
           <AnimatePresence mode="popLayout">
             {filteredDeadlines.map((item) => (
@@ -259,14 +172,17 @@ const Dashboard = () => {
               </motion.div>
             ))}
           </AnimatePresence>
+          {!workloadLoading && !workloadError && filteredDeadlines.length === 0 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">No upcoming deadlines.</p>
+          )}
+          {workloadError && <p className="text-sm text-red-500">{workloadError}</p>}
         </div>
       </div>
 
       {/* 5. Recent Activity */}
       <div className="flex flex-col items-center justify-start w-full shadow-[0_0_10px_0_#54545440]">
-        <RecentActivityCard />
+        <RecentActivityCard tasks={tasks} loading={workloadLoading} />
       </div>
-
     </div>
   );
 };

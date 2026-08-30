@@ -39,3 +39,15 @@ export const getUser = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name, email FROM users WHERE id != $1 AND is_active = true`,
+      [req.user.id]
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+};
