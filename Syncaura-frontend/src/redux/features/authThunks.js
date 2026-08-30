@@ -63,7 +63,11 @@ export const refreshAccessToken = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) throw new Error("No refresh token");
+      if (!refreshToken) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("token");
+        return rejectWithValue("Session expired");
+      }
 
       const res = await api.post("/auth/refresh", { refreshToken });
 
@@ -90,7 +94,7 @@ export const fetchUserProfile = createAsyncThunk(
   "auth/fetchUserProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get("/auth/profile");
+      const res = await api.get("/profile");
       return res.data;
     } catch (err) {
       return rejectWithValue(
@@ -104,7 +108,7 @@ export const updateUserProfile = createAsyncThunk(
   "auth/updateUserProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      const res = await api.put("/auth/profile", profileData);
+      const res = await api.put("/profile", profileData);
       return res.data;
     } catch (err) {
       return rejectWithValue(
