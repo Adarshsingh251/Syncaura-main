@@ -222,6 +222,7 @@ CREATE TABLE IF NOT EXISTS leaves (
   from_date TIMESTAMP NOT NULL,
   to_date TIMESTAMP NOT NULL,
   reason TEXT NOT NULL,
+  leave_type VARCHAR(100) DEFAULT 'Casual Leave',
   status VARCHAR(50) DEFAULT 'pending',
   reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
   reviewed_at TIMESTAMP DEFAULT NULL,

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Provider, useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import ScrollToTop from "./components/ScrollToTop";
 import MainLayout from "./layouts/MainLayout";
 import { lazy, Suspense, useEffect } from "react";
@@ -40,9 +40,6 @@ import {
 import { Loader } from "lucide-react";
 import ProtectRoute from "./RouteProtection/ProtectRoute";
 
-
-
-
 export default function App() {
   const dispatch = useDispatch();
   const isDark = useSelector((state) => state.theme.isDark);
@@ -50,13 +47,20 @@ export default function App() {
 
   useEffect(() => {
     const initAuth = async () => {
-      try {
-        const result = await dispatch(refreshAccessToken());
-        if (refreshAccessToken.fulfilled.match(result)) {
-          dispatch(fetchUserProfile());
+      const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+      if (token) {
+        try {
+          await dispatch(fetchUserProfile()).unwrap();
+        } catch (profileErr) {
+          try {
+            const refreshRes = await dispatch(refreshAccessToken()).unwrap();
+            if (refreshRes?.accessToken) {
+              await dispatch(fetchUserProfile()).unwrap();
+            }
+          } catch (refreshErr) {
+            console.warn("Session restore failed:", refreshErr);
+          }
         }
-      } catch (err) {
-        console.log(err);
       }
     };
 

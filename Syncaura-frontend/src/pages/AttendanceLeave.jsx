@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AttendanceList from "../components/AttendanceLeave/AttendanceList";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
+import api from "../config/axios";
 
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
@@ -123,9 +124,6 @@ const AttendanceLeave = () => {
     [leaveStorageKey],
   );
 
-  // Until an attendance API exists, this keeps a user's daily status stable across
-  // refreshes, logins, and logouts. Replace this with a GET attendance-status call
-  // when the backend endpoint is available.
   useEffect(() => {
     const emptyState = getInitialAttendanceState();
 
@@ -148,19 +146,11 @@ const AttendanceLeave = () => {
     const todayRecord = attendanceStateRef.current.records[getToday()] || {};
     let isCurrent = true;
 
-    queueMicrotask(() => {
-      if (!isCurrent) return;
-
-      setCheckInTime(todayRecord.checkInTime || null);
-      setCheckOutTime(todayRecord.checkOutTime || null);
-      setAttendanceStats((previousStats) =>
-        previousStats.map((stat) =>
-          stat.title === "Present Days"
-            ? { ...stat, value: attendanceStateRef.current.presentDays }
-            : stat,
-        ),
-      );
-    });
+    if (isCurrent) {
+      setCheckInTime(todayRecord.in || null);
+      setCheckOutTime(todayRecord.out || null);
+      setSelectedTab(todayRecord.in && !todayRecord.out ? "Check-Out" : "Check-In");
+    }
 
     return () => {
       isCurrent = false;
@@ -171,81 +161,90 @@ const AttendanceLeave = () => {
   // that date's stored check-in/check-out times instead of always showing today's.
   useEffect(() => {
     const record = attendanceStateRef.current.records[attendanceDate] || {};
-    setCheckInTime(record.checkInTime || null);
-    setCheckOutTime(record.checkOutTime || null);
-    setSelectedTab(record.checkInTime ? "Check-Out" : "Check-In");
+    setCheckInTime(record.in || null);
+    setCheckOutTime(record.out || null);
+    setSelectedTab(record.in && !record.out ? "Check-Out" : "Check-In");
   }, [attendanceDate]);
 
-  const saveAttendanceState = (nextState) => {
-    attendanceStateRef.current = nextState;
-    try {
-      localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
-    } catch {
-      // storage quota exceeded — silently ignore
-    }
-  };
-
-  const canCheckIn = !checkInTime && !checkOutTime;
-  const canCheckOut = Boolean(checkInTime) && !checkOutTime;
+  const canCheckIn = !checkInTime;
+  const canCheckOut = Boolean(checkInTime && !checkOutTime);
 
   const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In" && !canCheckIn) return;
+    if (selectedTab === "Check-In" && !canCheckIn) {
+      toast.info("You have already checked in for this date.");
+      return;
+    }
+
     if (selectedTab === "Check-Out" && !canCheckOut) {
       if (!checkInTime) {
-        toast.error("Please check in before checking out!");
-      } else if (checkOutTime) {
-        toast.info(`You have already checked out today at ${checkOutTime}`);
+        toast.error("Please check in before checking out.");
+      } else {
+        toast.info("You have already completed attendance for this date.");
       }
-      setShowPopup(false);
       return;
     }
 
     setIsSubmitting(true);
-    // This is UI-only until the backend provides attendance endpoints.
+    const now = new Date();
+    const formattedTime = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    const isToday = attendanceDate === getToday();
+
     setTimeout(() => {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
+      const currentRecords = { ...attendanceStateRef.current.records };
+      const selectedRecord = currentRecords[attendanceDate] || {};
 
       if (selectedTab === "Check-In") {
-        setCheckInTime(timeString);
-
-        const nextState = {
-          presentDays: attendanceStateRef.current.presentDays + 1,
-          records: {
-            ...attendanceStateRef.current.records,
-            [attendanceDate]: { ...currentRecord, checkInTime: timeString },
-          },
+        currentRecords[attendanceDate] = {
+          ...selectedRecord,
+          in: formattedTime,
+          status: "Present",
         };
-
-        saveAttendanceState(nextState);
-
-        setAttendanceStats((previousStats) =>
-          previousStats.map((stat) =>
-            stat.title === "Present Days"
-              ? { ...stat, value: nextState.presentDays }
-              : stat,
-          ),
-        );
-
+        if (!selectedRecord.in) {
+          attendanceStateRef.current.presentDays += 1;
+        }
+        setCheckInTime(formattedTime);
         setSelectedTab("Check-Out");
-        toast.success(`Attendance marked successfully for ${attendanceDate}!`);
-      } else if (selectedTab === "Check-Out") {
-        setCheckOutTime(timeString);
-
-        saveAttendanceState({
-          ...attendanceStateRef.current,
-          records: {
-            ...attendanceStateRef.current.records,
-            [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
-          },
-        });
-
-        toast.success("Checked out successfully!");
+        toast.success(
+          isToday
+            ? `Checked in successfully at ${formattedTime}!`
+            : `Checked in for ${attendanceDate} at ${formattedTime}!`,
+        );
+      } else {
+        currentRecords[attendanceDate] = {
+          ...selectedRecord,
+          out: formattedTime,
+        };
+        setCheckOutTime(formattedTime);
+        toast.success(
+          isToday
+            ? `Checked out successfully at ${formattedTime}!`
+            : `Checked out for ${attendanceDate} at ${formattedTime}!`,
+        );
       }
+
+      attendanceStateRef.current.records = currentRecords;
+
+      try {
+        localStorage.setItem(
+          attendanceStorageKey,
+          JSON.stringify(attendanceStateRef.current),
+        );
+      } catch {
+        // silently ignore quota issues
+      }
+
+      setAttendanceStats((prev) =>
+        prev.map((stat) =>
+          stat.title === "Present Days"
+            ? { ...stat, value: attendanceStateRef.current.presentDays }
+            : stat,
+        ),
+      );
 
       setIsSubmitting(false);
       setShowPopup(false);
@@ -254,63 +253,34 @@ const AttendanceLeave = () => {
 
   const fetchLeaves = useCallback(async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-
-      if (!token) {
-        // Fallback to localStorage if no token
-        try {
-          const stored = localStorage.getItem(leaveStorageKey);
-          if (stored) {
-            setLeaveData(JSON.parse(stored));
-          }
-        } catch {
-          // ignore malformed local data
-        }
-        return;
-      }
-
+      const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
       const isAdminOrCoAdmin = user?.role === "admin" || user?.role === "co-admin";
+      const endpoint = isAdminOrCoAdmin ? "/leave/allleaves" : "/leave/myleaves";
 
-      const endpoint = isAdminOrCoAdmin
-        ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
-        : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
+      if (token) {
+        const response = await api.get(endpoint, {
+          params: { page: currentPage, limit: 5 },
+        });
 
-      const response = await fetch(endpoint, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+        const data = response.data;
+        setTotalPages(data.totalPages || 1);
 
-      const data = await response.json();
-      setTotalPages(data.totalPages || 1);
-
-      if (data.leaves && data.leaves.length > 0) {
-        const formattedLeaves = data.leaves.map((leave) => ({
-          ...leave,
-          startDate: leave.from_date || leave.startDate,
-          endDate: leave.to_date || leave.endDate,
-          type: leave.leave_type || leave.type || "Leave",
-        }));
-        setLeaveData(formattedLeaves);
-      } else {
-        // If backend returns an empty leaves list, fall back to local storage
-        try {
-          const stored = localStorage.getItem(leaveStorageKey);
-          if (stored) {
-            const localLeaves = JSON.parse(stored);
-            if (Array.isArray(localLeaves) && localLeaves.length > 0) {
-              setLeaveData(localLeaves);
-            }
-          }
-        } catch {
-          // ignore malformed local data
+        if (data.leaves && data.leaves.length > 0) {
+          const formattedLeaves = data.leaves.map((leave) => ({
+            ...leave,
+            startDate: leave.from_date || leave.startDate,
+            endDate: leave.to_date || leave.endDate,
+            type: leave.leave_type || leave.type || "Casual Leave",
+            leave_type: leave.leave_type || leave.type || "Casual Leave",
+            user_name: leave.user_name || leave.employee_name || leave.userName,
+            user_email: leave.user_email || leave.email,
+          }));
+          setLeaveData(formattedLeaves);
+          return;
         }
       }
-    } catch (error) {
-      console.warn("Error fetching leaves from backend, using local fallback:", error.message);
-      toast.error("Failed to load leave requests from the server — showing local data.");
+
+      // If no token or empty list, fall back to local storage
       try {
         const stored = localStorage.getItem(leaveStorageKey);
         if (stored) {
@@ -320,7 +290,20 @@ const AttendanceLeave = () => {
           }
         }
       } catch {
-        // ignore malformed local data
+        // ignore
+      }
+    } catch (error) {
+      console.warn("Error fetching leaves from backend, using local fallback:", error.message);
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          const localLeaves = JSON.parse(stored);
+          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+            setLeaveData(localLeaves);
+          }
+        }
+      } catch {
+        // ignore
       }
     }
   }, [user?.role, currentPage, leaveStorageKey]);
@@ -342,17 +325,20 @@ const AttendanceLeave = () => {
         (item) =>
           (item.reason || "").toLowerCase().includes(debouncedValue) ||
           (item.status || "").toLowerCase().includes(debouncedValue) ||
-          (item.type || "").toLowerCase().includes(debouncedValue),
+          (item.type || "").toLowerCase().includes(debouncedValue) ||
+          (item.leave_type || "").toLowerCase().includes(debouncedValue) ||
+          (item.user_name || item.userName || "").toLowerCase().includes(debouncedValue) ||
+          (item.user_email || item.email || "").toLowerCase().includes(debouncedValue),
       );
     }
 
     if (appliedFilters) {
       if (appliedFilters.status && appliedFilters.status !== "All") {
-        result = result.filter((item) => item.status === appliedFilters.status);
+        result = result.filter((item) => String(item.status || "").toLowerCase() === appliedFilters.status.toLowerCase());
       }
 
       if (appliedFilters.type && appliedFilters.type !== "All") {
-        result = result.filter((item) => item.type === appliedFilters.type);
+        result = result.filter((item) => (item.type || item.leave_type) === appliedFilters.type);
       }
 
       if (appliedFilters.date) {
@@ -399,6 +385,30 @@ const AttendanceLeave = () => {
     setOpenModel(true);
   };
 
+  const handleStatusChange = async (leaveItem, newStatus) => {
+    try {
+      const normalizedStatus = newStatus.toLowerCase();
+      const displayStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).toLowerCase();
+
+      if (leaveItem.id) {
+        await api.put(`/leave/${leaveItem.id}/status`, { status: normalizedStatus });
+      }
+
+      syncLeavesToStorage((prev) =>
+        prev.map((item) =>
+          item === leaveItem || (item.id && item.id === leaveItem.id)
+            ? { ...item, status: displayStatus }
+            : item
+        )
+      );
+
+      toast.success(`Leave status updated to ${displayStatus}`);
+    } catch (error) {
+      console.error("Error updating leave status:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to update leave status");
+    }
+  };
+
   const handleOpenEditModal = (leave) => {
     setLeaveToEdit(leave);
     setOpenModel(true);
@@ -409,12 +419,21 @@ const AttendanceLeave = () => {
     setLeaveToEdit(null);
   };
 
-  const handleDeleteLeave = (leave) => {
+  const handleDeleteLeave = async (leave) => {
     if (!window.confirm("Are you sure you want to delete this leave request?")) {
       return;
     }
-    syncLeavesToStorage((prev) => prev.filter((item) => item !== leave));
-    toast.success("Leave request deleted successfully.");
+    try {
+      if (leave.id) {
+        await api.delete(`/leave/${leave.id}`);
+      }
+      syncLeavesToStorage((prev) => prev.filter((item) => item !== leave && (!item.id || item.id !== leave.id)));
+      toast.success("Leave request deleted successfully.");
+      fetchLeaves();
+    } catch (error) {
+      console.error("Error deleting leave:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to delete leave request");
+    }
   };
 
   return (
@@ -645,21 +664,24 @@ const AttendanceLeave = () => {
           border-t border-b border-[#EDEDED] dark:border-[#575757]
           bg-[#FFFFFF] dark:bg-[#000000]
           shadow-[0_4px_10px_0_rgba(0,0,0,0.25)]
-          px-11 py-5"
+          px-10 py-4"
         >
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[24%] text-center">
-            Date Range
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[20%] text-left px-3">
+            Applicant
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[20%] text-center px-2">
-            Type
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[15%] text-center px-2">
+            Leave Type
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[34%] text-left px-4">
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[20%] text-center px-2">
+            Duration
+          </h1>
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[23%] text-left px-3">
             Reason
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[14%] text-center">
             Status
           </h1>
-          <h1 className="uppercase text-base font-medium dark:text-[#FFFFFF] text-[#000000] w-[11%] text-center">
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[8%] text-center">
             Actions
           </h1>
         </div>
@@ -668,6 +690,8 @@ const AttendanceLeave = () => {
           LeaveData={filteredLeaveHistory}
           currId={selectedId}
           setCurrId={setSelectedId}
+          isAdminOrCoAdmin={user?.role === "admin" || user?.role === "co-admin"}
+          onStatusChange={handleStatusChange}
           onEditLeave={handleOpenEditModal}
           onDeleteLeave={handleDeleteLeave}
         />
@@ -711,6 +735,8 @@ const AttendanceLeave = () => {
           currId={selectedId}
           setCurrId={setSelectedId}
           LeaveData={filteredLeaveHistory}
+          isAdminOrCoAdmin={user?.role === "admin" || user?.role === "co-admin"}
+          onStatusChange={handleStatusChange}
           onEditLeave={handleOpenEditModal}
           onDeleteLeave={handleDeleteLeave}
         />
@@ -725,7 +751,12 @@ const AttendanceLeave = () => {
       </button>
 
       {openModel && (
-        <LeaveModel onClose={handleCloseLeaveModal} setLeaveData={syncLeavesToStorage} editingLeave={leaveToEdit} />
+        <LeaveModel
+          onClose={handleCloseLeaveModal}
+          setLeaveData={syncLeavesToStorage}
+          editingLeave={leaveToEdit}
+          onSuccess={() => fetchLeaves()}
+        />
       )}
     </div>
   );

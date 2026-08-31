@@ -8,15 +8,25 @@ import {
   updateUserProfile,
 } from "../features/authThunks";
 
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const storedToken = localStorage.getItem("accessToken") || localStorage.getItem("token");
+const storedUser = getStoredUser();
 
 const initialState = {
-  user: null,
+  user: storedUser,
   token: storedToken,
   isLoading: false,
   error: null,
   isAuthenticated: !!storedToken,
-  authChecking: !!storedToken,
+  authChecking: !!storedToken && !storedUser,
   profileLoading: false,
   localProfilePic: localStorage.getItem("syncaura_global_photo") || null, // 👈 Independent photo state
 };
@@ -37,6 +47,11 @@ const authSlice = createSlice({
       state.user = user;
       state.token = token;
       state.isAuthenticated = true;
+      if (user) {
+        try {
+          localStorage.setItem("user", JSON.stringify(user));
+        } catch {}
+      }
       if (token) {
         localStorage.setItem("accessToken", token);
         localStorage.setItem("token", token);
@@ -53,6 +68,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.authChecking = false;
+      localStorage.removeItem("user");
       localStorage.removeItem("token");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
@@ -69,7 +85,6 @@ const authSlice = createSlice({
         if (state.user) state.user.profilePic = null;
       }
     }
-
   },
   extraReducers: (builder) => {
     builder
@@ -88,6 +103,11 @@ const authSlice = createSlice({
         state.token = token;
         state.isAuthenticated = true;
         
+        if (user) {
+          try {
+            localStorage.setItem("user", JSON.stringify(user));
+          } catch {}
+        }
         if (token) localStorage.setItem("accessToken", token);
         if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
         const key = getPhotoStorageKey(user);
@@ -121,6 +141,11 @@ const authSlice = createSlice({
         state.token = token;
         state.isAuthenticated = true;
 
+        if (user) {
+          try {
+            localStorage.setItem("user", JSON.stringify(user));
+          } catch {}
+        }
         if (token) localStorage.setItem("accessToken", token);
         if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
         const key = getPhotoStorageKey(user);
@@ -141,7 +166,7 @@ const authSlice = createSlice({
 
       // Refresh Token
       .addCase(refreshAccessToken.pending, (state) => {
-        state.authChecking = true;
+        state.authChecking = !state.user;
         state.isLoading = true;
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
@@ -157,6 +182,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
+        localStorage.removeItem("user");
       })
 
       // Fetch User Profile
@@ -170,6 +196,12 @@ const authSlice = createSlice({
         state.user = profile;
         state.authChecking = false;  
         
+        if (profile) {
+          try {
+            localStorage.setItem("user", JSON.stringify(profile));
+          } catch {}
+        }
+
         if (state.user) {
           const key = getPhotoStorageKey(profile);
           if (key) {
@@ -198,6 +230,11 @@ const authSlice = createSlice({
           ...state.user,
           ...profile,
         };
+        if (state.user) {
+          try {
+            localStorage.setItem("user", JSON.stringify(state.user));
+          } catch {}
+        }
         const key = getPhotoStorageKey(state.user);
         if (key && state.user) {
           const savedPhoto = localStorage.getItem(key);

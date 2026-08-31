@@ -95,7 +95,7 @@ const navigate = useNavigate();
     count: 0,
   },
   {
-    label: "My Attendance",
+    label: "myAttendance",
     icon: UserCheck,
     path: "/my-attendance",
     count: 0,
