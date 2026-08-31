@@ -70,6 +70,16 @@ const getInitialAttendanceState = () => ({
 
 const AttendanceLeave = () => {
   const user = useSelector((state) => state.auth.user);
+  let storedUser = null;
+  try {
+    storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    // ignore
+  }
+  const currentUser = user || storedUser;
+  const currentRole = (currentUser?.role || "").toLowerCase();
+  const isAdminOrCoAdmin = currentRole === "admin" || currentRole === "co-admin" || currentRole === "coadmin";
+
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
@@ -95,8 +105,8 @@ const AttendanceLeave = () => {
 
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const attendanceStateRef = useRef(getInitialAttendanceState());
-  const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
-  const leaveStorageKey = `${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
+  const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${currentUser?.id || currentUser?.email || "current-user"}`;
+  const leaveStorageKey = `${LEAVE_STORAGE_PREFIX}${currentUser?.id || currentUser?.email || "current-user"}`;
 
   // Load leave data from localStorage (persists across refreshes)
   const [leaveData, setLeaveData] = useState(() => {
@@ -123,6 +133,72 @@ const AttendanceLeave = () => {
     },
     [leaveStorageKey],
   );
+
+  const fetchLeaves = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+      let activeUser = user;
+      if (!activeUser) {
+        try {
+          activeUser = JSON.parse(localStorage.getItem("user") || "null");
+        } catch {
+          // ignore
+        }
+      }
+      const role = (activeUser?.role || "").toLowerCase();
+      const isAdmin = role === "admin" || role === "co-admin" || role === "coadmin";
+      const endpoint = isAdmin ? "/leave/allleaves" : "/leave/myleaves";
+
+      if (token) {
+        const response = await api.get(endpoint, {
+          params: { page: currentPage, limit: 10 },
+        });
+
+        const data = response.data;
+        setTotalPages(data.totalPages || 1);
+
+        if (Array.isArray(data.leaves)) {
+          const formattedLeaves = data.leaves.map((leave) => ({
+            ...leave,
+            startDate: leave.from_date || leave.startDate,
+            endDate: leave.to_date || leave.endDate,
+            type: leave.leave_type || leave.type || "Casual Leave",
+            leave_type: leave.leave_type || leave.type || "Casual Leave",
+            user_name: leave.user_name || leave.employee_name || leave.userName || "Employee",
+            user_email: leave.user_email || leave.email || "—",
+          }));
+          setLeaveData(formattedLeaves);
+          return;
+        }
+      }
+
+      // If no token or empty list, fall back to local storage
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          const localLeaves = JSON.parse(stored);
+          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+            setLeaveData(localLeaves);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    } catch (error) {
+      console.warn("Error fetching leaves from backend, using local fallback:", error.message);
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          const localLeaves = JSON.parse(stored);
+          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+            setLeaveData(localLeaves);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [user, currentPage, leaveStorageKey]);
 
   useEffect(() => {
     const emptyState = getInitialAttendanceState();
@@ -250,63 +326,6 @@ const AttendanceLeave = () => {
       setShowPopup(false);
     }, 1000);
   };
-
-  const fetchLeaves = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
-      const isAdminOrCoAdmin = user?.role === "admin" || user?.role === "co-admin";
-      const endpoint = isAdminOrCoAdmin ? "/leave/allleaves" : "/leave/myleaves";
-
-      if (token) {
-        const response = await api.get(endpoint, {
-          params: { page: currentPage, limit: 5 },
-        });
-
-        const data = response.data;
-        setTotalPages(data.totalPages || 1);
-
-        if (data.leaves && data.leaves.length > 0) {
-          const formattedLeaves = data.leaves.map((leave) => ({
-            ...leave,
-            startDate: leave.from_date || leave.startDate,
-            endDate: leave.to_date || leave.endDate,
-            type: leave.leave_type || leave.type || "Casual Leave",
-            leave_type: leave.leave_type || leave.type || "Casual Leave",
-            user_name: leave.user_name || leave.employee_name || leave.userName,
-            user_email: leave.user_email || leave.email,
-          }));
-          setLeaveData(formattedLeaves);
-          return;
-        }
-      }
-
-      // If no token or empty list, fall back to local storage
-      try {
-        const stored = localStorage.getItem(leaveStorageKey);
-        if (stored) {
-          const localLeaves = JSON.parse(stored);
-          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
-            setLeaveData(localLeaves);
-          }
-        }
-      } catch {
-        // ignore
-      }
-    } catch (error) {
-      console.warn("Error fetching leaves from backend, using local fallback:", error.message);
-      try {
-        const stored = localStorage.getItem(leaveStorageKey);
-        if (stored) {
-          const localLeaves = JSON.parse(stored);
-          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
-            setLeaveData(localLeaves);
-          }
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }, [user?.role, currentPage, leaveStorageKey]);
 
   useEffect(() => {
     fetchLeaves();
@@ -690,7 +709,7 @@ const AttendanceLeave = () => {
           LeaveData={filteredLeaveHistory}
           currId={selectedId}
           setCurrId={setSelectedId}
-          isAdminOrCoAdmin={user?.role === "admin" || user?.role === "co-admin"}
+          isAdminOrCoAdmin={isAdminOrCoAdmin}
           onStatusChange={handleStatusChange}
           onEditLeave={handleOpenEditModal}
           onDeleteLeave={handleDeleteLeave}
@@ -735,7 +754,7 @@ const AttendanceLeave = () => {
           currId={selectedId}
           setCurrId={setSelectedId}
           LeaveData={filteredLeaveHistory}
-          isAdminOrCoAdmin={user?.role === "admin" || user?.role === "co-admin"}
+          isAdminOrCoAdmin={isAdminOrCoAdmin}
           onStatusChange={handleStatusChange}
           onEditLeave={handleOpenEditModal}
           onDeleteLeave={handleDeleteLeave}
