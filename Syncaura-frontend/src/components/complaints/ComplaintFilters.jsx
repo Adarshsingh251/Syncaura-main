@@ -18,6 +18,15 @@ export default function ComplaintFilters({ onClose, onApply }) {
   const [status, setStatus] = useState(items[0]);
   const [order, setOrder] = useState(orderOptions[0]);
   const [date, setDate] = useState("");
+  useEffect(() => {
+  onApply({
+    status,
+    order,
+    date,
+  });
+}, [status, order, date, onApply]);
+
+  const statusItems = ["Resolved", "In Progress", "Open"];
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10">
@@ -27,21 +36,6 @@ export default function ComplaintFilters({ onClose, onApply }) {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full bg-white dark:bg-black rounded-2xl shadow-[0_0_10px_1px_#ACACAC33] p-4 sm:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center lg:items-center"
       >
-        <motion.button
-          initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
-          whileHover={{ scale: 1.15, rotate: 90 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className="fixed top-4 right-10 md:right-15 z-100"
-          onClick={() => {
-            onApply(null);
-            onClose();
-          }}
-        >
-          <X className="text-black dark:text-white size-5" />
-        </motion.button>
 
         {/* Complaint ID Order */}
         <div className="flex flex-col gap-2 w-full lg:w-1/4">

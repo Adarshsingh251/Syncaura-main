@@ -15,6 +15,16 @@ export default function ProjectFilter({ onClose, onApply }) {
   const [priority, setPriority] = useState(items[0]);
   const [team, setTeam] = useState(t("projectFilter_allMembers", "All Members"));
   const [date, setDate] = useState("");
+
+  const priorityItems = ["Low", "Medium", "High", "Critical"];
+
+  const applyFilter = (changes = {}) => {
+    onApply({
+      priority: changes.priority ?? priority,
+      team: changes.team ?? team,
+      date: changes.date ?? date,
+    });
+  };
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10 relative">
       <motion.button
@@ -67,7 +77,11 @@ export default function ProjectFilter({ onClose, onApply }) {
               <input
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setDate(value);
+                  applyFilter({ date: value });
+                }}
                 className="
           w-full rounded-full border border-gray-200
           px-4 py-2 text-sm
@@ -97,12 +111,14 @@ export default function ProjectFilter({ onClose, onApply }) {
               {items.map((item) => (
                 <button
                   key={item}
-                  onClick={() => setPriority(item)}
-                  className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${
-                    priority === item
+                  onClick={() => {
+                    setPriority(item);
+                    applyFilter({ priority: item });
+                  }}
+                  className={`btn-hover px-4 py-1.5 rounded-full text-sm border ${priority === item
                       ? "border-blue-500 text-blue-500 dark:border-[#73FBFD] dark:text-[#73FBFD]"
                       : "border-gray-300 text-gray-500"
-                  }`}
+                    }`}
                 >
                   {item}
                 </button>

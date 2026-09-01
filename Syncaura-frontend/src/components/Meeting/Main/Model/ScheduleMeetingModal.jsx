@@ -64,17 +64,24 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
       return;
     }
 
-    onSave({
-      id: Date.now(),
-      platform: data.platform,
-      title: data.title,
-      startTime: startDateTime.toISOString(),
-      endTime: endDateTime.toISOString(),
-      avatarCount: data.participants
-        ? data.participants.split(",").length
-        : 1,
-      isDoc: data.isDoc,
-    });
+    // Build ISO strings without UTC offset conversion
+// Build a plain ISO-formatted string WITHOUT converting to UTC
+const startTimeStr = `${data.date}T${data.start}:00+05:30`;
+const endTimeStr = data.end 
+  ? `${data.date}T${data.end}:00+05:30` 
+  : `${data.date}T${data.start}:00+05:30`;
+
+onSave({
+  id: Date.now(),
+  platform: data.platform,
+  title: data.title,
+  startTime: startTimeStr,
+  start_time: startTimeStr,
+  endTime: endTimeStr,
+  end_time: endTimeStr,
+  avatarCount: data.participants ? data.participants.split(",").length : 1,
+  isDoc: data.isDoc,
+});
 
     onClose();
   };
@@ -273,6 +280,7 @@ export default function ScheduleMeetingModal({ onClose, onSave }) {
             {/* Footer */}
             <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6">
               <button
+                type="button"
                 onClick={onClose}
                 className="text-sm text-black dark:text-white btn-hover"
               >
