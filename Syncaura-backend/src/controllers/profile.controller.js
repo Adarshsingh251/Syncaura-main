@@ -48,12 +48,12 @@ export const updateProfile = async (req, res, next) => {
        RETURNING *;
       `,
       [
-        name,
-        first_name,
-        last_name,
-        phone,
-        language,
-        profile_pic,
+        name ?? null,
+        first_name ?? null,
+        last_name ?? null,
+        phone ?? null,
+        language ?? null,
+        profile_pic ?? null,
         userId,
       ]
     );
