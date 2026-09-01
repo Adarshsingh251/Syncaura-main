@@ -11,20 +11,23 @@ const PRIORITY_COLORS = {
   high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
-const CreateTaskModal = ({
-  onClose,
-  onSubmit,
-  isLoading,
-  isAdmin,
-  currentUserEmail,
-}) => {
+const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
   const { t } = useTranslation();
+
+  // Default task deadline in days (set by admin in dashboard, default 10 days)
+  const configuredDays = parseInt(localStorage.getItem("taskDeadlineDays") || "10", 10);
+  const defaultDeadline = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + configuredDays);
+    return d.toISOString().split("T")[0];
+  })();
+
   const [form, setForm] = useState({
     title: "",
     description: "",
     priority: "medium",
-    deadline: "",
-    assignedTo: isAdmin ? "" : currentUserEmail || "",
+    deadline: isAdmin ? "" : defaultDeadline,
+    assignedTo: "",
     status: "TODO",
   });
   const [errors, setErrors] = useState({});
@@ -185,8 +188,12 @@ const CreateTaskModal = ({
                 name="deadline"
                 value={form.deadline}
                 onChange={handleChange}
-                className="date-input w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                disabled={!isAdmin}
+                className={`date-input w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all ${!isAdmin ? 'opacity-70 cursor-not-allowed' : ''}`}
               />
+              {!isAdmin && (
+                <p className="text-[10px] text-gray-400 mt-0.5">{configuredDays}-day deadline (set by admin)</p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">

@@ -6,15 +6,31 @@ import {
   listCalendarEvents,
 } from "../services/googleCalendar.js";
 
-// ✅ Sync Google Calendar (import from Google + push local unsynced meetings)
+// Helper: Formats string strictly to local time without double-shifting UTC offsets
+const parseToLocalString = (dateInput) => {
+  if (!dateInput) return null;
+  // If string contains time (T), extract YYYY-MM-DDTHH:mm:ss directly
+  if (typeof dateInput === 'string' && dateInput.includes('T')) {
+    return dateInput.substring(0, 19);
+  }
+  return `${dateInput}T00:00:00`;
+};
+
+// Helper: Ensures string sent to Google Calendar explicitly includes IST (+05:30)
+const formatForGoogle = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr.includes('+') || dateStr.endsWith('Z')) return dateStr;
+  return `${dateStr}+05:30`;
+};
+
+// 🟢 Sync Google Calendar
 export const syncCalendar = async (req, res) => {
   try {
-    const tokens = req.googleTokens;
+    const tokens = req.user?.googleTokens;
     if (!tokens || (!tokens.access_token && !tokens.refresh_token)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Google Calendar not connected. Please connect your Google account first.",
+        message: "Google Calendar not connected. Please connect your Google account first.",
       });
     }
 
@@ -22,82 +38,21 @@ export const syncCalendar = async (req, res) => {
     const googleEvents = await listCalendarEvents({ tokens, userId });
     let importedCount = 0;
 
-    // Import Google Calendar events into DB
     for (const gEvent of googleEvents) {
-      if (!gEvent.id) continue;
-
-      const existing = await pool.query(
-        "SELECT id FROM meetings WHERE google_event_id = $1",
-        [gEvent.id]
-      );
-
       const title = gEvent.summary || "Google Calendar Event";
       const description = gEvent.description || "";
-      const startTime = gEvent.start?.dateTime || gEvent.start?.date;
-      const endTime = gEvent.end?.dateTime || gEvent.end?.date;
+      const startTime = parseToLocalString(gEvent.start?.dateTime || gEvent.start?.date);
+      const endTime = parseToLocalString(gEvent.end?.dateTime || gEvent.end?.date);
       const meetLink = gEvent.hangoutLink || gEvent.htmlLink || null;
 
       if (!startTime || !endTime) continue;
 
-      if (existing.rowCount === 0) {
-        await pool.query(
-          `INSERT INTO meetings (title, description, start_time, end_time, google_event_id, google_meet_link, created_by)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [title, description, startTime, endTime, gEvent.id, meetLink, userId]
-        );
-        importedCount++;
-      } else {
-        await pool.query(
-          `UPDATE meetings SET
-            title = $1,
-            description = $2,
-            start_time = $3,
-            end_time = $4,
-            google_meet_link = COALESCE($5, google_meet_link),
-            updated_at = CURRENT_TIMESTAMP
-           WHERE google_event_id = $6`,
-          [title, description, startTime, endTime, meetLink, gEvent.id]
-        );
-      }
+      importedCount++;
     }
 
-    // Push local unsynced meetings to Google Calendar
-    const unsyncedResult = await pool.query(
-      "SELECT * FROM meetings WHERE created_by = $1 AND (google_event_id IS NULL OR google_event_id = '')",
-      [userId]
-    );
+    const meetingsResult = await pool.query("SELECT * FROM meetings WHERE user_id = $1", [userId]);
+    const meetings = meetingsResult.rows || [];
 
-    for (const localMeeting of unsyncedResult.rows) {
-      try {
-        const createdGEvent = await createCalendarEvent({
-          tokens,
-          userId,
-          title: localMeeting.title,
-          description: localMeeting.description,
-          startTime: localMeeting.start_time,
-          endTime: localMeeting.end_time,
-        });
-
-        if (createdGEvent?.id) {
-          await pool.query(
-            "UPDATE meetings SET google_event_id = $1, google_meet_link = $2 WHERE id = $3",
-            [createdGEvent.id, createdGEvent.hangoutLink || null, localMeeting.id]
-          );
-          importedCount++;
-        }
-      } catch (err) {
-        console.warn(
-          `Failed to push local meeting ID ${localMeeting.id} to Google Calendar:`,
-          err.message
-        );
-      }
-    }
-
-    // Return all meetings
-    const allMeetingsResult = await pool.query(
-      "SELECT * FROM meetings ORDER BY start_time DESC"
-    );
-    const meetings = allMeetingsResult.rows;
     for (const meeting of meetings) {
       const participantsResult = await pool.query(
         "SELECT email FROM meeting_participants WHERE meeting_id = $1",
@@ -113,10 +68,11 @@ export const syncCalendar = async (req, res) => {
       meetings,
     });
   } catch (error) {
-    console.error("Error in syncCalendar controller:", error);
+    console.error("Error in syncCalendar:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to sync calendar",
+      message: "Failed to sync calendar",
+      error: error.message,
     });
   }
 };
@@ -130,20 +86,9 @@ export const createMeeting = async (req, res) => {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return res
-        .status(400)
-        .json({ message: "Invalid date format for startTime or endTime" });
-    }
-
-    if (end <= start) {
-      return res
-        .status(400)
-        .json({ message: "endTime must be after startTime" });
-    }
+    // Pass explicit timezone offset (+05:30) to Google Calendar API
+    const formattedStart = formatForGoogle(startTime);
+    const formattedEnd = formatForGoogle(endTime);
 
     let calendarEvent = null;
 
@@ -157,27 +102,20 @@ export const createMeeting = async (req, res) => {
           userId: req.user?.id,
           title,
           description,
-          startTime,
-          endTime,
+          startTime: formattedStart,
+          endTime: formattedEnd,
         });
       } catch (err) {
-        // console.warn("Calendar sync failed:", err.message);
         console.error("Calendar sync failed:", err);
       }
     }
 
+    const cleanStartTime = parseToLocalString(startTime);
+
     const result = await pool.query(
-      `INSERT INTO meetings (title, description, start_time, end_time, google_event_id, google_meet_link, created_by) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [
-        title,
-        description,
-        startTime,
-        endTime,
-        calendarEvent?.id || null,
-        calendarEvent?.hangoutLink || null,
-        req.user?.id || null,
-      ]
+      `INSERT INTO meetings (title, description, start_time) 
+       VALUES ($1, $2, $3) RETURNING *`,
+      [title, description, cleanStartTime]
     );
 
     const meeting = result.rows[0];
@@ -275,13 +213,16 @@ export const updateMeeting = async (req, res) => {
           userId: req.user?.id,
           title: title || meeting.title,
           description: description || meeting.description,
-          startTime: startTime || meeting.start_time,
-          endTime: endTime || meeting.end_time,
+          startTime: formatForGoogle(startTime || meeting.start_time),
+          endTime: formatForGoogle(endTime || meeting.end_time),
         });
       } catch (err) {
         console.warn("Google Calendar update failed:", err.message);
       }
     }
+
+    const cleanStartTime = parseToLocalString(startTime);
+    const cleanEndTime = parseToLocalString(endTime);
 
     const result = await pool.query(
       `UPDATE meetings SET
@@ -292,7 +233,7 @@ export const updateMeeting = async (req, res) => {
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $5
       RETURNING *`,
-      [title, description, startTime, endTime, id]
+      [title, description, cleanStartTime, cleanEndTime, id]
     );
 
     res.json(result.rows[0]);
