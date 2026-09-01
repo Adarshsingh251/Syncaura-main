@@ -171,7 +171,7 @@ const IssueStatus = () => {
         {/* Search */}
         <div className="mb-5">
           <div className="flex items-center gap-2 w-full sm:max-w-md bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl px-3.5 py-2.5">
-            <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <Search className="w-4 h-4 text-gray-400 shrink-0" />
 
             <input
               type="text"

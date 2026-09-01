@@ -15,6 +15,7 @@ import {
   X,
   LogOut,
   User,
+  ClipboardCheck,
 } from "lucide-react";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -48,12 +49,19 @@ const menuItems = [
     path: "/my-attendance",
     count: 0,
   },
+  {
+  label: "Issue Status",
+  icon: ClipboardCheck,
+  path: "/issue-status",
+  count: 0,
+},
   { label: "Settings", icon: Settings, path: "/settings", count: 0 },
   { label: "Profile", icon: User, path: "/profile", count: 0 },
 ];
 
 export default function MobileSidebar({ open, setOpen }) {
   const isDark = useSelector((state) => state.theme.isDark);
+  const user = useSelector((state) => state.auth.user);
   const isDesktop = useIsDesktop();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -103,6 +111,8 @@ export default function MobileSidebar({ open, setOpen }) {
 
         <nav className="px-1 space-y-1 flex-1 overflow-y-auto">
           {menuItems.map((item) => {
+            // Issue Status should only be visible to admin and co-admin 
+            if ( item.path === "/issue-status" && !["admin", "co-admin"].includes(user?.role) ) { return null; }
             const Icon = item.icon;
             return (
               <NavLink
