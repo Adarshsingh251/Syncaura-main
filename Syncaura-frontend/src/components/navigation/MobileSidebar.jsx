@@ -152,26 +152,18 @@ const navigate = useNavigate();
         }
       `}
       >
-        <div className="flex items-center justify-between px-4 py-4 min-w-[240px]">
-          <button
-            type="button"
-            onClick={() => setOpen((prev) => !prev)}
-            className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-[#575757] transition-colors btn-hover cursor-pointer"
-            aria-label="Toggle sidebar"
-          >
-            <Menu size={28} className="text-[#000000] dark:text-[#F8F8F8]" />
-          </button>
-          {!isDesktop && (
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-[#575757] transition-colors btn-hover cursor-pointer"
-              aria-label="Close sidebar"
-            >
-              <X size={20} className="text-[#000000] dark:text-[#F8F8F8]" />
-            </button>
-          )}
-        </div>
+        <div className="flex items-center justify-end px-4 py-4 min-w-[240px]">
+  {!isDesktop && (
+    <button
+      type="button"
+      onClick={() => setOpen(false)}
+      className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-[#575757] transition-colors btn-hover cursor-pointer"
+      aria-label="Close sidebar"
+    >
+      <X size={20} className="text-[#000000] dark:text-[#F8F8F8]" />
+    </button>
+  )}
+</div>
 
         <nav className="px-1 space-y-1 flex-1 overflow-y-auto min-w-[238px]">
           {dynamicMenuItems.map((item) => {
