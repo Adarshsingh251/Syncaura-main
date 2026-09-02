@@ -18,45 +18,109 @@ import {
 } from "lucide-react";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
 import { useIsDesktop } from "../dashboard/Main/SubMain/Left/hook/useMediaQuery";
 
-const menuItems = [
+
+export default function MobileSidebar({ open, setOpen }) {
+  const { t } = useTranslation();
+  const isDark = useSelector((state) => state.theme.isDark);
+ const user = useSelector((state) => state.auth.user);
+const channels = useSelector((state) => state.chat?.channels || []);
+const isDesktop = useIsDesktop();
+const dispatch = useDispatch();
+const navigate = useNavigate();
+  const dashboardPath =
+  user?.role === "admin"
+    ? "/admin"
+    : user?.role === "co-admin"
+      ? "/co-admin"
+      : "/user-dashboard";
+
+  const menuItems = [
   {
-    label: "Dashboard",
+    label: "dashboard",
     icon: LayoutDashboard,
-    path: "/user-dashboard",
+    path: dashboardPath,
     count: 0,
   },
-  { label: "Projects", icon: Folder, path: "/projects", count: 0 },
-  { label: "Chat", icon: MessageCircle, path: "/chat", count: 10 },
-  { label: "Meetings", icon: Calendar, path: "/meetings", count: 2 },
-  { label: "Tasks", icon: CheckSquare, path: "/tasks", count: 0 },
-  { label: "Notice", icon: Megaphone, path: "/notice", count: 0 },
-  { label: "Documents", icon: FileText, path: "/documents", count: 0 },
-  { label: "Complaints", icon: AlertTriangle, path: "/complaints", count: 0 },
   {
-    label: "Attendance & Leave",
+    label: "projects",
+    icon: Folder,
+    path: "/projects",
+    count: 0,
+  },
+  {
+    label: "chat",
+    icon: MessageCircle,
+    path: "/chat",
+    count: 10,
+  },
+  {
+    label: "meetings",
+    icon: Calendar,
+    path: "/meetings",
+    count: 2,
+  },
+  {
+    label: "tasks",
+    icon: CheckSquare,
+    path: "/tasks",
+    count: 0,
+  },
+  {
+    label: "notice",
+    icon: Megaphone,
+    path: "/notice",
+    count: 0,
+  },
+  {
+    label: "documents",
+    icon: FileText,
+    path: "/documents",
+    count: 0,
+  },
+  {
+    label: "complaints",
+    icon: AlertTriangle,
+    path: "/complaints",
+    count: 0,
+  },
+  {
+    label: "attendance",
     icon: Clock,
     path: "/attendance-leave",
     count: 0,
   },
   {
-    label: "My Attendance",
+    label: "myAttendance",
     icon: UserCheck,
     path: "/my-attendance",
     count: 0,
   },
-  { label: "Settings", icon: Settings, path: "/settings", count: 0 },
-  { label: "Profile", icon: User, path: "/profile", count: 0 },
+  {
+    label: "settings",
+    icon: Settings,
+    path: "/settings",
+    count: 0,
+  },
+  {
+    label: "profile",
+    icon: User,
+    path: "/profile",
+    count: 0,
+  },
 ];
 
-export default function MobileSidebar({ open, setOpen }) {
-  const isDark = useSelector((state) => state.theme.isDark);
-  const isDesktop = useIsDesktop();
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  // Calculate total unread messages from channels
+  const totalUnreadChats = channels?.reduce((acc, chat) => acc + (parseInt(chat.unread) || 0), 0) || 0;
+
+  // Dynamically update the Chat menu item's count
+  const dynamicMenuItems = menuItems.map(item => 
+    item.label === "Chat" ? { ...item, count: totalUnreadChats } : item
+  );
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -110,7 +174,7 @@ export default function MobileSidebar({ open, setOpen }) {
         </div>
 
         <nav className="px-1 space-y-1 flex-1 overflow-y-auto min-w-[238px]">
-          {menuItems.map((item) => {
+          {dynamicMenuItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -130,7 +194,7 @@ export default function MobileSidebar({ open, setOpen }) {
               >
                 <div className="flex items-center gap-3">
                   <Icon size={20} />
-                  <span className="text-lg">{item.label}</span>
+                  <span className="text-lg">{t(item.label)}</span>
                 </div>
 
                 {item.count > 0 && (
@@ -158,7 +222,9 @@ export default function MobileSidebar({ open, setOpen }) {
             className="flex cursor-pointer items-center justify-center gap-5 w-full"
           >
             <LogOut className="size-6 text-[#FF0000]" />
-            <h2 className="text-[#FF0000] text-xl font-semibold">Log Out</h2>
+            <h2 className="text-[#FF0000] text-xl font-semibold">
+            {t("logout")}
+            </h2>
           </button>
         </div>
       </aside>
