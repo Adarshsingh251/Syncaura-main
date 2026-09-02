@@ -120,10 +120,10 @@ const Header = ({ setOpen, open }) => {
 
           </div>
 
-          {/* MOBILE CONTROLS */}
-          <div className="flex sm:hidden items-center gap-2">
-            <ToggleSwitch />
-          </div>
+          {/* Mobile controls */}
+<div className="flex sm:hidden items-center gap-2">
+  <ToggleSwitch />
+</div>
 
         </div>
       </div>
