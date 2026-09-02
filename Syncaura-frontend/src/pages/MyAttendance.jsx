@@ -73,24 +73,17 @@ export default function MyAttendance() {
 
       const userKey = user?.id || user?.email || "current-user";
 
-      // ── Read check-in / check-out records ──────────────────────────────────
+      // ── Read check-in / check-out records for this user ─────────────────────
       let attendanceRecords = {};
       try {
         const stored = localStorage.getItem(`${ATTENDANCE_STORAGE_PREFIX}${userKey}`);
         attendanceRecords = stored ? (JSON.parse(stored).records || {}) : {};
       } catch { /* ignore parse errors */ }
 
-      // ── Read leave applications ────────────────────────────────────────────
-      let leaveApplications = [];
-      try {
-        const stored = localStorage.getItem(`${LEAVE_STORAGE_PREFIX}${userKey}`);
-        leaveApplications = stored ? JSON.parse(stored) : [];
-      } catch { /* ignore parse errors */ }
-
-      // ── Build daily records for the selected month ─────────────────────────
+      // ── Build daily records for the selected month (Only Actual Attendance Logs) ──
       const builtRecords = [];
 
-      // 1. Check-in/check-out entries
+      // Check-in/check-out entries
       Object.entries(attendanceRecords).forEach(([date, rec]) => {
         const d = new Date(date);
         if (d.getFullYear() !== selectedYear || d.getMonth() + 1 !== selectedMonth) return;
@@ -116,43 +109,13 @@ export default function MyAttendance() {
         });
       });
 
-      // 2. Leave applications — expand date range into daily records
-      leaveApplications.forEach((leave) => {
-        const start = new Date(leave.startDate);
-        const end   = new Date(leave.endDate);
-        const cursor = new Date(start);
-        while (cursor <= end) {
-          const y = cursor.getFullYear();
-          const mo = cursor.getMonth() + 1;
-          if (y === selectedYear && mo === selectedMonth) {
-            const date = cursor.toISOString().split("T")[0];
-            // Don't overwrite a check-in record with a leave record
-            const alreadyExists = builtRecords.some((r) => r.date === date);
-            if (!alreadyExists) {
-              builtRecords.push({
-                id: `local-leave-${date}-${leave.startDate}`,
-                date,
-                check_in_time: null,
-                check_out_time: null,
-                working_hours: "0.00",
-                status: "Leave",
-                leaveType: leave.type,
-                leaveReason: leave.reason,
-                leaveStatus: leave.status,
-              });
-            }
-          }
-          cursor.setDate(cursor.getDate() + 1);
-        }
-      });
-
       // Sort newest first
       builtRecords.sort((a, b) => b.date.localeCompare(a.date));
 
       // ── Compute summary stats ──────────────────────────────────────────────
       const present = builtRecords.filter((r) => r.status === "Present").length;
       const absent  = builtRecords.filter((r) => r.status === "Absent").length;
-      const leave   = builtRecords.filter((r) => r.status === "Leave").length;
+      const leave   = 0; // Leave requests are managed on the Attendance & Leave (Leave Management) page
       const late    = builtRecords.filter((r) => r.status === "Late").length;
       const total   = builtRecords.length;
       const pct     = total > 0 ? Math.round(((present + late) / total) * 1000) / 10 : 0;

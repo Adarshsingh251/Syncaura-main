@@ -9,11 +9,11 @@ const Navbar = () => {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useDarkMode();
   const location = useLocation();
-const isAboutActive = location.pathname === "/about-us";
-const isLearnMoreActive = location.pathname === "/learn-more";
+  const isAboutActive = location.pathname === "/about-us";
+  const isLearnMoreActive = location.pathname === "/learn-more";
   const [activeSection, setActiveSection] = useState('home');
 
- useEffect(() => {
+  useEffect(() => {
     if (location.pathname !== "/") {
       setActiveSection("");
       return;
@@ -73,7 +73,7 @@ const isLearnMoreActive = location.pathname === "/learn-more";
             FlowBit
           </div>
 
-          <nav 
+          <nav
             className="flex items-center gap-1 p-1.5 rounded-2xl"
             style={{
               background: "linear-gradient(145deg, rgba(128, 128, 128, 0.05) 0%, rgba(128, 128, 128, 0.01) 100%)",
@@ -131,7 +131,7 @@ const isLearnMoreActive = location.pathname === "/learn-more";
               <Info className="w-4 h-4 transition-transform group-hover:scale-110" />
               {t("nav_about")}
             </Link>
-           <Link
+            <Link
               to="/learn-more"
               className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 group hover:bg-black/5 dark:hover:bg-white/5"
               style={{
@@ -179,18 +179,30 @@ const isLearnMoreActive = location.pathname === "/learn-more";
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between px-6 py-5">
-          <div
-            className="text-[23px] font-bold tracking-tight text-blue-600 dark:text-[#4FE6E6]"
-          >
+          {/* Logo */}
+          <div className="text-[23px] font-bold tracking-tight text-blue-600 dark:text-[#4FE6E6]">
             FlowBit
           </div>
 
-          <button
-            onClick={() => navigate("/SignUp")}
-            className="px-4 py-1.5 text-sm font-semibold rounded-[10px] bg-blue-600 dark:bg-[#4FE6E6] text-white dark:text-gray-900"
-          >
-            Start Free
-          </button>
+          {/* Mobile Actions */}
+          <div className="flex items-center gap-3">
+            {/* Log In */}
+            <button
+              onClick={() => navigate("/sign-in")}
+              className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-[#4FE6E6] whitespace-nowrap"
+            >
+              <LogIn className="w-4 h-4" />
+              {t("nav_login")}
+            </button>
+
+            {/* Start Free */}
+            <button
+              onClick={() => navigate("/sign-up")}
+              className="px-4 py-1.5 text-sm font-semibold rounded-[10px] bg-blue-600 dark:bg-[#4FE6E6] text-white dark:text-gray-900 whitespace-nowrap"
+            >
+              Start Free
+            </button>
+          </div>
         </div>
 
         <div className="flex justify-center px-4 py-5 pb-3">
@@ -246,18 +258,27 @@ const isLearnMoreActive = location.pathname === "/learn-more";
             >
               Contact
             </a>
+
             <Link
               to="/about-us"
               className="text-sm font-medium whitespace-nowrap"
-              style={{ color: isAboutActive ? 'var(--accent-color)' : 'var(--text-secondary)' }}
+              style={{
+                color: isAboutActive
+                  ? 'var(--accent-color)'
+                  : 'var(--text-secondary)',
+              }}
             >
               {t("nav_about")}
             </Link>
 
-           <Link
+            <Link
               to="/learn-more"
               className="text-sm font-medium whitespace-nowrap"
-              style={{ color: isLearnMoreActive ? 'var(--accent-color)' : 'var(--text-secondary)' }}
+              style={{
+                color: isLearnMoreActive
+                  ? 'var(--accent-color)'
+                  : 'var(--text-secondary)',
+              }}
             >
               {t("nav_learn_more")}
             </Link>
