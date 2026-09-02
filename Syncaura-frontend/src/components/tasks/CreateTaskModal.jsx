@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 const PRIORITIES = ["low", "medium", "high"];
 const PRIORITY_COLORS = {
   low: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  medium:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
@@ -33,7 +34,8 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
 
   const validate = () => {
     const newErrors = {};
-    if (!form.title.trim()) newErrors.title = t('create_task_title_required', 'Title is required');
+    if (!form.title.trim())
+      newErrors.title = t("create_task_title_required", "Title is required");
     return newErrors;
   };
 
@@ -50,7 +52,11 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
       setErrors(newErrors);
       return;
     }
-    const payload = { ...form };
+    const payload = {
+      ...form,
+      assignedTo: isAdmin ? form.assignedTo : currentUserEmail,
+    };
+
     if (!payload.deadline) delete payload.deadline;
     if (!payload.assignedTo) delete payload.assignedTo;
     onSubmit(payload);
@@ -70,7 +76,9 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#2d2f33]">
-          <h2 className="text-lg font-bold text-[#0A0A0A] dark:text-white">{t('create_task_heading', 'Create New Task')}</h2>
+          <h2 className="text-lg font-bold text-[#0A0A0A] dark:text-white">
+            {t("create_task_heading", "Create New Task")}
+          </h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2d2f33] transition-colors btn-hover"
@@ -84,33 +92,41 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
           {/* Title */}
           <div>
             <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-              {t('create_task_title_label', 'Task Title *')}
+              {t("create_task_title_label", "Task Title *")}
             </label>
             <input
               name="title"
               value={form.title}
               onChange={handleChange}
-              placeholder={t('create_task_title_placeholder', 'e.g. Design landing page')}
+              placeholder={t(
+                "create_task_title_placeholder",
+                "e.g. Design landing page",
+              )}
               className={`w-full px-3.5 py-2.5 text-sm rounded-xl border ${
                 errors.title
                   ? "border-red-400 focus:ring-red-300"
                   : "border-gray-200 dark:border-[#2d2f33] focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30"
               } bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 transition-all`}
             />
-            {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
+            {errors.title && (
+              <p className="text-xs text-red-500 mt-1">{errors.title}</p>
+            )}
           </div>
 
           {/* Description */}
           <div>
             <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-              {t('create_task_description_label', 'Description')}
+              {t("create_task_description_label", "Description")}
             </label>
             <textarea
               name="description"
               value={form.description}
               onChange={handleChange}
               rows={3}
-              placeholder={t('create_task_description_placeholder', 'Add details about this task…')}
+              placeholder={t(
+                "create_task_description_placeholder",
+                "Add details about this task…",
+              )}
               className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all resize-none"
             />
           </div>
@@ -119,21 +135,24 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                {t('create_task_priority_label', 'Priority')}
+                {t("create_task_priority_label", "Priority")}
               </label>
               <div className="flex gap-1.5">
                 {PRIORITIES.map((p) => (
                   <button
                     key={p}
                     type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, priority: p }))}
+                    onClick={() =>
+                      setForm((prev) => ({ ...prev, priority: p }))
+                    }
                     className={`btn-hover flex-1 py-1.5 text-xs font-semibold rounded-lg capitalize ${
                       form.priority === p
-                        ? PRIORITY_COLORS[p] + "ring-2 ring-offset-1 ring-current"
+                        ? PRIORITY_COLORS[p] +
+                          "ring-2 ring-offset-1 ring-current"
                         : "bg-gray-100 dark:bg-[#2d2f33] text-gray-500 dark:text-gray-400"
                     }`}
                   >
-                    {t('priority_' + p, p)}
+                    {t("priority_" + p, p)}
                   </button>
                 ))}
               </div>
@@ -141,7 +160,7 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
 
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                {t('create_task_status_label', 'Initial Status')}
+                {t("create_task_status_label", "Initial Status")}
               </label>
               <select
                 name="status"
@@ -149,9 +168,11 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
                 onChange={handleChange}
                 className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
               >
-                <option value="TODO">{t('status_todo', 'To Do')}</option>
-                <option value="IN_PROGRESS">{t('status_in_progress', 'In Progress')}</option>
-                <option value="DONE">{t('status_done', 'Done')}</option>
+                <option value="TODO">{t("status_todo", "To Do")}</option>
+                <option value="IN_PROGRESS">
+                  {t("status_in_progress", "In Progress")}
+                </option>
+                <option value="DONE">{t("status_done", "Done")}</option>
               </select>
             </div>
           </div>
@@ -160,7 +181,7 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                {t('create_task_deadline_label', 'Deadline')}
+                {t("create_task_deadline_label", "Deadline")}
               </label>
               <input
                 type="date"
@@ -176,15 +197,27 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                {t('create_task_assigned_to_label', 'Assigned To')}
+                {t("create_task_assigned_to_label", "Assigned To")}
               </label>
-              <input
-                name="assignedTo"
-                value={form.assignedTo}
-                onChange={handleChange}
-                placeholder={t('create_task_assigned_to_placeholder', 'Name or email')}
-                className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
-              />
+              {isAdmin ? (
+                <input
+                  name="assignedTo"
+                  value={form.assignedTo}
+                  onChange={handleChange}
+                  placeholder={t(
+                    "create_task_assigned_to_placeholder",
+                    "Name or email",
+                  )}
+                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                />
+              ) : (
+                <input
+                  value={currentUserEmail || ""}
+                  readOnly
+                  disabled
+                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                />
+              )}
             </div>
           </div>
 
@@ -195,14 +228,16 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
               onClick={onClose}
               className="flex-1 py-2.5 text-sm font-medium rounded-xl border border-gray-200 dark:border-[#2d2f33] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2d2f33] transition-colors btn-hover"
             >
-              {t('create_task_cancel', 'Cancel')}
+              {t("create_task_cancel", "Cancel")}
             </button>
             <button
               type="submit"
               disabled={isLoading}
               className="flex-1 py-2.5 text-sm font-semibold rounded-xl bg-[#2457C5] dark:bg-[#73FBFD] text-white dark:text-black hover:bg-blue-700 dark:hover:bg-[#5af4f5] transition-colors disabled:opacity-60 disabled:cursor-not-allowed btn-hover"
             >
-              {isLoading ? t('create_task_creating', 'Creating…') : t('create_task_submit', 'Create Task')}
+              {isLoading
+                ? t("create_task_creating", "Creating…")
+                : t("create_task_submit", "Create Task")}
             </button>
           </div>
         </form>

@@ -9,8 +9,8 @@ const Navbar = () => {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useDarkMode();
   const location = useLocation();
-const isAboutActive = location.pathname === "/about-us";
-const isLearnMoreActive = location.pathname === "/learn-more";
+  const isAboutActive = location.pathname === "/about-us";
+  const isLearnMoreActive = location.pathname === "/learn-more";
   const [activeSection, setActiveSection] = useState('home');
 useEffect(() => {
   if (location.pathname !== "/") {
@@ -48,7 +48,7 @@ useEffect(() => {
             FlowBit
           </div>
 
-          <nav 
+          <nav
             className="flex items-center gap-1 p-1.5 rounded-2xl"
             style={{
               background: "linear-gradient(145deg, rgba(128, 128, 128, 0.05) 0%, rgba(128, 128, 128, 0.01) 100%)",
@@ -106,7 +106,7 @@ useEffect(() => {
               <Info className="w-4 h-4 transition-transform group-hover:scale-110" />
               {t("nav_about")}
             </Link>
-           <Link
+            <Link
               to="/learn-more"
               className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-300 group hover:bg-black/5 dark:hover:bg-white/5"
               style={{
@@ -154,9 +154,8 @@ useEffect(() => {
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between px-6 py-5">
-          <div
-            className="text-[23px] font-bold tracking-tight text-blue-600 dark:text-[#4FE6E6]"
-          >
+          {/* Logo */}
+          <div className="text-[23px] font-bold tracking-tight text-blue-600 dark:text-[#4FE6E6]">
             FlowBit
           </div>
              <div className="flex items-center gap-2">
