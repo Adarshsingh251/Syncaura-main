@@ -42,10 +42,17 @@ export const getUser = async (req, res, next) => {
 
 export const getAllUsers = async (req, res, next) => {
   try {
-    const result = await pool.query(
-      `SELECT id, name, email FROM users WHERE id != $1 AND is_active = true`,
-      [req.user.id]
-    );
+    const { excludeSelf } = req.query;
+    let query = `SELECT id, name, email, role FROM users WHERE is_active = true`;
+    const params = [];
+
+    if (excludeSelf === 'true' && req.user?.id) {
+      params.push(req.user.id);
+      query += ` AND id != $1`;
+    }
+
+    query += ` ORDER BY name ASC`;
+    const result = await pool.query(query, params);
     res.status(200).json(result.rows);
   } catch (error) {
     next(error);

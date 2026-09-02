@@ -106,16 +106,18 @@ export default function Complaints() {
     }
 
     if (appliedFilters) {
-      if (appliedFilters.status && appliedFilters.status !== "All") {
+      if (appliedFilters.status && appliedFilters.status.toLowerCase() !== "all") {
         const targetStatus = appliedFilters.status.toLowerCase().replace(" ", "-");
-        result = result.filter((item) => (item.status || "").toLowerCase().replace(" ", "-") === targetStatus);
+        result = result.filter(
+          (item) => (item.status || "open").toLowerCase().replace(" ", "-") === targetStatus
+        );
       }
       if (appliedFilters.date) {
-        result = result.filter((item) => item.created_at?.startsWith(appliedFilters.date));
+        result = result.filter((item) => (item.created_at || "").startsWith(appliedFilters.date));
       }
       result.sort((a, b) => {
-        const dateA = new Date(a.created_at);
-        const dateB = new Date(b.created_at);
+        const dateA = new Date(a.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || 0).getTime();
         return appliedFilters.order === "Ascending" ? dateA - dateB : dateB - dateA;
       });
     }
@@ -125,6 +127,10 @@ export default function Complaints() {
 
   const handleApplyFilters = (newFilters) => {
     setAppliedFilters(newFilters);
+  };
+
+  const handleResetFilters = () => {
+    setAppliedFilters(null);
   };
 
   const handleAddComplaint = async (complaint) => {
@@ -166,6 +172,8 @@ export default function Complaints() {
             search={searchComplaints}
             setSearch={setSearchComplaints}
             onApplyFilters={handleApplyFilters}
+            appliedFilters={appliedFilters}
+            onResetFilters={handleResetFilters}
           />
 
           {isLoading && <p className="text-center text-gray-400 py-10">Loading complaints...</p>}
