@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, Flag, Calendar, User, AlignLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import api from "../../config/axios";
 
 const PRIORITIES = ["low", "medium", "high"];
 const PRIORITY_COLORS = {
@@ -12,6 +13,13 @@ const PRIORITY_COLORS = {
 
 const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
   const { t } = useTranslation();
+  const [usersList, setUsersList] = useState([]);
+
+  useEffect(() => {
+    api.get("/users/all")
+      .then((res) => setUsersList(res.data || []))
+      .catch((err) => console.error("Failed to load users:", err));
+  }, []);
 
   // Default task deadline in days (set by admin in dashboard, default 10 days)
   const configuredDays = parseInt(localStorage.getItem("taskDeadlineDays") || "10", 10);
@@ -178,13 +186,29 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
                 {t('create_task_assigned_to_label', 'Assigned To')}
               </label>
-              <input
-                name="assignedTo"
-                value={form.assignedTo}
-                onChange={handleChange}
-                placeholder={t('create_task_assigned_to_placeholder', 'Name or email')}
-                className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
-              />
+              {usersList && usersList.length > 0 ? (
+                <select
+                  name="assignedTo"
+                  value={form.assignedTo}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                >
+                  <option value="">{t('select_an_employee', 'Select an Employee...')}</option>
+                  {usersList.map((u) => (
+                    <option key={u.id} value={u.email || u.name || u.id}>
+                      {u.name} ({u.email}) {u.role ? `— ${u.role}` : ''}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  name="assignedTo"
+                  value={form.assignedTo}
+                  onChange={handleChange}
+                  placeholder={t('create_task_assigned_to_placeholder', 'Name or email')}
+                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                />
+              )}
             </div>
           </div>
 

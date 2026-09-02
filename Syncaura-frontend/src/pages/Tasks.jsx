@@ -144,14 +144,15 @@ const Tasks = () => {
   const dispatch = useDispatch();
   const { tasks, isLoading } = useSelector((state) => state.tasks);
   const isDark = useSelector((state) => state.theme.isDark);
-  const userRole = useSelector((state) => state.auth?.user?.role);
-  const isAdmin = userRole === "admin";
-
   const currentUser = useSelector((state) => state.auth?.user);
+  const userRole = (currentUser?.role || "").toLowerCase();
+  const isAdminOrCoAdmin =
+    userRole === "admin" || userRole === "co-admin" || userRole === "coadmin";
+  const isAdmin = userRole === "admin";
 
   // helper: admin can delete anything, user only what they created
   const canDeleteTask = (task) =>
-    isAdmin || task?.createdBy === currentUser?.id;
+    isAdminOrCoAdmin || task?.createdBy === currentUser?.id;
 
   const [view, setView] = useState("kanban"); // "kanban" | "list"
   const [search, setSearch] = useState("");
@@ -184,10 +185,29 @@ const Tasks = () => {
   // Filtered & sorted tasks
   const filtered = useMemo(() => {
     let result = [...tasks];
+
+    // Non-admin / non-co-admin: ONLY show tasks assigned to this user
+    if (!isAdminOrCoAdmin && currentUser) {
+      const uId = String(currentUser.id || "").toLowerCase();
+      const uEmail = String(currentUser.email || "").toLowerCase();
+      const uName = String(currentUser.name || "").toLowerCase();
+
+      result = result.filter((t) => {
+        const assigned = String(
+          t.assignedTo || t.assigned_to || t.assigned_user_name || t.assigned_user_email || ""
+        ).toLowerCase();
+        return (
+          (uId && assigned === uId) ||
+          (uEmail && (assigned === uEmail || assigned.includes(uEmail))) ||
+          (uName && (assigned === uName || assigned.includes(uName)))
+        );
+      });
+    }
+
     if (debouncedSearch) {
       result = result.filter(
         (t) =>
-          t.title.toLowerCase().includes(debouncedSearch) ||
+          t.title?.toLowerCase().includes(debouncedSearch) ||
           t.description?.toLowerCase().includes(debouncedSearch),
       );
     }
@@ -206,7 +226,7 @@ const Tasks = () => {
       return 0;
     });
     return result;
-  }, [tasks, debouncedSearch, priorityFilter, sortField, sortDir]);
+  }, [tasks, debouncedSearch, priorityFilter, sortField, sortDir, isAdminOrCoAdmin, currentUser]);
 
   const tasksByStatus = useMemo(
     () => ({
@@ -220,12 +240,12 @@ const Tasks = () => {
   // Stats
   const stats = useMemo(
     () => ({
-      total: tasks.length,
-      todo: tasks.filter((t) => t.status === "TODO").length,
-      inProgress: tasks.filter((t) => t.status === "IN_PROGRESS").length,
-      done: tasks.filter((t) => t.status === "DONE").length,
+      total: filtered.length,
+      todo: filtered.filter((t) => t.status === "TODO").length,
+      inProgress: filtered.filter((t) => t.status === "IN_PROGRESS").length,
+      done: filtered.filter((t) => t.status === "DONE").length,
     }),
-    [tasks],
+    [filtered],
   );
 
   const handleCreate = async (data) => {
