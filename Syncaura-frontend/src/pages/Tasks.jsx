@@ -25,7 +25,9 @@ import {
 import KanbanColumn from "../components/tasks/KanbanColumn";
 import CreateTaskModal from "../components/tasks/CreateTaskModal";
 import TaskDetailModal from "../components/tasks/TaskDetailModal";
+import { getAssigneeDisplay } from "../components/tasks/taskUtils";
 import { toast } from "react-toastify";
+import api from "../config/axios";
 
 // ── Priority config ──────────────────────────────────────────────────────────
 const PRIORITY_COLORS = {
@@ -59,9 +61,9 @@ const isOverdue = (dateStr, status) => {
 const StatCard = ({ label, value, icon: Icon, color }) => (
   <div className="flex items-center gap-3 bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl px-4 py-3">
     <div
-      className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}
+      className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="w-5 h-5" />
     </div>
     <div>
       <p className="text-xl font-bold text-[#0A0A0A] dark:text-white leading-none">
@@ -73,7 +75,7 @@ const StatCard = ({ label, value, icon: Icon, color }) => (
 );
 
 // ── List Row ─────────────────────────────────────────────────────────────────
-const ListRow = ({ task, onOpen, onDelete, canDelete }) => {
+const ListRow = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
   const status = STATUS_LABELS[task.status] || STATUS_LABELS.TODO;
   const overdue = isOverdue(task.deadline, task.status);
 
@@ -118,8 +120,8 @@ const ListRow = ({ task, onOpen, onDelete, canDelete }) => {
         </span>
       </td>
       <td className="py-3 px-3 hidden lg:table-cell">
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {task.assignedTo || task.assigned_to || task.assigned_user_name || "Unassigned"}
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+          {getAssigneeDisplay(task, usersList)}
         </span>
       </td>
       <td className="py-3 px-3">
@@ -163,6 +165,15 @@ const Tasks = () => {
   const [sortField, setSortField] = useState("createdAt");
   const [sortDir, setSortDir] = useState("desc");
   const [createLoading, setCreateLoading] = useState(false);
+  const [usersList, setUsersList] = useState([]);
+
+  // Fetch users list for resolving assignee names & emails
+  useEffect(() => {
+    api
+      .get("/users/all")
+      .then((res) => setUsersList(res.data || []))
+      .catch(() => {});
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -433,6 +444,7 @@ const Tasks = () => {
                     onOpenTask={setSelectedTask}
                     onDeleteTask={handleDelete}
                     canDeleteTask={canDeleteTask}
+                    usersList={usersList}
                   />
                 ))}
               </motion.div>
@@ -497,6 +509,7 @@ const Tasks = () => {
                             onOpen={setSelectedTask}
                             onDelete={handleDelete}
                             canDelete={canDeleteTask(task)}
+                            usersList={usersList}
                           />
                         ))}
                       </tbody>
@@ -528,6 +541,7 @@ const Tasks = () => {
             onDeleted={() => setSelectedTask(null)}
             canDelete={canDeleteTask(selectedTask)}
             isAdmin={isAdmin}
+            usersList={usersList}
           />
         )}
       </AnimatePresence>

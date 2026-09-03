@@ -19,6 +19,7 @@ import {
   toggleSubtaskStatus,
   deleteTask,
 } from "../../redux/features/taskThunks";
+import { getAssigneeDisplay } from "./taskUtils";
 
 const PRIORITY_COLORS = {
   high: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
@@ -55,7 +56,14 @@ const formatDate = (dateStr) => {
   });
 };
 
-const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false }) => {
+const TaskDetailModal = ({
+  task,
+  onClose,
+  onDeleted,
+  canDelete,
+  isAdmin = false,
+  usersList = [],
+}) => {
   const dispatch = useDispatch();
   const [subtaskInput, setSubtaskInput] = useState("");
   const [addingSubtask, setAddingSubtask] = useState(false);
@@ -243,8 +251,8 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false 
                 Assigned To
               </p>
               <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                <User className="w-3.5 h-3.5 text-gray-400" />
-                {task.assignedTo || task.assigned_to || task.assigned_user_name || "Unassigned"}
+                <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <span className="truncate">{getAssigneeDisplay(task, usersList)}</span>
               </div>
             </div>
           </div>
