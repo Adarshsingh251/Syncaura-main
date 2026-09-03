@@ -37,8 +37,11 @@ export const createTask = async (req, res) => {
       projectId, startDate, endDate, dependencies, reminderAt 
     } = req.body;
  
-    // RBAC: Fallback to logged-in user if assignedTo is omitted
-    const finalAssignedTo = assignedTo || req.user?.id;
+    const isAdminOrCoAdmin = isUserAdminOrCoAdmin(req.user);
+    // If not Admin/Co-Admin, task is always assigned to the user themselves
+    const finalAssignedTo = isAdminOrCoAdmin
+      ? (assignedTo || req.user?.email || req.user?.id)
+      : (req.user?.email || req.user?.id || req.user?.name);
  
     const result = await pool.query(
       `INSERT INTO tasks (

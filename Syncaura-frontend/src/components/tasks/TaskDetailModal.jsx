@@ -11,14 +11,17 @@ import {
   Plus,
   ChevronRight,
   AlertTriangle,
+  Save,
+  Loader2,
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import {
-  updateTaskStatus,
+  updateTask,
   addSubtask,
   toggleSubtaskStatus,
   deleteTask,
 } from "../../redux/features/taskThunks";
+import { getAssigneeDisplay } from "./taskUtils";
 
 const PRIORITY_COLORS = {
   high: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
@@ -55,22 +58,46 @@ const formatDate = (dateStr) => {
   });
 };
 
-const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false }) => {
+const TaskDetailModal = ({
+  task,
+  onClose,
+  onDeleted,
+  canDelete,
+  isAdmin = false,
+  usersList = [],
+}) => {
   const dispatch = useDispatch();
   const [subtaskInput, setSubtaskInput] = useState("");
   const [addingSubtask, setAddingSubtask] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [statusLoading, setStatusLoading] = useState(false);
 
-  const handleStatusChange = async (newStatus) => {
-    if (newStatus === task.status) return;
-    setStatusLoading(true);
+  const [selectedStatus, setSelectedStatus] = useState(task.status || "TODO");
+  const [saveLoading, setSaveLoading] = useState(false);
+
+  const handleStatusChange = (newStatus) => {
+    setSelectedStatus(newStatus);
+  };
+
+  const handleSave = async () => {
+    if (saveLoading) return;
+
+    setSaveLoading(true);
+
     try {
       await dispatch(
-        updateTaskStatus({ id: task.id, status: newStatus }),
+        updateTask({
+          id: task.id,
+          data: {
+            status: selectedStatus,
+          },
+        }),
       ).unwrap();
+
+      onClose();
+    } catch (error) {
+      console.error("Failed to save task:", error);
     } finally {
-      setStatusLoading(false);
+      setSaveLoading(false);
     }
   };
 
@@ -202,13 +229,12 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false 
                     <>
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-lg font-bold ${
-                            daysInfo.isOverdue
-                              ? "text-red-500"
-                              : daysInfo.daysLeft <= 2
+                          className={`text-lg font-bold ${daysInfo.isOverdue
+                            ? "text-red-500"
+                            : daysInfo.daysLeft <= 2
                               ? "text-amber-500"
                               : "text-emerald-500"
-                          }`}
+                            }`}
                         >
                           {daysInfo.isOverdue ? "Overdue" : `${daysInfo.daysLeft} day${daysInfo.daysLeft !== 1 ? "s" : ""} left`}
                         </span>
@@ -216,13 +242,12 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false 
                       {/* Progress bar for days */}
                       <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all ${
-                            daysInfo.isOverdue
-                              ? "bg-red-500"
-                              : daysInfo.daysLeft <= 2
+                          className={`h-full rounded-full transition-all ${daysInfo.isOverdue
+                            ? "bg-red-500"
+                            : daysInfo.daysLeft <= 2
                               ? "bg-amber-500"
                               : "bg-emerald-500"
-                          }`}
+                            }`}
                           style={{
                             width: `${Math.min((daysInfo.daysLeft / daysInfo.totalDays) * 100, 100)}%`,
                           }}
@@ -243,8 +268,8 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false 
                 Assigned To
               </p>
               <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                <User className="w-3.5 h-3.5 text-gray-400" />
-                {task.assignedTo || task.assigned_to || task.assigned_user_name || "Unassigned"}
+                <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <span className="truncate">{getAssigneeDisplay(task, usersList)}</span>
               </div>
             </div>
           </div>
@@ -259,9 +284,9 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false 
                 <button
                   key={opt.value}
                   onClick={() => handleStatusChange(opt.value)}
-                  disabled={statusLoading}
-                  className={`btn-hover flex-1 py-2 text-xs font-semibold rounded-xl ${task.status === opt.value
-                      ? opt.color + "ring-2 ring-offset-1 ring-current"
+                  disabled={saveLoading}
+                  className={`btn-hover flex-1 py-2 text-xs font-semibold rounded-xl ${selectedStatus === opt.value
+                      ? opt.color + " ring-2 ring-offset-1 ring-current"
                       : "bg-gray-100 dark:bg-[#2d2f33] text-gray-400 dark:text-gray-500 hover:opacity-80"
                     } disabled:opacity-60`}
                 >
@@ -352,37 +377,68 @@ const TaskDetailModal = ({ task, onClose, onDeleted, canDelete, isAdmin = false 
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-[#2d2f33]">
-          {canDelete ? (
-            !confirmDelete ? (
-              <button
-                onClick={() => setConfirmDelete(true)}
-                className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors btn-hover"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete Task
-              </button>
+        <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 dark:border-[#2d2f33]">
+
+          {/* Delete Task */}
+          <div>
+            {canDelete ? (
+              !confirmDelete ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors btn-hover"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete Task
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Delete this task?
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors btn-hover"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors btn-hover"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )
+            ) : null}
+          </div>
+
+          {/* Save Button */}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saveLoading}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#2457C5] dark:bg-[#73FBFD] text-white dark:text-black text-sm font-semibold hover:bg-blue-700 dark:hover:bg-[#5af4f5] transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed btn-hover"
+          >
+            {saveLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
             ) : (
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                <span className="text-sm text-gray-600 dark:text-gray-400 flex-1">
-                  Delete this task?
-                </span>
-                <button
-                  onClick={() => setConfirmDelete(false)}
-                  className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors btn-hover"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors btn-hover"
-                >
-                  Delete
-                </button>
-              </div>
-            )
-          ) : null}
+              <>
+                <Save className="w-4 h-4" />
+                Save
+              </>
+            )}
+          </button>
+
         </div>
       </motion.div>
     </div>
