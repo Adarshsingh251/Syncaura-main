@@ -156,11 +156,10 @@ const Tasks = () => {
     userRole === "admin" || userRole === "co-admin" || userRole === "coadmin";
   const isAdmin = userRole === "admin";
 
-  // helper: admin can delete anything, user only what they created
   const canDeleteTask = (task) =>
     isAdminOrCoAdmin || task?.createdBy === currentUser?.id;
 
-  const [view, setView] = useState("kanban"); // "kanban" | "list"
+  const [view, setView] = useState("kanban"); 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -171,7 +170,6 @@ const Tasks = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [usersList, setUsersList] = useState([]);
 
-  // Fetch users list for resolving assignee names & emails
   useEffect(() => {
     api
       .get("/users/all")
@@ -201,18 +199,27 @@ const Tasks = () => {
   const filtered = useMemo(() => {
     let result = [...tasks];
 
-    // Non-admin / non-co-admin: ONLY show tasks assigned to this user
     if (!isAdminOrCoAdmin && currentUser) {
-      const uId = String(currentUser.id || "").toLowerCase();
+      const uId = String(currentUser.id || currentUser._id || "").toLowerCase();
       const uEmail = String(currentUser.email || "").toLowerCase();
       const uName = String(currentUser.name || "").toLowerCase();
 
       result = result.filter((t) => {
         const assigned = String(
-          t.assignedTo || t.assigned_to || t.assigned_user_name || t.assigned_user_email || ""
+          t.assignedTo || 
+          t.assigned_to || 
+          t.assigned_user_name || 
+          t.assigned_user_email || 
+          t.userId || 
+          t.user_id || 
+          ""
         ).toLowerCase();
+        
+        const assigneeId = String(t.assignee?.id || t.assignee?._id || t.user?.id || t.user?._id || "").toLowerCase();
+
         return (
           (uId && assigned === uId) ||
+          (uId && assigneeId === uId) ||
           (uEmail && (assigned === uEmail || assigned.includes(uEmail))) ||
           (uName && (assigned === uName || assigned.includes(uName)))
         );
