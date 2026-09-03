@@ -2,7 +2,6 @@ import { ChevronDown, ListFilter, Plus, X, Edit3, Eye, Calendar, CheckCircle2, F
 import { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Tab from "../components/projects/Tab";
-import ProjectCard from "../components/projects/ProjectCard";
 import { PROJECTS } from "../constant/constant";
 import CreateNewProject from "../components/projects/Model/CreateNewProject";
 import { AnimatePresence, motion } from "framer-motion";
@@ -308,36 +307,7 @@ const Projects = () => {
         </AnimatePresence>
       </div>
 
-      <div className="bg-[#FFFFFF] dark:bg-[#000000] mt-5 transition-colors duration-500">
-        <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
-            key={currTab}
-            custom={direction}
-            initial={{ x: direction === 1 ? 300 : -300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: direction === 1 ? -300 : 300, opacity: 0 }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="px-5 py-3 flex flex-wrap items-center justify-center gap-x-14 gap-y-8"
-          >
-            {sortedProjects.map(
-              (
-                { id, title, department, priority, progress, dueDate, avatars }) => (
-                <ProjectCard
-                  key={id}
-                  id={id}
-                  title={title}
-                  department={department}
-                  priority={priority}
-                  progress={progress}
-                  dueDate={dueDate}
-                  avatars={avatars}
-                  onAction={handleProjectAction}
-                />
-              )
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+     
 
       {/* Create New Project Modal */}
       {showModel && (
