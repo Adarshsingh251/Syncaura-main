@@ -517,7 +517,7 @@ const Tasks = () => {
             onClose={() => setShowCreate(false)}
             onSubmit={handleCreate}
             isLoading={createLoading}
-            isAdmin={isAdmin}
+            isAdmin={isAdminOrCoAdmin}
           />
         )}
         {selectedTask && (
