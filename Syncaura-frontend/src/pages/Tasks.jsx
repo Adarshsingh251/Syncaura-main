@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
+
 import {
   Plus,
   Search,
@@ -120,8 +121,11 @@ const ListRow = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
         </span>
       </td>
       <td className="py-3 px-3 hidden lg:table-cell">
-        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-          {getAssigneeDisplay(task, usersList)}
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {task.assignedTo ||
+            task.assigned_to ||
+            task.assigned_user_name ||
+            "Unassigned"}
         </span>
       </td>
       <td className="py-3 px-3">
