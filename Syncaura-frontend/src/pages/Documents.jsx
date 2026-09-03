@@ -378,53 +378,55 @@ export default function Documents() {
           <div className="hidden md:flex items-center w-full border px-10 py-3 border-gray-200 dark:border-gray-700">
 
             {/* Name */}
-            <div className="w-[30%] flex items-center justify-start">
+            <div className={`${isAdminOrCoAdmin ? "w-[30%]" : "w-[35%]"} flex items-center justify-start`}>
               <h1 className="text-lg text-black dark:text-white font-semibold">
                 Name
               </h1>
             </div>
 
             {/* Type */}
-            <div className="w-[12%] flex items-center justify-start">
+            <div className={`${isAdminOrCoAdmin ? "w-[12%]" : "w-[13%]"} flex items-center justify-start`}>
               <h1 className="text-lg text-black dark:text-white font-semibold">
                 Type
               </h1>
             </div>
 
             {/* Version */}
-            <div className="w-[10%] flex items-center justify-start">
+            <div className={`${isAdminOrCoAdmin ? "w-[10%]" : "w-[11%]"} flex items-center justify-start`}>
               <h1 className="text-lg text-black dark:text-white font-semibold">
                 Version
               </h1>
             </div>
 
             {/* Last Modified */}
-            <div className="w-[15%] flex items-center justify-start">
+            <div className={`${isAdminOrCoAdmin ? "w-[15%]" : "w-[15%]"} flex items-center justify-start`}>
               <h1 className="text-lg text-black dark:text-white font-semibold">
                 Last Modified
               </h1>
             </div>
 
             {/* Status */}
-            <div className="w-[11%] flex items-center justify-center">
+            <div className={`${isAdminOrCoAdmin ? "w-[11%]" : "w-[12%]"} flex items-center justify-center`}>
               <h1 className="text-lg text-black dark:text-white font-semibold">
                 Status
               </h1>
             </div>
 
             {/* Document */}
-            <div className="w-[14%] flex items-center justify-center">
+            <div className={`${isAdminOrCoAdmin ? "w-[14%]" : "w-[14%]"} flex items-center justify-center`}>
               <h1 className="text-lg text-black dark:text-white font-semibold">
                 Document
               </h1>
             </div>
 
             {/* Edit */}
-            <div className="w-[8%] flex items-center justify-center">
-              <h1 className="text-lg text-black dark:text-white font-semibold">
-                Edit
-              </h1>
-            </div>
+            {isAdminOrCoAdmin && (
+              <div className="w-[8%] flex items-center justify-center">
+                <h1 className="text-lg text-black dark:text-white font-semibold">
+                  Edit
+                </h1>
+              </div>
+            )}
 
           </div>
 
