@@ -462,76 +462,9 @@ const AttendanceLeave = () => {
       }
     } catch (apiErr) {
       console.warn("Attendance API error response:", apiErr);
-      const backendMsg = apiErr.response?.data?.message || apiErr.response?.data?.error;
-
-      if (backendMsg) {
-        // Task 5: Show Location Errors (e.g. "You are outside the workplace attendance area.")
-        toast.error(backendMsg);
-      } else {
-        // Local state fallback if backend server endpoint is offline
-        const now = new Date();
-        const formattedTime = now.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
-
-        const currentRecords = { ...attendanceStateRef.current.records };
-        const selectedRecord = currentRecords[attendanceDate] || {};
-
-        if (selectedTab === "Check-In") {
-          currentRecords[attendanceDate] = {
-            ...selectedRecord,
-            in: formattedTime,
-            status: "Present",
-            lat: locationData.latitude,
-            lng: locationData.longitude,
-            accuracy: locationData.accuracy,
-          };
-          if (!selectedRecord.in) {
-            attendanceStateRef.current.presentDays += 1;
-          }
-          setCheckInTime(formattedTime);
-          setSelectedTab("Check-Out");
-          toast.success(
-            isToday
-              ? `Checked in successfully at ${formattedTime}!`
-              : `Checked in for ${attendanceDate} at ${formattedTime}!`
-          );
-        } else {
-          currentRecords[attendanceDate] = {
-            ...selectedRecord,
-            out: formattedTime,
-          };
-          setCheckOutTime(formattedTime);
-          toast.success(
-            isToday
-              ? `Checked out successfully at ${formattedTime}!`
-              : `Checked out for ${attendanceDate} at ${formattedTime}!`
-          );
-        }
-
-        attendanceStateRef.current.records = currentRecords;
-
-        try {
-          localStorage.setItem(
-            attendanceStorageKey,
-            JSON.stringify(attendanceStateRef.current)
-          );
-        } catch {
-          // ignore storage quota issues
-        }
-
-        setAttendanceStats((prev) =>
-          prev.map((stat) =>
-            stat.title === "Present Days"
-              ? { ...stat, value: attendanceStateRef.current.presentDays }
-              : stat
-          )
-        );
-
-        setShowPopup(false);
-      }
+      const backendMsg = apiErr.response?.data?.message || apiErr.response?.data?.error || apiErr.message;
+      // Task 5: Show Location Errors (e.g. "You are outside the workplace attendance area.")
+      toast.error(backendMsg || "Attendance location verification failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
