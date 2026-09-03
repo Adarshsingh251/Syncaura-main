@@ -1,22 +1,40 @@
 import { motion } from "framer-motion";
 import FilterDropdown from "../common/FilterDropdown";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import api from "../../config/axios";
 
 export default function ProjectFilter({ onClose, onApply }) {
   const { t } = useTranslation();
   const items = [
-    t("projectFilter_priorityLow", "Low"),
-    t("projectFilter_priorityMedium", "Medium"),
-    t("projectFilter_priorityHigh", "High"),
-    t("projectFilter_priorityCritical", "Critical")
+    "All",
+    "Not Started",
+    "In Progress",
+    "Planning",
+    "On Hold",
+    "Completed",
   ];
-  const [priority, setPriority] = useState(items[0]);
+  const [priority, setPriority] = useState("All");
   const [team, setTeam] = useState(t("projectFilter_allMembers", "All Members"));
   const [date, setDate] = useState("");
+  const [membersList, setMembersList] = useState([]);
 
-  const priorityItems = ["Low", "Medium", "High", "Critical"];
+  useEffect(() => {
+    api
+      .get("/users/all")
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setMembersList(res.data);
+        }
+      })
+      .catch((err) => console.warn("Failed to load filter members:", err));
+  }, []);
+
+  const memberOptions = [
+    t("projectFilter_allMembers", "All Members"),
+    ...membersList.map((m) => m.name || m.email).filter(Boolean),
+  ];
 
   const applyFilter = (changes = {}) => {
     onApply({
@@ -92,9 +110,9 @@ export default function ProjectFilter({ onClose, onApply }) {
               />
             </div>
 
-            {/* Team */}
+            {/* Team / Members */}
             <FilterDropdown
-              options={[t("projectFilter_allMembers", "All Members"), ""]}
+              options={memberOptions}
               startVal={team}
               label={t("projectFilter_teamMembers", "TEAM / MEMBERS")}
               onChange={setTeam}

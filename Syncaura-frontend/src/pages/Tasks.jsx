@@ -26,7 +26,7 @@ import {
 import KanbanColumn from "../components/tasks/KanbanColumn";
 import CreateTaskModal from "../components/tasks/CreateTaskModal";
 import TaskDetailModal from "../components/tasks/TaskDetailModal";
-import { getAssigneeDisplay } from "../components/tasks/taskUtils";
+import { getAssigneeBadge, getAssigneeDisplay, getTaskCreatorInfo } from "../components/tasks/taskUtils";
 import { toast } from "react-toastify";
 import api from "../config/axios";
 
@@ -79,6 +79,8 @@ const StatCard = ({ label, value, icon: Icon, color }) => (
 const ListRow = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
   const status = STATUS_LABELS[task.status] || STATUS_LABELS.TODO;
   const overdue = isOverdue(task.deadline, task.status);
+  const assigneeInfo = getAssigneeBadge(task, usersList);
+  const creatorInfo = getTaskCreatorInfo(task, usersList);
 
   return (
     <motion.tr
@@ -93,6 +95,15 @@ const ListRow = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
         <span className="text-sm font-medium text-[#0A0A0A] dark:text-white line-clamp-1">
           {task.title}
         </span>
+      </td>
+      <td className="py-3 px-3 hidden md:table-cell">
+        {task.project_name || task.project_title ? (
+          <span className="text-xs font-semibold text-blue-600 dark:text-[#73FBFD] bg-blue-50 dark:bg-[#73FBFD]/10 border border-blue-200 dark:border-[#73FBFD]/20 px-2 py-0.5 rounded-md truncate max-w-[140px] inline-block">
+            📁 {task.project_name || task.project_title}
+          </span>
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        )}
       </td>
       <td className="py-3 px-3 hidden md:table-cell">
         <span
@@ -121,12 +132,20 @@ const ListRow = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
         </span>
       </td>
       <td className="py-3 px-3 hidden lg:table-cell">
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {task.assignedTo ||
-            task.assigned_to ||
-            task.assigned_user_name ||
-            "Unassigned"}
-        </span>
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+            {assigneeInfo?.name || "Unassigned"}
+          </span>
+          {creatorInfo && (
+            <span className="text-[10px] text-gray-400 flex items-center gap-1">
+              {creatorInfo.isSelfAssigned ? (
+                <span className="text-purple-600 dark:text-purple-400 font-medium">Self-created</span>
+              ) : (
+                <span>{creatorInfo.label}</span>
+              )}
+            </span>
+          )}
+        </div>
       </td>
       <td className="py-3 px-3">
         {canDelete && (
@@ -164,18 +183,29 @@ const Tasks = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [projectFilter, setProjectFilter] = useState("all");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [sortField, setSortField] = useState("createdAt");
   const [sortDir, setSortDir] = useState("desc");
   const [createLoading, setCreateLoading] = useState(false);
   const [usersList, setUsersList] = useState([]);
+  const [projectsList, setProjectsList] = useState([]);
 
   // Fetch users list for resolving assignee names & emails
   useEffect(() => {
     api
       .get("/users/all")
       .then((res) => setUsersList(res.data || []))
+      .catch(() => {});
+
+    api
+      .get("/projects")
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setProjectsList(res.data);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -229,6 +259,11 @@ const Tasks = () => {
     if (priorityFilter !== "all") {
       result = result.filter((t) => t.priority === priorityFilter);
     }
+    if (projectFilter !== "all") {
+      result = result.filter(
+        (t) => String(t.project_id || t.projectId) === String(projectFilter),
+      );
+    }
     result.sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
@@ -241,7 +276,7 @@ const Tasks = () => {
       return 0;
     });
     return result;
-  }, [tasks, debouncedSearch, priorityFilter, sortField, sortDir, isAdminOrCoAdmin, currentUser]);
+  }, [tasks, debouncedSearch, priorityFilter, projectFilter, sortField, sortDir, isAdminOrCoAdmin, currentUser]);
 
   const tasksByStatus = useMemo(
     () => ({
@@ -391,6 +426,22 @@ const Tasks = () => {
             ))}
           </div>
 
+          {/* Project Filter */}
+          <div className="flex items-center bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl px-2.5 py-1">
+            <select
+              value={projectFilter}
+              onChange={(e) => setProjectFilter(e.target.value)}
+              className="text-xs font-semibold bg-transparent text-[#0A0A0A] dark:text-white outline-none cursor-pointer py-1 max-w-[150px] truncate"
+            >
+              <option value="all" className="bg-white dark:bg-[#1e1f22]">📁 All Projects</option>
+              {projectsList.map((p) => (
+                <option key={p.id} value={p.id} className="bg-white dark:bg-[#1e1f22]">
+                  📁 {p.name || p.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* View Toggle */}
           <div className="flex items-center bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl p-1">
             <button
@@ -484,6 +535,9 @@ const Tasks = () => {
                           Title <SortIcon field="title" />
                         </th>
                         <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">
+                          Project
+                        </th>
+                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">
                           Priority
                         </th>
                         <th
@@ -499,7 +553,7 @@ const Tasks = () => {
                           Deadline <SortIcon field="deadline" />
                         </th>
                         <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden lg:table-cell">
-                          Assigned
+                          Assigned & Origin
                         </th>
                         <th className="py-3 px-3 w-10" />
                       </tr>

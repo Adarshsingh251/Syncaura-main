@@ -7,7 +7,7 @@ import {
   Flag,
   Trash2,
 } from "lucide-react";
-import { getAssigneeBadge } from "./taskUtils";
+import { getAssigneeBadge, getTaskCreatorInfo } from "./taskUtils";
 
 const PRIORITY_CONFIG = {
   high: {
@@ -47,6 +47,7 @@ const TaskCard = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
   const totalSubtasks = task.subtasks?.length || 0;
   const deadline = task.deadline;
   const overdue = isOverdue(deadline) && task.status !== "DONE";
+  const creatorInfo = getTaskCreatorInfo(task, usersList);
 
   return (
     <motion.div
@@ -59,21 +60,48 @@ const TaskCard = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
       className="bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl p-4 cursor-pointer group relative"
       onClick={() => onOpen(task)}
     >
-      {/* Priority + Delete */}
-      <div className="flex items-center justify-between mb-3">
-        <span
-          className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${priority.className}`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
-          {priority.label}
-        </span>
+      {/* Priority + Project Tag + Self-Assigned/Creator Tag + Delete */}
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${priority.className}`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
+            {priority.label}
+          </span>
+
+          {(task.project_name || task.project_title) && (
+            <span
+              className="text-[11px] font-semibold text-blue-600 dark:text-[#73FBFD] bg-blue-50 dark:bg-[#73FBFD]/10 border border-blue-200 dark:border-[#73FBFD]/20 px-2 py-0.5 rounded-md truncate max-w-[130px]"
+              title={task.project_name || task.project_title}
+            >
+              📁 {task.project_name || task.project_title}
+            </span>
+          )}
+
+          {creatorInfo && creatorInfo.isSelfAssigned ? (
+            <span
+              className="text-[10px] font-semibold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/50 px-1.5 py-0.5 rounded-md"
+              title="This task was created by the user for themselves"
+            >
+              👤 Self-created
+            </span>
+          ) : creatorInfo && creatorInfo.name ? (
+            <span
+              className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded-md truncate max-w-[120px]"
+              title={creatorInfo.label}
+            >
+              By {creatorInfo.name}
+            </span>
+          ) : null}
+        </div>
         {canDelete && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(task.id);
             }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover shrink-0"
             aria-label="Delete task"
           >
             <Trash2 className="w-3.5 h-3.5" />

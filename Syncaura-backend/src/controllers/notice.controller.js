@@ -10,21 +10,24 @@ const __dirname = path.dirname(__filename);
 // CREATE notice with attachments
 export const createNotice = async (req, res) => {
   try {
-    const { title, description, created_by } = req.body;
- 
+    const { title, description, category, created_by } = req.body;
+    const authorName = req.user?.name || created_by || 'Admin';
+    const authorId = req.user?.id || null;
+    const normCategory = (category || 'GENERAL').toUpperCase();
+
     const result = await pool.query(
-      "INSERT INTO notices (title, description, created_by) VALUES ($1, $2, $3) RETURNING *",
-      [title, description, created_by || 'Admin']
+      "INSERT INTO notices (title, description, category, created_by, creator_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [title, description, normCategory, authorName, authorId]
     );
- 
+
     const notice = result.rows[0];
- 
+
     // Prepare attachments
     const files = req.files?.map(file => ({
       fileName: file.originalname,
       fileUrl: `/uploads/${file.filename}`
     })) || [];
- 
+
     for (const file of files) {
       await pool.query(
         "INSERT INTO notice_attachments (notice_id, file_name, file_url) VALUES ($1, $2, $3)",
@@ -32,14 +35,14 @@ export const createNotice = async (req, res) => {
       );
     }
     notice.attachments = files;
- 
+
     // Send notifications
     try {
       await notifyAllUsersAboutNotice(notice);
     } catch (notificationError) {
       console.error("Notification error:", notificationError);
     }
- 
+
     res.status(201).json({ success: true, data: notice });
   } catch (error) {
     // Cleanup
@@ -52,51 +55,69 @@ export const createNotice = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
- 
+
 // GET all notices
 export const getAllNotices = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM notices ORDER BY created_at DESC");
+    const result = await pool.query(`
+      SELECT n.*, u.name AS creator_user_name, u.role AS creator_user_role 
+      FROM notices n 
+      LEFT JOIN users u ON n.creator_id = u.id 
+      ORDER BY n.created_at DESC
+    `);
     const notices = result.rows;
- 
+
     for (let notice of notices) {
-      const attachmentsResult = await pool.query("SELECT * FROM notice_attachments WHERE notice_id = $1", [notice.id]);
+      const attachmentsResult = await pool.query(
+        "SELECT * FROM notice_attachments WHERE notice_id = $1",
+        [notice.id]
+      );
       notice.attachments = attachmentsResult.rows;
     }
- 
+
     res.status(200).json({ success: true, data: notices });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
- 
+
 // GET single notice by ID
 export const getNoticeById = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM notices WHERE id = $1", [req.params.id]);
+    const result = await pool.query(`
+      SELECT n.*, u.name AS creator_user_name, u.role AS creator_user_role 
+      FROM notices n 
+      LEFT JOIN users u ON n.creator_id = u.id 
+      WHERE n.id = $1
+    `, [req.params.id]);
+
     if (result.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Notice not found" });
     }
- 
+
     const notice = result.rows[0];
-    const attachmentsResult = await pool.query("SELECT * FROM notice_attachments WHERE notice_id = $1", [notice.id]);
+    const attachmentsResult = await pool.query(
+      "SELECT * FROM notice_attachments WHERE notice_id = $1",
+      [notice.id]
+    );
     notice.attachments = attachmentsResult.rows;
- 
+
     res.status(200).json({ success: true, data: notice });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
- 
+
 // UPDATE notice
 export const updateNotice = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description } = req.body;
- 
+    const { title, description, category } = req.body;
+    const normCategory = category ? category.toUpperCase() : null;
+
     const result = await pool.query(
-      "UPDATE notices SET title = COALESCE($1, title), description = COALESCE($2, description), updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *",
-      [title, description, id]
+      "UPDATE notices SET title = COALESCE($1, title), description = COALESCE($2, description), category = COALESCE($3, category), updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING *",
+      [title, description, normCategory, id]
     );
  
     if (result.rowCount === 0) {

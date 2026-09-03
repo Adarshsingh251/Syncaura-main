@@ -34,7 +34,7 @@ export const createTask = async (req, res) => {
   try {
     const { 
       title, description, priority, assignedTo, deadline, status, 
-      projectId, startDate, endDate, dependencies, reminderAt 
+      projectId, project_id, startDate, endDate, dependencies, reminderAt 
     } = req.body;
  
     const isAdminOrCoAdmin = isUserAdminOrCoAdmin(req.user);
@@ -43,20 +43,40 @@ export const createTask = async (req, res) => {
       ? (assignedTo || req.user?.email || req.user?.id)
       : (req.user?.email || req.user?.id || req.user?.name);
  
+    const resolvedProjectId = (projectId || project_id) && isUUID(String(projectId || project_id))
+      ? String(projectId || project_id)
+      : null;
+
     const result = await pool.query(
       `INSERT INTO tasks (
         title, description, priority, assigned_to, deadline, status, 
-        project_id, start_date, end_date, reminder_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+        project_id, start_date, end_date, reminder_at, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
       RETURNING *, assigned_to AS "assignedTo"`,
       [
         title, description, priority || "medium", finalAssignedTo, deadline, 
-        status || "TODO", projectId || null, startDate || null, 
-        endDate || null, reminderAt || deadline || null
+        status || "TODO", resolvedProjectId, startDate || null, 
+        endDate || null, reminderAt || deadline || null, req.user?.id || null
       ]
     );
  
     const task = result.rows[0];
+
+    // Attach creator details
+    if (req.user) {
+      task.creator_user_name = req.user.name;
+      task.creator_user_email = req.user.email;
+      task.creator_user_role = req.user.role;
+    }
+
+    // Attach project name if project_id exists
+    if (task.project_id) {
+      const pRes = await pool.query("SELECT name FROM projects WHERE id = $1", [task.project_id]);
+      if (pRes.rowCount > 0) {
+        task.project_name = pRes.rows[0].name;
+        task.project_title = pRes.rows[0].name;
+      }
+    }
  
     // Handle dependencies
     if (dependencies && Array.isArray(dependencies)) {
@@ -109,9 +129,14 @@ export const getAllTasks = async (req, res) => {
     const isAdminOrCoAdmin = isUserAdminOrCoAdmin(req.user);
  
     let query = `
-      SELECT t.*, t.assigned_to AS "assignedTo", u.name AS assigned_user_name, u.email AS assigned_user_email
+      SELECT t.*, t.assigned_to AS "assignedTo",
+        u.name AS assigned_user_name, u.email AS assigned_user_email,
+        u_creator.name AS creator_user_name, u_creator.email AS creator_user_email, u_creator.role AS creator_user_role,
+        p.name AS project_name, p.name AS project_title
       FROM tasks t
       LEFT JOIN users u ON (t.assigned_to = u.id::text OR t.assigned_to = u.email OR LOWER(t.assigned_to) = LOWER(u.name))
+      LEFT JOIN users u_creator ON (t.created_by = u_creator.id)
+      LEFT JOIN projects p ON t.project_id = p.id
     `;
     const conditions = [];
     const values = [];
