@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { X, Flag, Calendar, User, AlignLeft } from "lucide-react";
+import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import api from "../../config/axios";
 
 const PRIORITIES = ["low", "medium", "high"];
 const PRIORITY_COLORS = {
@@ -13,9 +15,25 @@ const PRIORITY_COLORS = {
 
 const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
   const { t } = useTranslation();
+  const currentUser = useSelector((state) => state.auth?.user);
+  const currentUserEmail = currentUser?.email || "";
+
+  const [usersList, setUsersList] = useState([]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      api
+        .get("/users/all")
+        .then((res) => setUsersList(res.data || []))
+        .catch((err) => console.error("Failed to load users:", err));
+    }
+  }, [isAdmin]);
 
   // Default task deadline in days (set by admin in dashboard, default 10 days)
-  const configuredDays = parseInt(localStorage.getItem("taskDeadlineDays") || "10", 10);
+  const configuredDays = parseInt(
+    localStorage.getItem("taskDeadlineDays") || "10",
+    10,
+  );
   const defaultDeadline = (() => {
     const d = new Date();
     d.setDate(d.getDate() + configuredDays);
@@ -27,7 +45,7 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
     description: "",
     priority: "medium",
     deadline: isAdmin ? "" : defaultDeadline,
-    assignedTo: "",
+    assignedTo: isAdmin ? "" : currentUserEmail,
     status: "TODO",
   });
   const [errors, setErrors] = useState({});
@@ -54,7 +72,7 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
     }
     const payload = {
       ...form,
-      assignedTo: isAdmin ? form.assignedTo : currentUserEmail,
+      assignedTo: isAdmin ? form.assignedTo : currentUserEmail || form.assignedTo,
     };
 
     if (!payload.deadline) delete payload.deadline;
@@ -189,10 +207,12 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
                 value={form.deadline}
                 onChange={handleChange}
                 disabled={!isAdmin}
-                className={`date-input w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all ${!isAdmin ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`date-input w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all ${!isAdmin ? "opacity-70 cursor-not-allowed" : ""}`}
               />
               {!isAdmin && (
-                <p className="text-[10px] text-gray-400 mt-0.5">{configuredDays}-day deadline (set by admin)</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {configuredDays}-day deadline (set by admin)
+                </p>
               )}
             </div>
             <div>
@@ -200,22 +220,40 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
                 {t("create_task_assigned_to_label", "Assigned To")}
               </label>
               {isAdmin ? (
-                <input
-                  name="assignedTo"
-                  value={form.assignedTo}
-                  onChange={handleChange}
-                  placeholder={t(
-                    "create_task_assigned_to_placeholder",
-                    "Name or email",
-                  )}
-                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
-                />
+                usersList && usersList.length > 0 ? (
+                  <select
+                    name="assignedTo"
+                    value={form.assignedTo}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                  >
+                    <option value="">
+                      {t("select_an_employee", "Select an Employee...")}
+                    </option>
+                    {usersList.map((u) => (
+                      <option key={u.id} value={u.email || u.name || u.id}>
+                        {u.name} ({u.email}) {u.role ? `— ${u.role}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    name="assignedTo"
+                    value={form.assignedTo}
+                    onChange={handleChange}
+                    placeholder={t(
+                      "create_task_assigned_to_placeholder",
+                      "Name or email",
+                    )}
+                    className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                  />
+                )
               ) : (
                 <input
                   value={currentUserEmail || ""}
                   readOnly
                   disabled
-                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all"
+                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-gray-50 dark:bg-[#111214] text-[#0A0A0A] dark:text-white opacity-70 cursor-not-allowed outline-none"
                 />
               )}
             </div>

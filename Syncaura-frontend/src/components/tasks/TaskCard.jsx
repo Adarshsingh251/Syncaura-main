@@ -7,6 +7,7 @@ import {
   Flag,
   Trash2,
 } from "lucide-react";
+import { getAssigneeBadge } from "./taskUtils";
 
 const PRIORITY_CONFIG = {
   high: {
@@ -39,7 +40,7 @@ const isOverdue = (dateStr) => {
   return new Date(dateStr) < new Date();
 };
 
-const TaskCard = ({ task, onOpen, onDelete, canDelete }) => {
+const TaskCard = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
   const completedSubtasks =
     task.subtasks?.filter((s) => s.status === "DONE").length || 0;
@@ -115,12 +116,25 @@ const TaskCard = ({ task, onOpen, onDelete, canDelete }) => {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-2">
-        {(task.assignedTo || task.assigned_to || task.assigned_user_name) ? (
-          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-            {task.assignedTo || task.assigned_to || task.assigned_user_name}
-          </span>
-        ) : <span />}
+      <div className="flex items-center justify-between mt-2 gap-2">
+        {(() => {
+          const assigneeInfo = getAssigneeBadge(task, usersList);
+          return assigneeInfo ? (
+            <div
+              title={assigneeInfo.email ? `${assigneeInfo.name} (${assigneeInfo.email})` : assigneeInfo.name}
+              className="flex flex-col min-w-0 max-w-[155px] px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800"
+            >
+              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate leading-tight">
+                {assigneeInfo.name}
+              </span>
+              {assigneeInfo.email && (
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate leading-tight">
+                  {assigneeInfo.email}
+                </span>
+              )}
+            </div>
+          ) : <span />;
+        })()}
         {deadline ? (
           <span
             className={`flex items-center gap-1 text-xs font-medium ${overdue ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}
