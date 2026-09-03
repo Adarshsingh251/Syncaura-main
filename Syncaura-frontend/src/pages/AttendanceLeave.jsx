@@ -393,14 +393,15 @@ const AttendanceLeave = () => {
       const response = await api.post(endpoint, payload);
 
       if (response.data && response.data.success) {
-        const now = new Date();
-        const formattedTime = now.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
+        const serverTime =
+          response.data.data?.check_in_time ||
+          response.data.data?.check_out_time ||
+          new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
 
-        const serverTime = response.data.data?.check_in_time || response.data.data?.check_out_time || formattedTime;
         const currentRecords = { ...attendanceStateRef.current.records };
         const selectedRecord = currentRecords[attendanceDate] || {};
 
@@ -419,9 +420,10 @@ const AttendanceLeave = () => {
           setCheckInTime(serverTime);
           setSelectedTab("Check-Out");
           toast.success(
-            response.data.message || (isToday
-              ? `Checked in successfully at ${serverTime}!`
-              : `Checked in for ${attendanceDate} at ${serverTime}!`)
+            response.data.message ||
+              (isToday
+                ? `Checked in successfully at ${serverTime}!`
+                : `Checked in for ${attendanceDate} at ${serverTime}!`)
           );
         } else {
           currentRecords[attendanceDate] = {
@@ -430,9 +432,10 @@ const AttendanceLeave = () => {
           };
           setCheckOutTime(serverTime);
           toast.success(
-            response.data.message || (isToday
-              ? `Checked out successfully at ${serverTime}!`
-              : `Checked out for ${attendanceDate} at ${serverTime}!`)
+            response.data.message ||
+              (isToday
+                ? `Checked out successfully at ${serverTime}!`
+                : `Checked out for ${attendanceDate} at ${serverTime}!`)
           );
         }
 
