@@ -1,21 +1,16 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Search, ChevronUp, ChevronDown, CalendarDays } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchTasks } from "../redux/features/taskThunks";
+import api from "../config/axios";
+import { toast } from "react-toastify";
 
-// --- 1. Data & Config ---
-const initialIssues = [
-  { id: 1, createdAt: "2026-08-30", name: "Diksha Anand", project: "Syncaura", title: "Login issue on dashboard", status: "IN_PROGRESS", priority: "high" },
-  { id: 2, createdAt: "2026-08-29", name: "Rahul Kumar", project: "Syncaura", title: "Notification not showing", status: "OPEN", priority: "medium" },
-  { id: 3, createdAt: "2026-08-28", name: "Priya Sharma", project: "Project Management", title: "Unable to create new project", status: "RESOLVED", priority: "high" },
-  { id: 4, createdAt: "2026-08-27", name: "Aman Singh", project: "Syncaura", title: "Task deadline not updating", status: "IN_PROGRESS", priority: "low" },
-  { id: 5, createdAt: "2026-08-26", name: "Neha Verma", project: "Website", title: "Profile page loading slowly", status: "CLOSED", priority: "medium" },
-];
-
+// --- Data & Config ---
 const STATUS_CONFIG = {
-  OPEN: { label: "Open", pillClass: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400", textClass: "text-red-600 dark:text-red-400" },
+  TODO: { label: "To Do", pillClass: "bg-slate-100 text-slate-600 dark:bg-slate-900/30 dark:text-slate-400", textClass: "text-slate-600 dark:text-slate-400" },
   IN_PROGRESS: { label: "In Progress", pillClass: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400", textClass: "text-amber-600 dark:text-amber-400" },
-  RESOLVED: { label: "Resolved", pillClass: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400", textClass: "text-emerald-600 dark:text-emerald-400" },
-  CLOSED: { label: "Closed", pillClass: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400", textClass: "text-blue-600 dark:text-blue-400" },
+  DONE: { label: "Done", pillClass: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400", textClass: "text-emerald-600 dark:text-emerald-400" },
 };
 
 const PRIORITY_CONFIG = {
@@ -25,10 +20,11 @@ const PRIORITY_CONFIG = {
 };
 
 const formatDate = (date) => {
+  if (!date) return "—"; // Added fallback boundary check
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-// --- 2. Isolated Dropdown Component ---
+// --- Isolated Dropdown Component ---
 function StatusDropdown({ currentStatus, onStatusChange, statusConfig }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -88,65 +84,75 @@ function StatusDropdown({ currentStatus, onStatusChange, statusConfig }) {
   );
 }
 
-// --- 3. Main Component ---
 const IssueStatus = () => {
-  const [issues, setIssues] = useState(initialIssues);
+  const dispatch = useDispatch();
+  const { tasks } = useSelector((state) => state.tasks);
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [statusFilter, setStatusFilter] = useState("ALL");   
+  const [priorityFilter, setPriorityFilter] = useState("ALL"); 
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [isPriorityDropdownOpen, setIsPriorityDropdownOpen] = useState(false);
 
-  const handleStatusChange = (issueId, newStatus) => {
-    setIssues((prevIssues) =>
-      prevIssues.map((issue) =>
-        issue.id === issueId ? { ...issue, status: newStatus } : issue
-      )
-    );
+  useEffect(() => {
+    dispatch(fetchTasks());
+  }, [dispatch]);
+
+  const handleStatusChange = async (taskId, newStatus) => {
+    try {
+      await api.put(`/tasks/${taskId}`, { status: newStatus });
+      dispatch(fetchTasks()); 
+      toast.success("Task status updated!");
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
+  };
+    const toggleDateOrder = () => {
+    setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"));
   };
 
-  const filteredIssues = useMemo(() => {
-    let result = [...issues];
-    if (search.trim()) {
-      const query = search.toLowerCase();
-      result = result.filter(
-        (issue) =>
-          issue.name.toLowerCase().includes(query) ||
-          issue.project.toLowerCase().includes(query) ||
-          issue.title.toLowerCase().includes(query)
-      );
-    }
-
-    result.sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
-      if (sortField === "createdAt") {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
-      }
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  }, [issues, search, sortField, sortDirection]);
-
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+const filteredIssues = useMemo(() => {
+  const uniqueTasksMap = new Map();
+  tasks.forEach((task) => {
+    const id = task.id || task._id;
+    if (id) {
+      uniqueTasksMap.set(id, task);
     } else {
-      setSortField(field);
-      setSortDirection("asc");
+      uniqueTasksMap.set(JSON.stringify(task), task);
     }
-  };
+  });
+  
+  let result = Array.from(uniqueTasksMap.values());
+  if (statusFilter !== "ALL") {
+    result = result.filter((task) => (task.status || "TODO") === statusFilter);
+  }
 
-  const SortIcon = ({ field }) => {
-    if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <ChevronUp className="inline w-3.5 h-3.5" />
-    ) : (
-      <ChevronDown className="inline w-3.5 h-3.5" />
-    );
-  };
+  if (priorityFilter !== "ALL") {
+    result = result.filter((task) => (task.priority || "medium") === priorityFilter);
+  }
+  if (search.trim()) {
+    const query = search.toLowerCase();
+    result = result.filter((task) => {
+      const titleMatch = task.title?.toLowerCase().includes(query);
+      
+      const assigneeText = String(
+        task.assignedTo || 
+        task.assigned_to || 
+        task.assigned_user_name || 
+        ""
+      ).toLowerCase();
+      
+      return titleMatch || assigneeText.includes(query);
+    });
+  }
+  result.sort((a, b) => {
+    const dateA = new Date(a.createdAt || a.deadline || 0).getTime();
+    const dateB = new Date(b.createdAt || b.deadline || 0).getTime();
+    return sortDirection === "desc" ? dateB - dateA : dateA - dateB;
+  });
+
+  return result;
+}, [tasks, search, statusFilter, priorityFilter, sortDirection]);
 
   return (
     <div className="w-full min-h-full bg-[#F7F8FA] dark:bg-[#111214] transition-colors duration-500">
@@ -178,64 +184,168 @@ const IssueStatus = () => {
               <p className="text-gray-400 dark:text-gray-500 text-sm">No issues found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto overflow-y-visible">
+            <div className="overflow-visible">
               <table className="w-full min-w-[800px]">
                 <thead>
-                  <tr className="border-b border-gray-100 dark:border-[#2d2f33]">
-                    <th onClick={() => handleSort("createdAt")} className="text-left py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide cursor-pointer hover:text-gray-600 dark:hover:text-gray-200">
-                      Date <SortIcon field="createdAt" />
+                  <tr className="border-b border-gray-100 dark:border-[#2d2f33] select-none text-left">
+                    {/* Date Column - Clickable Toggle */}
+                    <th 
+                      onClick={toggleDateOrder} 
+                      className="py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                    >
+                      Date {sortDirection === "desc" ? "▼ (Recent)" : "▲ (Old)"}
                     </th>
-                    <th onClick={() => handleSort("name")} className="text-left py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide cursor-pointer hover:text-gray-600 dark:hover:text-gray-200">
-                      Name <SortIcon field="name" />
+
+                    <th className="py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide text-gray-400">
+                      Name
                     </th>
-                    <th onClick={() => handleSort("project")} className="text-left py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide cursor-pointer hover:text-gray-600 dark:hover:text-gray-200">
-                      Project <SortIcon field="project" />
+                    <th className="py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide text-gray-400">
+                      Project
                     </th>
-                    <th className="text-left py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Title</th>
-                    <th className="text-left py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Status</th>
-                    <th className="text-left py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Priority</th>
+                    <th className="py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide text-gray-400">
+                      Title
+                    </th>
+
+                    {/* Status Filter Column - Interactive Dropdown */}
+                    <th className="py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide relative">
+                      <div 
+                        onClick={() => {
+                          setIsStatusDropdownOpen(!isStatusDropdownOpen);
+                          setIsPriorityDropdownOpen(false); // Close priority dropdown
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                      >
+                        Status <ChevronDown className="w-3.5 h-3.5 inline opacity-70" />
+                      </div>
+
+                      <AnimatePresence>
+                        {isStatusDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 5 }}
+                            className="absolute top-full left-5 mt-1 w-40 z-50 bg-white dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#2d2f33] rounded-xl shadow-xl overflow-hidden py-1 normal-case text-sm font-medium"
+                          >
+                            {[
+                              { key: "ALL", val: "All Statuses" },
+                              { key: "TODO", val: "To Do" },
+                              { key: "IN_PROGRESS", val: "In Progress" },
+                              { key: "DONE", val: "Done" }
+                            ].map((opt) => (
+                              <button
+                                key={opt.key}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setStatusFilter(opt.key);
+                                  setIsStatusDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#2d2f33] ${statusFilter === opt.key ? "text-blue-500 font-bold bg-blue-50/50 dark:bg-blue-900/10" : "text-gray-700 dark:text-gray-300"}`}
+                              >
+                                {opt.val}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </th>
+
+                    {/* Priority Filter Column - Interactive Dropdown */}
+                    <th className="py-4 px-5 text-xs font-semibold text-gray-400 uppercase tracking-wide relative">
+                      <div 
+                        onClick={() => {
+                          setIsPriorityDropdownOpen(!isPriorityDropdownOpen);
+                          setIsStatusDropdownOpen(false); // Close status dropdown
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                      >
+                        Priority <ChevronDown className="w-3.5 h-3.5 inline opacity-70" />
+                      </div>
+
+                      <AnimatePresence>
+                        {isPriorityDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 5 }}
+                            className="absolute top-full left-5 mt-1 w-40 z-50 bg-white dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#2d2f33] rounded-xl shadow-xl overflow-hidden py-1 normal-case text-sm font-medium"
+                          >
+                            {/* Filter options mapping */}
+                          {[
+                            { key: "ALL", val: "All Priorities" },
+                            { key: "low", val: "Low" },
+                            { key: "medium", val: "Medium" },
+                            { key: "high", val: "High" }
+                          ].map((opt) => (
+                            <button
+                              key={opt.key}
+                              onClick={(e) => {
+                                e.stopPropagation(); 
+                                setPriorityFilter(opt.key);
+                                setIsPriorityDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#2d2f33] capitalize ...`}
+                            >
+                              {opt.val}
+                            </button>
+                          ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredIssues.map((issue) => {
-                    const priority = PRIORITY_CONFIG[issue.priority];
+                  {filteredIssues.map((task) => {
+                    // Fallback properties for live Redux data items
+                    const priorityKey = task.priority || "medium";
+                    const priority = PRIORITY_CONFIG[priorityKey] || PRIORITY_CONFIG.medium;
+                    const statusKey = task.status || "TODO";
 
                     return (
-                      <tr key={issue.id} className="border-b border-gray-50 dark:border-[#2d2f33] hover:bg-gray-50/80 dark:hover:bg-[#1e1f22] transition-colors relative">
+                      <tr 
+                        key={task.id || task._id || `task-fallback-${index}`} 
+                        className="border-b border-gray-50 dark:border-[#2d2f33] hover:bg-gray-50/80 dark:hover:bg-[#1e1f22] transition-colors relative"
+                      >
                         {/* Date */}
                         <td className="py-4 px-5">
                           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                             <CalendarDays className="w-4 h-4 text-gray-400" />
-                            {formatDate(issue.createdAt)}
+                            {formatDate(task.createdAt || task.deadline)}
                           </div>
                         </td>
 
-                        {/* Name */}
+                        {/* Name (Assignee ID or Username) */}
                         <td className="py-4 px-5">
-                          <span className="text-sm font-medium text-[#0A0A0A] dark:text-white">{issue.name}</span>
+                          <span className="text-sm font-medium text-[#0A0A0A] dark:text-white">
+                            {task.assignedTo || task.assigned_to || task.assigned_user_name || "Unassigned"}
+                          </span>
                         </td>
 
-                        {/* Project */}
+                        {/* Project Column mapping */}
                         <td className="py-4 px-5">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">{issue.project}</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {task.project || task.projectName || "General"}
+                          </span>
                         </td>
 
                         {/* Title */}
                         <td className="py-4 px-5">
-                          <span className="text-sm font-medium text-[#0A0A0A] dark:text-white">{issue.title}</span>
+                          <span className="text-sm font-medium text-[#0A0A0A] dark:text-white">
+                            {task.title}
+                          </span>
                         </td>
 
                         {/* Custom Dropdown Status */}
                         <td className="py-4 px-5 relative">
                           <StatusDropdown 
-                            currentStatus={issue.status}
-                            onStatusChange={(newStatus) => handleStatusChange(issue.id, newStatus)}
+                            currentStatus={statusKey}
+                            onStatusChange={(newStatus) => handleStatusChange(task.id || task._id, newStatus)}
                             statusConfig={STATUS_CONFIG}
                           />
                         </td>
 
-                        {/* Priority */}
+                        {/* Priority Block */}
                         <td className="py-4 px-5">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${priority.className}`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -252,7 +362,10 @@ const IssueStatus = () => {
         </div>
 
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
-          Showing {filteredIssues.length} of {issues.length} issues
+          {statusFilter === "ALL" && priorityFilter === "ALL" && !search.trim() 
+            ? `Showing all ${tasks.length} issues` 
+            : `Showing ${filteredIssues.length} of ${tasks.length} filtered issues`
+          }
         </p>
       </div>
     </div>
