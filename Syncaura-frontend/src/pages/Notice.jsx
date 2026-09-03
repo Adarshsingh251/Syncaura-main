@@ -15,7 +15,16 @@ const Notice = () => {
   const { notices, isLoading } = useSelector((state) => state.notice);
   const isdark = useSelector((state) => state.theme.isDark);
   const user = useSelector((state) => state.auth.user);
-  const userRole = (user?.role || localStorage.getItem("role") || "").toLowerCase();
+  const storedUser = (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const currentUser = user || storedUser;
+  const userRole = String(currentUser?.role || "").trim().toLowerCase();
   const canCreateNotice = userRole === "admin" || userRole === "co-admin" || userRole === "coadmin";
 
   const [showModel, setShowModal] = useState(false);
@@ -178,6 +187,7 @@ const Notice = () => {
                   title={item.description}
                   category={item.category}
                   creator={item.creator_user_name || item.created_by || "Admin"}
+                  creatorId={item.creator_id || item.created_by_id}
                   date={item.created_at || item.createdAt}
                   onEdit={() => { setEditingNotice(item); setShowModal(true); }}
                   onDelete={handleDeleteNotice}

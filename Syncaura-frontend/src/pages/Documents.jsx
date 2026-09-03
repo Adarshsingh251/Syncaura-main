@@ -1,17 +1,31 @@
 import { Download, ListFilter, Plus, Search, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchDocuments, createDocument } from "../redux/features/documentThunks";
+import { fetchDocuments, createDocument, updateDocument } from "../redux/features/documentThunks";
 import TableRow from "../components/Document/TableRow";
 import DocumentModal from "../components/Document/DocumentModel";
 import ViewDocumentModal from "../components/Document/ViewDocumentModal";
 import VersionHistoryDrawer from "../components/Document/DetailAboutDcument/VersionHistoryDrawer";
 import { AnimatePresence, motion } from "framer-motion";
 import DocumentFilter from "../components/Document/DocumentFilter";
+import api from "../config/axios";
+import { toast } from "react-toastify";
 
 export default function Documents() {
   const dispatch = useDispatch();
   const { documents = [], loading = false, error = null } = useSelector((state) => state.documents || {});
+  const user = useSelector((state) => state.auth.user);
+  const storedUser = (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const currentUser = user || storedUser;
+  const userRole = String(currentUser?.role || "").trim().toLowerCase();
+  const isAdminOrCoAdmin = userRole === "admin" || userRole === "co-admin" || userRole === "coadmin";
   const LOCAL_STORAGE_KEY = "syncaura_uploaded_documents";
 
   const [localDocs, setLocalDocs] = useState(() => {
@@ -23,12 +37,13 @@ export default function Documents() {
     }
   });
 
-  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const tab = ["All Files", "Recent", "Shared with me", "Archived"];
   const [selectedTab, setSelectedTab] = useState("All Files");
   const [showModal, setShowModal] = useState(false);
+  const [editingDoc, setEditingDoc] = useState(null);
   const [currId, setCurrId] = useState(null);
   const [viewingDoc, setViewingDoc] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [showFilter, setShowFilter] = useState(false);
 
@@ -177,20 +192,103 @@ export default function Documents() {
     setShowModal(false);
     setSelectedTab("All Files");
 
-    setToast({ show: true, message: "Document uploaded successfully!", type: "success" });
-    setTimeout(() => setToast({ show: false, message: "", type: "success" }), 3500);
-
     try {
       await dispatch(createDocument({
         title: docData.title,
         content: docData.description,
         category: docData.category,
         type: docData.type,
+        file_url: docData.file_url,
+        file_name: docData.file_name,
       })).unwrap();
+      dispatch(fetchDocuments());
+      toast.success("Document uploaded and saved successfully!");
     } catch (err) {
       console.error("Backend sync notice: ", err);
+      toast.success("Document saved to current session!");
     }
   };
+
+  const handleUpdateDocument = async (docData) => {
+    const targetId = editingDoc?.id || editingDoc?._id;
+    if (!targetId) return;
+
+    try {
+      await dispatch(updateDocument({
+        id: targetId,
+        payload: {
+          title: docData.title,
+          content: docData.description || docData.content,
+          category: docData.category,
+          type: docData.type,
+          status: docData.status || "Active",
+        }
+      })).unwrap();
+
+      setLocalDocs((prev) => prev.map((d) => ((d.id || d._id) === targetId ? { ...d, ...docData } : d)));
+      setEditingDoc(null);
+      setShowModal(false);
+      dispatch(fetchDocuments());
+      toast.success("Document updated successfully!");
+    } catch (err) {
+      console.error("Update document error:", err);
+      toast.error("Failed to update document");
+    }
+  };
+
+  const handleRestoreVersion = async (versionItem, refetchVersions) => {
+    if (!currId) return;
+    const confirmed = window.confirm(`Are you sure you want to restore document to version ${versionItem.version}?`);
+    if (!confirmed) return;
+
+    try {
+      const targetDoc = safeDocuments.find((d) => (d.id || d._id) === currId);
+      await dispatch(updateDocument({
+        id: currId,
+        payload: {
+          title: versionItem.title || targetDoc?.title,
+          content: versionItem.content || targetDoc?.content,
+          category: targetDoc?.category,
+          type: targetDoc?.type,
+          status: "Active",
+        }
+      })).unwrap();
+
+      refetchVersions?.();
+      dispatch(fetchDocuments());
+      toast.success(`Document restored to ${versionItem.version}!`);
+    } catch (err) {
+      console.error("Restore error:", err);
+      toast.error("Failed to restore document version");
+    }
+  };
+
+  const handleExportAll = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      toast.info("Generating reports export...");
+      const res = await api.get("/documents/export/all", { responseType: "blob" });
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `documents_and_reports_${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Documents and reports exported successfully!");
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error("Failed to export documents and reports");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="relative w-full transition-colors duration-500 border-t dark:border-[#000000] h-full bg-[#FFFFFF] dark:bg-black pt-6 pb-24 overflow-y-auto">
       <div className="flex items-center justify-between w-full px-2 sm:px-7">
@@ -198,10 +296,16 @@ export default function Documents() {
           <h1 className="text-[#000000] text-xl lg:text-2xl font-semibold dark:text-[#FFFFFF]">Documents and Report</h1>
         </div>
         <div className="flex items-center justify-end">
-          <div className="flex items-center justify-center rounded-4xl border gap-2 border-[#2461E6] dark:border-[#73FBFD] px-3 sm:px-5 py-1 sm:py-2">
+          <button
+            onClick={handleExportAll}
+            disabled={isExporting}
+            className="flex items-center justify-center rounded-4xl border gap-2 border-[#2461E6] dark:border-[#73FBFD] px-3 sm:px-5 py-1 sm:py-2 hover:bg-blue-50 dark:hover:bg-cyan-950/30 transition cursor-pointer disabled:opacity-50 btn-hover"
+          >
             <Download className="text-[#2457C5] dark:text-[#73FBFD] size-4 sm:size-5" />
-            <p className="text-xs sm:text-base font-bold text-[#2457C5] dark:text-[#73FBFD]">Export All</p>
-          </div>
+            <p className="text-xs sm:text-base font-bold text-[#2457C5] dark:text-[#73FBFD]">
+              {isExporting ? "Exporting..." : "Export All"}
+            </p>
+          </button>
         </div>
       </div>
 
@@ -373,6 +477,7 @@ export default function Documents() {
                   document={item.attachments?.[0]?.name || item.file_name || (item.content ? item.title : "View Document")}
                   onView={() => setViewingDoc(item)}
                   onEdit={() => setCurrId(item._id || item.id)}
+                  canEdit={isAdminOrCoAdmin}
                   docColor={
                     idx % 3 === 0
                       ? "text-[#DC2626]"
@@ -409,19 +514,51 @@ export default function Documents() {
         </div>
       </div>
 
-      <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-500 px-6 py-3 text-white shadow-lg hover:bg-blue-500 dark:hover:bg-[#2cc4c7] btn-hover font-semibold cursor-pointer z-20"
-      >
-        <Upload size={18} />
-        <span>Upload Document</span>
-      </button>
+      {isAdminOrCoAdmin && (
+        <button
+          onClick={() => {
+            setEditingDoc(null);
+            setShowModal(true);
+          }}
+          className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-500 px-6 py-3 text-white shadow-lg hover:bg-blue-500 dark:hover:bg-[#2cc4c7] btn-hover font-semibold cursor-pointer z-20"
+        >
+          <Upload size={18} />
+          <span>Upload Document</span>
+        </button>
+      )}
 
       {showModal && (
-        <DocumentModal addReport={handleAddDocument} onClose={() => setShowModal(false)} />
+        <DocumentModal
+          initialData={editingDoc}
+          addReport={editingDoc ? handleUpdateDocument : handleAddDocument}
+          onClose={() => {
+            setShowModal(false);
+            setEditingDoc(null);
+          }}
+        />
       )}
       {currId && (
-        <VersionHistoryDrawer open={currId !== null} onClose={() => setCurrId(null)} />
+        <VersionHistoryDrawer
+          docId={currId}
+          document={safeDocuments.find((d) => (d.id || d._id) === currId)}
+          open={currId !== null}
+          onClose={() => setCurrId(null)}
+          onOpenEditor={(doc) => {
+            setEditingDoc(doc);
+            setShowModal(true);
+          }}
+          onViewVersion={(versionItem) => {
+            const parentDoc = safeDocuments.find((d) => (d.id || d._id) === currId);
+            setViewingDoc({
+              ...(parentDoc || {}),
+              title: versionItem.title || parentDoc?.title || "Document",
+              content: versionItem.content || parentDoc?.content,
+              description: versionItem.content || parentDoc?.description,
+              versions: [{ version: versionItem.version, date: versionItem.date }],
+            });
+          }}
+          onRestoreVersion={handleRestoreVersion}
+        />
       )}
       {viewingDoc && (
         <ViewDocumentModal
@@ -429,23 +566,6 @@ export default function Documents() {
           onClose={() => setViewingDoc(null)}
         />
       )}
-
-      {/* Error Toast Notification Banner */}
-      <AnimatePresence>
-        {toast.show && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-150 px-6 py-3 rounded-full shadow-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all ${toast.type === "success"
-              ? "bg-green-50 border-green-200 text-green-700 dark:bg-zinc-900 dark:border-[#73FBFD] dark:text-[#73FBFD]"
-              : "bg-red-50 border-red-200 text-red-700 dark:bg-zinc-900 dark:border-red-500 dark:text-red-400"
-              }`}
-          >
-            {toast.type === "success" ? "✓" : "⚠️"} {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

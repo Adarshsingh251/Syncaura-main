@@ -115,33 +115,50 @@ export const updateNotice = async (req, res) => {
     const { title, description, category } = req.body;
     const normCategory = category ? category.toUpperCase() : null;
 
+    // Check notice exists and ownership
+    const existingNoticeRes = await pool.query("SELECT * FROM notices WHERE id = $1", [id]);
+    if (existingNoticeRes.rowCount === 0) {
+      return res.status(404).json({ success: false, message: "Notice not found" });
+    }
+    const existingNotice = existingNoticeRes.rows[0];
+
+    const userRole = String(req.user?.role || "").toLowerCase();
+    const isAdmin = userRole === "admin";
+    const isCoAdmin = userRole === "co-admin" || userRole === "coadmin";
+
+    // Co-admin can only edit notices they published
+    if (!isAdmin && isCoAdmin) {
+      if (existingNotice.creator_id && existingNotice.creator_id !== req.user?.id) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You can only edit notices that you published."
+        });
+      }
+    }
+
     const result = await pool.query(
       "UPDATE notices SET title = COALESCE($1, title), description = COALESCE($2, description), category = COALESCE($3, category), updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING *",
       [title, description, normCategory, id]
     );
- 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, message: "Notice not found" });
-    }
- 
+
     const notice = result.rows[0];
- 
+
     // Add new attachments
     const files = req.files?.map(file => ({
       fileName: file.originalname,
       fileUrl: `/uploads/${file.filename}`
     })) || [];
- 
+
     for (const file of files) {
       await pool.query(
         "INSERT INTO notice_attachments (notice_id, file_name, file_url) VALUES ($1, $2, $3)",
         [id, file.fileName, file.fileUrl]
       );
     }
- 
+
     const attachmentsResult = await pool.query("SELECT * FROM notice_attachments WHERE notice_id = $1", [id]);
     notice.attachments = attachmentsResult.rows;
- 
+
     res.status(200).json({ success: true, data: notice });
   } catch (error) {
     if (req.files) {
@@ -255,13 +272,30 @@ export const deleteAttachment = async (req, res) => {
 // DELETE notice
 export const deleteNotice = async (req, res) => {
   try {
-    const attachmentsResult = await pool.query("SELECT * FROM notice_attachments WHERE notice_id = $1", [req.params.id]);
-    
-    const result = await pool.query("DELETE FROM notices WHERE id = $1 RETURNING *", [req.params.id]);
-    if (result.rowCount === 0) {
+    const existingNoticeRes = await pool.query("SELECT * FROM notices WHERE id = $1", [req.params.id]);
+    if (existingNoticeRes.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Notice not found" });
     }
- 
+    const existingNotice = existingNoticeRes.rows[0];
+
+    const userRole = String(req.user?.role || "").toLowerCase();
+    const isAdmin = userRole === "admin";
+    const isCoAdmin = userRole === "co-admin" || userRole === "coadmin";
+
+    // Co-admin can only delete notices they published
+    if (!isAdmin && isCoAdmin) {
+      if (existingNotice.creator_id && existingNotice.creator_id !== req.user?.id) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You can only delete notices that you published."
+        });
+      }
+    }
+
+    const attachmentsResult = await pool.query("SELECT * FROM notice_attachments WHERE notice_id = $1", [req.params.id]);
+    
+    await pool.query("DELETE FROM notices WHERE id = $1", [req.params.id]);
+
     // Cleanup files
     attachmentsResult.rows.forEach(att => {
       const filePath = path.join(__dirname, '../../public', att.file_url);
@@ -269,7 +303,7 @@ export const deleteNotice = async (req, res) => {
         fs.unlinkSync(filePath);
       }
     });
- 
+
     res.status(200).json({ success: true, message: "Notice and attachments deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -11,6 +11,7 @@ const TableRow = ({
   document,
   onView,
   onEdit,
+  canEdit = true,
 }) => {
   const { t } = useTranslation();
 
@@ -90,18 +91,20 @@ const TableRow = ({
         </div>
 
         {/* Edit */}
-        <div className="w-[8%] flex items-center justify-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit?.();
-            }}
-            className="text-[#2461E6] dark:text-[#73FBFD] hover:underline font-medium text-sm cursor-pointer btn-hover"
-          >
-            {t("edit", "Edit")}
-          </button>
-        </div>
+        {canEdit && (
+          <div className="w-[8%] flex items-center justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.();
+              }}
+              className="text-[#2461E6] dark:text-[#73FBFD] hover:underline font-medium text-sm cursor-pointer btn-hover"
+            >
+              {t("edit", "Edit")}
+            </button>
+          </div>
+        )}
 
       </div>
 
@@ -177,18 +180,20 @@ const TableRow = ({
           </div>
 
           {/* Edit */}
-          <div className="flex justify-end pt-1">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.();
-              }}
-              className="text-sm font-medium text-[#2461E6] dark:text-[#73FBFD] hover:underline cursor-pointer btn-hover"
-            >
-              {t("edit", "Edit")}
-            </button>
-          </div>
+          {canEdit && (
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.();
+                }}
+                className="text-sm font-medium text-[#2461E6] dark:text-[#73FBFD] hover:underline cursor-pointer btn-hover"
+              >
+                {t("edit", "Edit")}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -11,6 +11,7 @@ export default function NotificationRow({
   about,
   category,
   creator,
+  creatorId,
   date,
   bgColor,
   docColor,
@@ -21,8 +22,34 @@ export default function NotificationRow({
 }) {
   const { t } = useTranslation();
   const user = useSelector((state) => state.auth.user);
-  const userRole = (user?.role || localStorage.getItem("role") || "").toLowerCase();
-  const canManage = userRole === "admin" || userRole === "co-admin" || userRole === "coadmin";
+  const storedUser = (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const currentUser = user || storedUser;
+  const userRole = String(currentUser?.role || "").trim().toLowerCase();
+  const userId = currentUser?.id || currentUser?._id;
+
+  const isAdmin = userRole === "admin";
+  const isCoAdmin = userRole === "co-admin" || userRole === "coadmin";
+
+  // Strict RBAC:
+  // - Regular 'user' or 'employee' can NEVER manage/edit/delete.
+  // - 'admin' can manage all.
+  // - 'co-admin' can ONLY manage notices published by themselves.
+  let canManage = false;
+  if (isAdmin) {
+    canManage = true;
+  } else if (isCoAdmin) {
+    const isIdMatch = Boolean(creatorId && userId && String(creatorId) === String(userId));
+    const isNameMatch = Boolean(creator && currentUser?.name && creator.trim().toLowerCase() === currentUser.name.trim().toLowerCase());
+    const isEmailMatch = Boolean(creator && currentUser?.email && creator.trim().toLowerCase() === currentUser.email.trim().toLowerCase());
+    canManage = isIdMatch || isNameMatch || isEmailMatch;
+  }
 
   const attachment = attachments && attachments.length > 0 ? attachments[0] : null;
   const fileName = attachment ? (attachment.fileName || attachment.file_name) : null;

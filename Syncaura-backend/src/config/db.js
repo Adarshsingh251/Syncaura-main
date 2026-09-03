@@ -44,6 +44,13 @@ pool.query("SELECT current_database(), current_schema()")
         ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE SET NULL;
         ALTER TABLE notices ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT 'GENERAL';
         ALTER TABLE notices ADD COLUMN IF NOT EXISTS creator_id UUID REFERENCES users(id) ON DELETE SET NULL;
+        ALTER TABLE documents ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT 'GENERAL';
+        ALTER TABLE documents ADD COLUMN IF NOT EXISTS type VARCHAR(100) DEFAULT 'DOCUMENT';
+        ALTER TABLE documents ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active';
+        ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_url TEXT;
+        ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_name VARCHAR(255);
+        ALTER TABLE document_versions ADD COLUMN IF NOT EXISTS version_number VARCHAR(50) DEFAULT 'v1.0';
+        ALTER TABLE document_versions ADD COLUMN IF NOT EXISTS title VARCHAR(255);
         CREATE TABLE IF NOT EXISTS project_members (
           project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
           user_id UUID REFERENCES users(id) ON DELETE CASCADE,
