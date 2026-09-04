@@ -390,9 +390,12 @@ export const deleteTask = async (req, res) => {
     const existingTask = taskCheck.rows[0];
     const isAdminOrCoAdmin = isUserAdminOrCoAdmin(req.user);
  
-    // RBAC: Check if user is Admin/Co-Admin OR assigned to this task
-    if (!isAdminOrCoAdmin && !isTaskAssignedToUser(existingTask, req.user)) {
-      return res.status(403).json({ message: "Forbidden: Not authorized to delete this task" });
+    // RBAC: Only Admin/Co-Admin OR the user who created this task can delete it
+    const isCreator = String(existingTask.created_by || "").trim() === String(req.user?.id || "").trim();
+    if (!isAdminOrCoAdmin && !isCreator) {
+      return res.status(403).json({ 
+        message: "Forbidden: You can only delete tasks you created. Tasks assigned by an admin cannot be deleted." 
+      });
     }
  
     const result = await pool.query("DELETE FROM tasks WHERE id = $1 RETURNING *", [id]);

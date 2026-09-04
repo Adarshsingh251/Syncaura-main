@@ -32,18 +32,8 @@ export const register = async (req, res, next) => {
     if (existingRes.rowCount > 0) return res.status(409).json({ message: 'Email already registered' });
 
     const passwordHash = await hashPassword(password);
-    // const allowedRoles = Object.values(ROLES);
-    // const finalRole = allowedRoles.includes(role) ? role : ROLES.USER;
-    // const finalRole = ROLES.USER;
-    const allowedRoles = Object.values(ROLES);
-
-    if (!allowedRoles.includes(role)) {
-      return res.status(400).json({
-        message: 'Invalid registration role'
-      });
-    }
-
-    const finalRole = role;
+    // Public registrations are always standard users for security
+    const finalRole = ROLES.USER;
 
     const insertRes = await pool.query(
       'INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',

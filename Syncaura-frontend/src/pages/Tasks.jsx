@@ -200,7 +200,8 @@ const Tasks = () => {
   const isAdmin = userRole === "admin";
 
   const canDeleteTask = (task) =>
-    isAdminOrCoAdmin || task?.createdBy === currentUser?.id;
+    isAdminOrCoAdmin ||
+    (currentUser?.id && (String(task?.created_by) === String(currentUser.id) || String(task?.createdBy) === String(currentUser.id)));
 
   const [view, setView] = useState("kanban"); 
   const [search, setSearch] = useState("");
