@@ -200,38 +200,6 @@ const AttendanceLeave = () => {
     }
   }, [user, currentPage, leaveStorageKey]);
 
-  useEffect(() => {
-    const emptyState = getInitialAttendanceState();
-
-    try {
-      const storedValue = localStorage.getItem(attendanceStorageKey);
-      const storedState = storedValue ? JSON.parse(storedValue) : emptyState;
-      attendanceStateRef.current = {
-        presentDays: Number.isFinite(storedState.presentDays)
-          ? storedState.presentDays
-          : emptyState.presentDays,
-        records:
-          storedState.records && typeof storedState.records === "object"
-            ? storedState.records
-            : {},
-      };
-    } catch {
-      attendanceStateRef.current = emptyState;
-    }
-
-    const todayRecord = attendanceStateRef.current.records[getToday()] || {};
-    let isCurrent = true;
-
-    if (isCurrent) {
-      setCheckInTime(todayRecord.in || null);
-      setCheckOutTime(todayRecord.out || null);
-      setSelectedTab(todayRecord.in && !todayRecord.out ? "Check-Out" : "Check-In");
-    }
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [attendanceStorageKey]);
 
   // Helper to fetch user's current browser location
   const getUserLocation = () => {
@@ -298,7 +266,9 @@ const AttendanceLeave = () => {
         if (response.data && response.data.success && Array.isArray(response.data.records)) {
           const todayStr = getToday();
           const todayRec = response.data.records.find((r) => r.date === todayStr);
-          if (todayRec && isCurrent) {
+          const isSample = todayRec && String(todayRec.id).startsWith("sample-");
+
+          if (todayRec && !isSample && isCurrent) {
             const inTime = (todayRec.check_in_time && todayRec.check_in_time !== "-") ? todayRec.check_in_time : null;
             const outTime = (todayRec.check_out_time && todayRec.check_out_time !== "-") ? todayRec.check_out_time : null;
             setCheckInTime(inTime);
@@ -312,6 +282,18 @@ const AttendanceLeave = () => {
               out: outTime,
               status: todayRec.status || "Present",
             };
+            attendanceStateRef.current.records = currentRecords;
+            try {
+              localStorage.setItem(attendanceStorageKey, JSON.stringify(attendanceStateRef.current));
+            } catch { /* ignore */ }
+          } else if (isCurrent && (!todayRec || isSample)) {
+            // No real record marked for today yet in DB - keep state ready for Check-In
+            setCheckInTime(null);
+            setCheckOutTime(null);
+            setSelectedTab("Check-In");
+
+            const currentRecords = { ...attendanceStateRef.current.records };
+            delete currentRecords[todayStr];
             attendanceStateRef.current.records = currentRecords;
             try {
               localStorage.setItem(attendanceStorageKey, JSON.stringify(attendanceStateRef.current));
