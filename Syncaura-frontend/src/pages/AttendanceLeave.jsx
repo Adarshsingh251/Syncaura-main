@@ -136,12 +136,13 @@ const AttendanceLeave = () => {
     [leaveStorageKey]
   );
 
-  const [leaveBalance, setLeaveBalance] = useState({
-    totalQuota: 24,
-    usedDays: 0,
+  const [leaveStats, setLeaveStats] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0,
+    rejected: 0,
+    approvedDays: 0,
     pendingDays: 0,
-    availableDays: 24,
-    year: new Date().getFullYear(),
   });
 
   const fetchLeaves = useCallback(async () => {
@@ -167,11 +168,11 @@ const AttendanceLeave = () => {
         const data = response.data;
         setTotalPages(data.totalPages || 1);
 
-        if (data.balance) {
-          setLeaveBalance(data.balance);
+        if (data.stats || data.balance) {
+          setLeaveStats(data.stats || data.balance);
         } else {
           api.get("/leave/balance").then(bRes => {
-            if (bRes.data?.data) setLeaveBalance(bRes.data.data);
+            if (bRes.data?.data) setLeaveStats(bRes.data.data);
           }).catch(() => {});
         }
 
@@ -853,35 +854,43 @@ const AttendanceLeave = () => {
         </div>
       </motion.div>
 
-      {/* Leave Quota Balance Banner */}
+      {/* Leave Status Summary Banner */}
       {(!isAdminOrCoAdmin || activeAdminView === "leaves") && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-4 mt-4 w-full">
           <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-blue-50/60 dark:bg-[#73FBFD]/10 border border-blue-100 dark:border-[#73FBFD]/20">
-            <span className="text-xl">🏖️</span>
+            <span className="text-xl">📋</span>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Annual Quota</p>
-              <p className="text-base font-bold text-blue-700 dark:text-[#73FBFD]">{leaveBalance.totalQuota} Days</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Total Requests</p>
+              <p className="text-base font-bold text-blue-700 dark:text-[#73FBFD]">
+                {leaveStats.total || leaveData.length} Requests
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-800/30">
-            <span className="text-xl">🟢</span>
+            <span className="text-xl">✅</span>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Available</p>
-              <p className="text-base font-bold text-emerald-700 dark:text-emerald-400">{leaveBalance.availableDays} Days</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Approved</p>
+              <p className="text-base font-bold text-emerald-700 dark:text-emerald-400">
+                {leaveStats.approved !== undefined ? leaveStats.approved : leaveData.filter(l => (l.status || '').toLowerCase() === 'approved').length} Leaves
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-800/30">
             <span className="text-xl">⏳</span>
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Pending</p>
-              <p className="text-base font-bold text-amber-700 dark:text-amber-400">{leaveBalance.pendingDays} Days</p>
+              <p className="text-base font-bold text-amber-700 dark:text-amber-400">
+                {leaveStats.pending !== undefined ? leaveStats.pending : leaveData.filter(l => (l.status || '').toLowerCase() === 'pending').length} Requests
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-800/30">
-            <span className="text-xl">📊</span>
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-800/30">
+            <span className="text-xl">❌</span>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Used Leaves</p>
-              <p className="text-base font-bold text-purple-700 dark:text-purple-300">{leaveBalance.usedDays} Days</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Rejected</p>
+              <p className="text-base font-bold text-rose-700 dark:text-rose-400">
+                {leaveStats.rejected !== undefined ? leaveStats.rejected : leaveData.filter(l => (l.status || '').toLowerCase() === 'rejected').length} Requests
+              </p>
             </div>
           </div>
         </div>

@@ -1,45 +1,59 @@
 import pool from '../config/db.js';
 import { createNotification } from '../utils/notifications.js';
 
-export const getLeaveBalanceHelper = async (userId) => {
-  const currentYear = new Date().getFullYear();
-  const leavesRes = await pool.query(
-    `SELECT from_date, to_date, status, leave_type 
-     FROM leaves 
-     WHERE user_id = $1 AND EXTRACT(YEAR FROM from_date) = $2`,
-    [userId, currentYear]
-  );
+export const getLeaveBalanceHelper = async (userId, isAdmin = false) => {
+  let query = `SELECT from_date, to_date, status, leave_type FROM leaves`;
+  let params = [];
+  if (!isAdmin && userId) {
+    query += ` WHERE user_id = $1`;
+    params = [userId];
+  }
 
-  let usedDays = 0;
+  const leavesRes = await pool.query(query, params);
+
+  let total = leavesRes.rowCount || 0;
+  let approved = 0;
+  let pending = 0;
+  let rejected = 0;
+  let approvedDays = 0;
   let pendingDays = 0;
+  let totalDays = 0;
 
   for (const l of leavesRes.rows) {
     const from = new Date(l.from_date);
     const to = new Date(l.to_date);
     const days = Math.max(1, Math.ceil((to - from) / (1000 * 60 * 60 * 24)) + 1);
-    if (l.status === 'approved') {
-      usedDays += days;
-    } else if (l.status === 'pending') {
+    totalDays += days;
+
+    const st = String(l.status || '').toLowerCase();
+    if (st === 'approved') {
+      approved += 1;
+      approvedDays += days;
+    } else if (st === 'pending') {
+      pending += 1;
       pendingDays += days;
+    } else if (st === 'rejected') {
+      rejected += 1;
     }
   }
 
-  const totalQuota = 24;
-  const availableDays = Math.max(0, totalQuota - usedDays);
-
   return {
-    totalQuota,
-    usedDays,
+    total,
+    approved,
+    pending,
+    rejected,
+    approvedDays,
     pendingDays,
-    availableDays,
-    year: currentYear
+    totalDays
   };
 };
 
 export const getLeaveBalance = async (req, res) => {
   try {
-    const balance = await getLeaveBalanceHelper(req.user.id);
-    return res.status(200).json({ success: true, data: balance });
+    const role = (req.user.role || '').toLowerCase();
+    const isAdmin = role === 'admin' || role === 'co-admin' || role === 'coadmin';
+    const stats = await getLeaveBalanceHelper(req.user.id, isAdmin);
+    return res.status(200).json({ success: true, data: stats, stats });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -70,15 +84,6 @@ export const applyLeave = async (req, res) => {
     if (toStr < fromStr) {
       return res.status(400).json({
         message: "toDate cannot be before fromDate"
-      });
-    }
-
-    const requestedDays = Math.max(1, Math.ceil((to - from) / (1000 * 60 * 60 * 24)) + 1);
-    const balance = await getLeaveBalanceHelper(req.user.id);
-
-    if (requestedDays > balance.availableDays) {
-      return res.status(400).json({
-        message: `You requested ${requestedDays} days, but you only have ${balance.availableDays} leave days remaining in your annual quota of ${balance.totalQuota}.`
       });
     }
 
@@ -319,11 +324,15 @@ export const getAllLeaves = async (req, res) => {
       [limit, offset]
     );
 
+    const stats = await getLeaveBalanceHelper(null, true);
+
     res.status(200).json({
       leaves: result.rows,
       currentPage: page,
       totalPages: Math.ceil(totalLeaves / limit),
       totalLeaves,
+      balance: stats,
+      stats,
     });
 
   } catch (error) {
