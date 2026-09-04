@@ -19,10 +19,27 @@ const Projects = () => {
   useEffect(() => {
     Promise.all([api.get('/projects'), api.get('/tasks')])
       .then(([projectsResponse, tasksResponse]) => {
+        // TEMP DEBUG: remove once the empty-projects issue is confirmed fixed.
+        const rawTasks = Array.isArray(tasksResponse.data) ? tasksResponse.data : []
+        let currentUser = null
+        try {
+          currentUser = JSON.parse(localStorage.getItem('user'))
+        } catch (e) {}
+        console.log('[DEBUG] current logged-in user:', currentUser)
+        console.log('[DEBUG] /projects response (raw):', projectsResponse.data)
+        console.log('[DEBUG] /tasks -> project_id & assigned_to per task:', rawTasks.map(t => ({
+          id: t.id,
+          title: t.title,
+          project_id: t.project_id,
+          assigned_to: t.assigned_to,
+        })))
         setProjects(Array.isArray(projectsResponse.data) ? projectsResponse.data : [])
-        setTasks(Array.isArray(tasksResponse.data) ? tasksResponse.data : [])
+        setTasks(rawTasks)
       })
-      .catch((requestError) => setError(requestError.response?.data?.message || 'Unable to load projects'))
+      .catch((requestError) => {
+        console.log('[DEBUG] /projects or /tasks failed:', requestError.response?.status, requestError.response?.data)
+        setError(requestError.response?.data?.message || 'Unable to load projects')
+      })
       .finally(() => setLoading(false))
   }, [])
 
