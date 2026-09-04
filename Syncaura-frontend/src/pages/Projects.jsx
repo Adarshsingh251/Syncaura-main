@@ -1,5 +1,5 @@
-import { ChevronDown, ListFilter, Plus, X, Edit3, Eye, Calendar, CheckCircle2, Flag, Tally2 } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, ListFilter, Plus, X, Edit3, Eye, Calendar, CheckCircle2, Flag, Tally2, Check } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Tab from "../components/projects/Tab";
 import ProjectCard from "../components/projects/ProjectCard";
@@ -11,14 +11,44 @@ import { toast } from "react-toastify";
 
 const Projects = () => {
   const userRole = useSelector((state) => state.auth?.user?.role);
-  const isAdmin = userRole === "admin" || userRole === "co-admin" || true; // allow creation & editing for demo
-
-  const [projectsList, setProjectsList] = useState(PROJECTS);
+  const isAdmin = userRole === "admin" || userRole === "co-admin";
+  const [projectsList, setProjectsList] = useState(() => {
+    const savedProjects = localStorage.getItem("projectsList");
+    return savedProjects ? JSON.parse(savedProjects) : PROJECTS;
+  });
+  useEffect(() => {
+    localStorage.setItem("projectsList", JSON.stringify(projectsList));
+  }, [projectsList]);
   const [currTab, setCurrTab] = useState("All Projects");
   const [showModel, setShowModel] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
   const [direction, setDirection] = useState(0);
+
+  const handleAddProject = (newProject) => {
+    setProjectsList((prev) => [newProject, ...prev]);
+  };
+
+  // Sorting state
+  const [sortBy, setSortBy] = useState("Recent");
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const sortRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutsideSort = (event) => {
+      if (sortRef.current && !sortRef.current.contains(event.target)) {
+        setShowSortDropdown(false);
+      }
+    };
+    if (showSortDropdown) {
+      document.addEventListener("mousedown", handleClickOutsideSort);
+      document.addEventListener("touchstart", handleClickOutsideSort);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideSort);
+      document.removeEventListener("touchstart", handleClickOutsideSort);
+    };
+  }, [showSortDropdown]);
 
   // Modals state for action menu options
   const [selectedProject, setSelectedProject] = useState(null);
@@ -52,6 +82,26 @@ const Projects = () => {
       ? projectsList
       : projectsList.filter((item) => item.priority === currTab);
 
+  // Apply sorting algorithm
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
+    if (sortBy === "Name (A-Z)") {
+      return a.title.localeCompare(b.title);
+    }
+    if (sortBy === "Name (Z-A)") {
+      return b.title.localeCompare(a.title);
+    }
+    if (sortBy === "Progress (High to Low)") {
+      return (b.progress || 0) - (a.progress || 0);
+    }
+    if (sortBy === "Progress (Low to High)") {
+      return (a.progress || 0) - (b.progress || 0);
+    }
+    if (sortBy === "Due Date") {
+      return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
+    }
+    return 0;
+  });
+
   const handleApplyFilters = (newFilters) => {
     setAppliedFilters(newFilters);
   };
@@ -65,7 +115,7 @@ const Projects = () => {
   };
 
   // Handle actions triggered from ProjectCard action menu
-  const handleProjectAction = (actionType, projectData) => {
+  const handleProjectAction = (actionType, projectData, targetStatus = null) => {
     if (actionType === "view") {
       setSelectedProject(projectData);
       setActiveModal("view");
@@ -88,21 +138,18 @@ const Projects = () => {
       setProjectsList((prev) => [duplicated, ...prev]);
       toast.success(`Project "${projectData.title}" duplicated!`);
     } else if (actionType === "status") {
-      const statusCycle = {
-        Ongoing: "Completed",
-        Completed: "On Hold",
-        "On Hold": "Critical",
-        Critical: "Ongoing",
-      };
-      const nextStatus = statusCycle[projectData.priority] || "Ongoing";
+      const newStatus = targetStatus || (projectData.priority === "Ongoing" ? "Completed" : "Ongoing");
       setProjectsList((prev) =>
         prev.map((p) =>
-          p.title === projectData.title ? { ...p, priority: nextStatus } : p
+          p.title === projectData.title ? { ...p, priority: newStatus } : p
         )
       );
-      toast.info(`Updated "${projectData.title}" status to ${nextStatus}`);
+      toast.info(`Updated status for "${projectData.title}" to ${newStatus}`);
     } else if (actionType === "delete") {
-      setProjectsList((prev) => prev.filter((p) => p.title !== projectData.title));
+      setProjectsList((prev) =>
+        prev.filter((p) => p.id !== projectData.id)
+      );
+
       toast.warn(`Deleted project "${projectData.title}"`);
     }
   };
@@ -115,13 +162,13 @@ const Projects = () => {
       prev.map((p) =>
         p.title === selectedProject.title
           ? {
-              ...p,
-              title: editFormData.title,
-              department: editFormData.department,
-              priority: editFormData.priority,
-              progress: Number(editFormData.progress),
-              dueDate: editFormData.dueDate,
-            }
+            ...p,
+            title: editFormData.title,
+            department: editFormData.department,
+            priority: editFormData.priority,
+            progress: Number(editFormData.progress),
+            dueDate: editFormData.dueDate,
+          }
           : p
       )
     );
@@ -175,17 +222,56 @@ const Projects = () => {
             className="flex flex-wrap items-center gap-3 justify-center 
                   md:justify-end"
           >
-            {/* Sort */}
-            <div
-              className="px-3 py-2 bg-white dark:bg-[#575757]
-                    flex items-center gap-2
-                    border rounded-xl
-                    border-[#EAECEF] dark:border-[#575757]"
-            >
-              <h1 className="text-sm text-[#082A44] dark:text-[#B2B2B2] font-semibold">
-                Sort by: Recent
-              </h1>
-              <ChevronDown className="size-5 text-[#082A44] dark:text-[#B2B2B2]" />
+            {/* Functional Sort Dropdown */}
+            <div ref={sortRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setShowSortDropdown((prev) => !prev)}
+                className="px-3 py-2 bg-white dark:bg-[#575757] flex items-center gap-2 border rounded-xl border-[#EAECEF] dark:border-[#575757] hover:border-blue-500 dark:hover:border-[#73FBFD] transition-colors cursor-pointer"
+              >
+                <h1 className="text-sm text-[#082A44] dark:text-[#B2B2B2] font-semibold">
+                  Sort by: {sortBy}
+                </h1>
+                <ChevronDown className={`size-5 text-[#082A44] dark:text-[#B2B2B2] transition-transform ${showSortDropdown ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {showSortDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-0 top-11 z-50 w-52 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-1.5 overflow-hidden"
+                  >
+                    {[
+                      "Recent",
+                      "Name (A-Z)",
+                      "Name (Z-A)",
+                      "Progress (High to Low)",
+                      "Progress (Low to High)",
+                      "Due Date",
+                    ].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => {
+                          setSortBy(option);
+                          setShowSortDropdown(false);
+                          toast.info(`Sorted projects by: ${option}`);
+                        }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left cursor-pointer transition-colors ${sortBy === option
+                          ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-[#73FBFD] font-bold"
+                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2A2A2A]"
+                          }`}
+                      >
+                        <span>{option}</span>
+                        {sortBy === option && <Check className="size-4 text-blue-600 dark:text-[#73FBFD]" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <button
@@ -233,13 +319,12 @@ const Projects = () => {
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="px-5 py-3 flex flex-wrap items-center justify-center gap-x-14 gap-y-8"
           >
-            {filteredProjects.map(
+            {sortedProjects.map(
               (
-                { title, department, priority, progress, dueDate, avatars },
-                idx
-              ) => (
+                { id, title, department, priority, progress, dueDate, avatars }) => (
                 <ProjectCard
-                  key={title + idx}
+                  key={id}
+                  id={id}
                   title={title}
                   department={department}
                   priority={priority}
@@ -255,7 +340,12 @@ const Projects = () => {
       </div>
 
       {/* Create New Project Modal */}
-      {showModel && <CreateNewProject onClose={() => setShowModel(false)} />}
+      {showModel && (
+        <CreateNewProject
+          onClose={() => setShowModel(false)}
+          onAddProject={handleAddProject}
+        />
+      )}
 
       {/* View Details Modal */}
       <AnimatePresence>

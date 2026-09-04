@@ -1,4 +1,4 @@
-  import {
+import {
   Calendar,
   CircleCheckBig,
   Clock,
@@ -72,22 +72,26 @@ const AttendanceLeave = () => {
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [leaveToEdit, setLeaveToEdit] = useState(null);
-
+  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedTab, setSelectedTab] = useState("Check-In");
   const popupRef = useRef(null);
   const triggerRef = useRef(null);
+  const dateInputRef = useRef(null);
   const [search, setSearch] = useState("");
   const [debouncedValue, setDebouncedValue] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const [attendanceDate] = useState(getToday);
+  // Editable attendance date (feature/attendance-date-picker-ui) — defaults to today,
+  // but the user can pick another date to mark/view attendance for.
+  const [attendanceDate, setAttendanceDate] = useState(getToday);
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+
   const [attendanceStats, setAttendanceStats] = useState(initialAttendanceStats);
   const attendanceStateRef = useRef(getInitialAttendanceState());
   const attendanceStorageKey = `${ATTENDANCE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`;
@@ -96,7 +100,7 @@ const AttendanceLeave = () => {
   // Load leave data from localStorage (persists across refreshes)
   const [leaveData, setLeaveData] = useState(() => {
     try {
-      const stored = localStorage.getItem(`${LEAVE_STORAGE_PREFIX}${user?.id || user?.email || "current-user"}`);
+      const stored = localStorage.getItem(leaveStorageKey);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -104,17 +108,20 @@ const AttendanceLeave = () => {
   });
 
   // Persist leave data to localStorage whenever it changes
-  const syncLeavesToStorage = useCallback((updater) => {
-    setLeaveData((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      try {
-        localStorage.setItem(leaveStorageKey, JSON.stringify(next));
-      } catch {
-        // storage quota exceeded — silently ignore
-      }
-      return next;
-    });
-  }, [leaveStorageKey]);
+  const syncLeavesToStorage = useCallback(
+    (updater) => {
+      setLeaveData((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        try {
+          localStorage.setItem(leaveStorageKey, JSON.stringify(next));
+        } catch {
+          // storage quota exceeded — silently ignore
+        }
+        return next;
+      });
+    },
+    [leaveStorageKey],
+  );
 
   // Until an attendance API exists, this keeps a user's daily status stable across
   // refreshes, logins, and logouts. Replace this with a GET attendance-status call
@@ -129,9 +136,10 @@ const AttendanceLeave = () => {
         presentDays: Number.isFinite(storedState.presentDays)
           ? storedState.presentDays
           : emptyState.presentDays,
-        records: storedState.records && typeof storedState.records === "object"
-          ? storedState.records
-          : {},
+        records:
+          storedState.records && typeof storedState.records === "object"
+            ? storedState.records
+            : {},
       };
     } catch {
       attendanceStateRef.current = emptyState;
@@ -159,27 +167,36 @@ const AttendanceLeave = () => {
     };
   }, [attendanceStorageKey]);
 
+  // Whenever the selected attendance date changes (via the date picker), reflect
+  // that date's stored check-in/check-out times instead of always showing today's.
+  useEffect(() => {
+    const record = attendanceStateRef.current.records[attendanceDate] || {};
+    setCheckInTime(record.checkInTime || null);
+    setCheckOutTime(record.checkOutTime || null);
+    setSelectedTab(record.checkInTime ? "Check-Out" : "Check-In");
+  }, [attendanceDate]);
+
   const saveAttendanceState = (nextState) => {
     attendanceStateRef.current = nextState;
-    localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
+    try {
+      localStorage.setItem(attendanceStorageKey, JSON.stringify(nextState));
+    } catch {
+      // storage quota exceeded — silently ignore
+    }
   };
 
   const canCheckIn = !checkInTime && !checkOutTime;
   const canCheckOut = Boolean(checkInTime) && !checkOutTime;
 
   const handleConfirmAttendance = () => {
-    if (selectedTab === "Check-In" && !canCheckIn) {
-      toast.info(`You have already checked in today at ${checkInTime}`);
-      setShowPopup(false);
-      return;
-    }
-    if (selectedTab === "CheckOut" && !canCheckOut) {
-      if (checkOutTime) {
+    if (selectedTab === "Check-In" && !canCheckIn) return;
+    if (selectedTab === "Check-Out" && !canCheckOut) {
+      if (!checkInTime) {
+        toast.error("Please check in before checking out!");
+      } else if (checkOutTime) {
         toast.info(`You have already checked out today at ${checkOutTime}`);
-        setShowPopup(false);
-        return;
       }
-      toast.error("Please check in before checking out!");
+      setShowPopup(false);
       return;
     }
 
@@ -187,11 +204,15 @@ const AttendanceLeave = () => {
     // This is UI-only until the backend provides attendance endpoints.
     setTimeout(() => {
       const now = new Date();
-      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const timeString = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
       const currentRecord = attendanceStateRef.current.records[attendanceDate] || {};
 
       if (selectedTab === "Check-In") {
         setCheckInTime(timeString);
+
         const nextState = {
           presentDays: attendanceStateRef.current.presentDays + 1,
           records: {
@@ -199,16 +220,22 @@ const AttendanceLeave = () => {
             [attendanceDate]: { ...currentRecord, checkInTime: timeString },
           },
         };
+
         saveAttendanceState(nextState);
+
         setAttendanceStats((previousStats) =>
           previousStats.map((stat) =>
-            stat.title === "Present Days" ? { ...stat, value: nextState.presentDays } : stat,
+            stat.title === "Present Days"
+              ? { ...stat, value: nextState.presentDays }
+              : stat,
           ),
         );
-        setSelectedTab("CheckOut");
+
+        setSelectedTab("Check-Out");
         toast.success(`Attendance marked successfully for ${attendanceDate}!`);
-      } else if (selectedTab === "CheckOut") {
+      } else if (selectedTab === "Check-Out") {
         setCheckOutTime(timeString);
+
         saveAttendanceState({
           ...attendanceStateRef.current,
           records: {
@@ -216,8 +243,10 @@ const AttendanceLeave = () => {
             [attendanceDate]: { ...currentRecord, checkOutTime: timeString },
           },
         });
-        toast.success("Check-out recorded successfully!");
+
+        toast.success("Checked out successfully!");
       }
+
       setIsSubmitting(false);
       setShowPopup(false);
     }, 1000);
@@ -228,16 +257,23 @@ const fetchLeaves = useCallback(async () => {
     const token = localStorage.getItem("accessToken");
 
     if (!token) {
-      throw new Error("Access token not found");
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
+        if (stored) {
+          setLeaveData(JSON.parse(stored));
+        }
+      } catch {
+        // ignore malformed local data
+      }
+      return;
     }
 
     const isAdminOrCoAdmin =
-  user?.role === "admin" ||
-  user?.role === "co-admin";
+      user?.role === "admin" || user?.role === "co-admin";
 
-   const endpoint = isAdminOrCoAdmin
-  ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
-  : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
+    const endpoint = isAdminOrCoAdmin
+      ? `http://localhost:5000/api/leave/allleaves?page=${currentPage}&limit=5`
+      : `http://localhost:5000/api/leave/myleaves?page=${currentPage}&limit=5`;
 
     const response = await fetch(endpoint, {
       method: "GET",
@@ -247,43 +283,66 @@ const fetchLeaves = useCallback(async () => {
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch leaves: ${response.status}`);
-    }
-
     const data = await response.json();
-   
 
     setTotalPages(data.totalPages || 1);
 
-       
+    if (data.leaves && data.leaves.length > 0) {
+      const formattedLeaves = data.leaves.map((leave) => ({
+        ...leave,
+        startDate: leave.from_date || leave.startDate,
+        endDate: leave.to_date || leave.endDate,
+        type: leave.leave_type || leave.type || "Leave",
+      }));
 
-    const formattedLeaves = (data.leaves || []).map((leave) => ({
-      ...leave,
-      startDate: leave.from_date,
-      endDate: leave.to_date,
-      type: leave.leave_type || "Leave",
-    }));
+      setLeaveData(formattedLeaves);
+    } else {
+      try {
+        const stored = localStorage.getItem(leaveStorageKey);
 
-     
-    console.log("Formatted Leaves:", formattedLeaves);
-    setLeaveData(formattedLeaves);
+        if (stored) {
+          const localLeaves = JSON.parse(stored);
+
+          if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+            setLeaveData(localLeaves);
+          }
+        }
+      } catch {
+        // ignore malformed local data
+      }
+    }
   } catch (error) {
-    console.error("Error fetching leaves:", error);
-    toast.error("Failed to load leave requests");
+    console.warn(
+      "Error fetching leaves from backend, using local fallback:",
+      error.message
+    );
+
+    toast.error(
+      "Failed to load leave requests from the server — showing local data."
+    );
+
+    try {
+      const stored = localStorage.getItem(leaveStorageKey);
+
+      if (stored) {
+        const localLeaves = JSON.parse(stored);
+
+        if (Array.isArray(localLeaves) && localLeaves.length > 0) {
+          setLeaveData(localLeaves);
+        }
+      }
+    } catch {
+      // ignore malformed local data
+    }
   }
-}, [user?.role,currentPage]);
-
-useEffect(() => {
-  fetchLeaves();
-}, [fetchLeaves,]);
-
+}, [user?.role, currentPage, leaveStorageKey]);
 
   useEffect(() => {
-    const timer = setTimeout(
-      () => setDebouncedValue(search.toLowerCase()),
-      500,
-    );
+    fetchLeaves();
+  }, [fetchLeaves]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(search.toLowerCase()), 500);
     return () => clearTimeout(timer);
   }, [search]);
 
@@ -292,11 +351,11 @@ useEffect(() => {
 
     if (debouncedValue) {
       result = result.filter(
-      (item) =>
-            (item.reason || "").toLowerCase().includes(debouncedValue) ||
-            (item.status || "").toLowerCase().includes(debouncedValue) ||
-            (item.type || "").toLowerCase().includes(debouncedValue),
-        );
+        (item) =>
+          (item.reason || "").toLowerCase().includes(debouncedValue) ||
+          (item.status || "").toLowerCase().includes(debouncedValue) ||
+          (item.type || "").toLowerCase().includes(debouncedValue),
+      );
     }
 
     if (appliedFilters) {
@@ -314,11 +373,7 @@ useEffect(() => {
           const startStr = item.startDate ? item.startDate.split("T")[0] : "";
           const endStr = item.endDate ? item.endDate.split("T")[0] : "";
           if (!startStr) return false;
-          return (
-            selectedDateStr >= startStr &&
-            (!endStr || selectedDateStr <= endStr)
-            );
-          
+          return selectedDateStr >= startStr && (!endStr || selectedDateStr <= endStr);
         });
       }
     }
@@ -348,8 +403,8 @@ useEffect(() => {
   }, [showPopup]);
 
   const handleApplyFilters = (newFilters) => {
-  setAppliedFilters(newFilters);
-};
+    setAppliedFilters(newFilters);
+  };
 
   const handleOpenCreateModal = () => {
     setLeaveToEdit(null);
@@ -376,18 +431,20 @@ useEffect(() => {
 
   return (
     <div className="relative w-full min-h-[calc(92vh)] flex flex-col bg-[#FFFFFF] dark:bg-[#000000]">
-      <div className="flex flex-col sm:flex-row gap-y-3 items-center justify-between px-5 py-5 border-b border-[#EDEDED]">
-        <h1 className="text-2xl flex-2/5 xl:flex-3/5 font-medium text-[#000000] dark:text-[#FFFFFF]">
+      {/* Header Section Updated for Perfect Alignment */}
+      <div className="relative flex flex-col lg:flex-row gap-y-3 items-center justify-between px-5 py-5 border-b border-[#EDEDED] dark:border-[#575757]">
+        <h1 className="text-xl lg:text-2xl font-medium text-[#000000] dark:text-[#FFFFFF] w-full lg:w-auto">
           Attendance And Leave Management
         </h1>
-        <div className="flex w-full flex-3/5 md:flex-2/5 2xl:flex-1/5 items-center justify-center gap-2 ">
+        <div className="flex w-full flex-3/5 md:flex-2/5 2xl:flex-3/5 items-center justify-center gap-2 ">
           <Link
             to="/my-attendance"
-            className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-4xl font-semibold text-sm transition-transform active:scale-95 shadow-sm"
+            className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-4xl font-semibold text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap"
           >
             <UserCheck className="size-4" />
             <span>My Attendance</span>
           </Link>
+
           <button
             onClick={() => setShowFilter((prev) => !prev)}
             className={`btn-hover px-4 py-2 bg-white dark:bg-[#000000] flex items-center gap-2 border rounded-4xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#989696] dark:border-[#989696]"} `}
@@ -395,39 +452,40 @@ useEffect(() => {
             <Funnel
               className={`size-5 ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"} `}
             />
-            <h1
-              className={`text-base ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#575757] dark:text-[#8f8e8e]"}  font-semibold`}
+            <span
+              className={`text-base ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#575757] dark:text-[#8f8e8e]"} font-semibold`}
             >
               Filter
-            </h1>
+            </span>
           </button>
-          <AnimatePresence mode="wait">
-            {showFilter && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="w-full absolute left-0 top-30 md:top-20 z-100"
-              >
-                <AttendanceLeaveFilter
-                  onClose={() => setShowFilter(false)}
-                  onApply={handleApplyFilters}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div className="flex w-full items-center gap-2 bg-[#EDEDED] dark:bg-[#2E2F2F]  px-3 py-2 rounded-4xl">
-            <Search className="size-6 text-gray-500 dark:text-[#A19C9C]" />
+
+          {/* Search bar width optimized */}
+          <div className="flex items-center gap-2 bg-[#EDEDED] dark:bg-[#2E2F2F] px-3 py-2 rounded-4xl w-[160px] sm:w-[180px] lg:w-[200px]">
+            <Search className="size-5 text-gray-500 dark:text-[#A19C9C] shrink-0" />
             <input
               onChange={(e) => setSearch(e.target.value)}
               value={search}
               placeholder="Search"
-              className="bg-transparent  dark:text-[#A19C9C] dark:placeholder:text-[#A19C9C] text-[#5C5C5C] placeholder:text-[#5C5C5C] outline-none text-sm w-full"
+              className="bg-transparent dark:text-[#A19C9C] dark:placeholder:text-[#A19C9C] text-[#5C5C5C] placeholder:text-[#5C5C5C] outline-none text-sm w-full"
             />
           </div>
         </div>
+
+        <AnimatePresence mode="wait">
+          {showFilter && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="absolute left-0 top-full mt-1 w-full z-50 px-5"
+            >
+              <AttendanceLeaveFilter onClose={() => setShowFilter(false)} onApply={handleApplyFilters} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
       <motion.div
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
@@ -439,27 +497,7 @@ useEffect(() => {
             <AttendanceCard {...item} />
           </div>
         ))}
-{/* 5th CARD: MARK THE PRESENCE */}
-{/* <div className="relative w-full flex justify-center">
-  <motion.div
-    onClick={() => setShowPopup((prev) => !prev)}
-    ref={triggerRef}
-    whileTap={{ scale: 0.97 }}
-    className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED]"
-  >
-    <h1
-      className={`font-semibold text-xs sm:text-sm ${
-        checkInTime ? 'text-[#29C339]' : 'text-[#FF0000]'
-      }`}
-    >
-      {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
-    </h1>
 
-    <div className="flex items-center justify-between mt-2">
-      ...
-    </div>
-  </motion.div>
-</div> */}
         <div className="relative w-full flex justify-center">
           <motion.div
             onClick={() => setShowPopup((prev) => !prev)}
@@ -467,17 +505,17 @@ useEffect(() => {
             whileTap={{ scale: 0.97 }}
             className="cursor-pointer w-full max-w-[220px] min-h-[90px] px-4 py-4 rounded-2xl shadow-[0_0_10px_1px_#EDEDED] dark:shadow-[0_0_10px_1px_#171717] bg-[#FFFFFF] dark:bg-[#2E2F2F] flex flex-col justify-center"
           >
-            <h1 className={`font-semibold text-xs sm:text-sm ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
-              {checkInTime ? 'Presence Marked' : 'Mark the Presence'}
+            <h1 className={`font-semibold text-xs sm:text-sm ${checkInTime ? "text-[#29CC39]" : "text-[#FF0000]"}`}>
+              {checkInTime ? "Presence Marked" : "Mark the Presence"}
             </h1>
 
             <div className="flex items-center justify-between mt-2">
               <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
-                In: <span className="font-semibold">{checkInTime || '-'}</span>
+                In: <span className="font-semibold">{checkInTime || "-"}</span>
               </p>
 
               <p className="text-[#000000] dark:text-[#F8F8F8] text-xs">
-                Out: <span className="font-semibold">{checkOutTime || '-'}</span>
+                Out: <span className="font-semibold">{checkOutTime || "-"}</span>
               </p>
             </div>
           </motion.div>
@@ -486,22 +524,10 @@ useEffect(() => {
           <AnimatePresence>
             {showPopup && (
               <motion.div
-                // initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                // animate={{ opacity: 1, y: 8, scale: 1 }}
-                // exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                
                 initial={{ opacity: 0, x: 10, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 10, scale: 0.95 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
-                // className="
-                //     absolute 
-                //     right-0 sm:right-auto xl:right-0
-                //     top-full
-                //     mt-2
-                //     z-50
-                //     w-[90vw] sm:w-[380px] md:w-[400px] 
-                //   "
                 className="
                   absolute
                   right-full
@@ -527,59 +553,67 @@ useEffect(() => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Clock className="size-5 text-[#000000] dark:text-[#F8F8F8]" />
-                      <h1 className="font-medium text-xl text-[#000000] dark:text-[#F8F8F8]">
-                        Daily Attendance
-                      </h1>
+                      <h1 className="font-medium text-xl text-[#000000] dark:text-[#F8F8F8]">Daily Attendance</h1>
                     </div>
 
-                    <div className={`flex items-center justify-center px-3 py-1 rounded-2xl ${checkInTime ? 'bg-[#D1FAE5]' : 'bg-[#FFE2E2D1]'}`}>
-                      <p className={`text-sm font-normal ${checkInTime ? 'text-[#29CC39]' : 'text-[#FF0000]'}`}>
-                        {checkInTime ? 'Present' : 'Absent'}
+                    <div
+                      className={`flex items-center justify-center px-3 py-1 rounded-2xl ${checkInTime ? "bg-[#D1FAE5]" : "bg-[#FFE2E2D1]"}`}
+                    >
+                      <p className={`text-sm font-normal ${checkInTime ? "text-[#29CC39]" : "text-[#FF0000]"}`}>
+                        {checkInTime ? "Present" : "Absent"}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex flex-col px-5 py-1 w-full gap-4">
-                    <div className="flex w-full items-center justify-center border border-[#E0DDDD] dark:border-[#000000]">
+                    {/* Editable date picker (feature/attendance-date-picker-ui) */}
+                    <div className="flex w-full items-center gap-3 border border-[#E0DDDD] dark:border-[#575757] rounded-lg px-3 py-2 bg-white dark:bg-[#000000]">
+                      <Calendar
+                        className="size-5 text-[#898888] dark:text-gray-300 shrink-0 cursor-pointer"
+                        onClick={() => dateInputRef.current?.showPicker?.()}
+                      />
+
                       <input
+                        ref={dateInputRef}
                         type="date"
                         value={attendanceDate}
-                        disabled
+                        max={getToday()}
+                        onChange={(e) => setAttendanceDate(e.target.value)}
                         aria-label="Attendance date"
-                        className="w-full h-full text-[#898888] px-3 py-1 bg-white dark:bg-[#000000] dark:text-gray-200 outline-none date-input disabled:cursor-not-allowed disabled:opacity-80"
+                        className="date-input w-full bg-transparent text-[#898888] dark:text-gray-200 outline-none cursor-pointer"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between gap-2">
-                      {["Check-In", "CheckOut"].map((item, idx) => {
+                    <div className="flex items-center justify-between gap-3">
+                      {["Check-In", "Check-Out"].map((item) => {
+                        const isSelected = selectedTab === item;
                         const isDisabled = item === "Check-In" ? !canCheckIn : !canCheckOut;
 
                         return (
-                          <motion.div
-                            onClick={() => !isDisabled && setSelectedTab(item)}
-                            key={idx}
-                            whileTap={{ scale: 0.95 }}
-                            layout
-                            transition={{
-                              type: "spring",
-                              stiffness: 300,
-                              damping: 20,
-                            }}
-                            aria-disabled={isDisabled}
-                            className={`flex flex-1 items-center justify-center border ${selectedTab === item
-                                ? "border-[#2461E6] dark:border-[#73FBFD]"
-                                : "border-[#EDEDED] dark:border-[#575757]"
-                              } ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} px-5 py-2 rounded-lg`}
+                          <motion.button
+                            type="button"
+                            key={item}
+                            onClick={() => setSelectedTab(item)}
+                            whileTap={{ scale: 0.97 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                            disabled={isDisabled}
+                            className={`flex-1 flex items-center justify-center
+                              px-5 py-3 rounded-xl border
+                              font-bold text-sm transition-all duration-200
+                              ${
+                                isSelected
+                                  ? "border-[#2461E6] bg-[#EEF4FF] text-[#2461E6] dark:border-[#73FBFD] dark:bg-[#73FBFD]/10 dark:text-[#73FBFD]"
+                                  : "border-[#E0E0E0] bg-transparent text-[#554D4D] dark:border-[#575757] dark:text-gray-400"
+                              }
+                              ${
+                                isDisabled
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "cursor-pointer hover:border-[#2461E6] dark:hover:border-[#73FBFD]"
+                              }
+                            `}
                           >
-                            <p
-                              className={`font-bold text-xs ${selectedTab === item
-                                  ? "text-[#2461E6] dark:text-[#73FBFD]"
-                                  : "text-[#554d4d] dark:text-gray-400"
-                                }`}
-                            >
-                              {item}
-                            </p>
-                          </motion.div>
+                            {item}
+                          </motion.button>
                         );
                       })}
                     </div>
@@ -594,10 +628,18 @@ useEffect(() => {
                           <Loader className="size-4 animate-spin" />
                           Confirming...
                         </>
+                      ) : selectedTab === "Check-In" ? (
+                        canCheckIn ? (
+                          "Check In"
+                        ) : (
+                          "Checked In"
+                        )
+                      ) : canCheckOut ? (
+                        "Check Out"
+                      ) : checkOutTime ? (
+                        "Attendance Complete"
                       ) : (
-                        selectedTab === "Check-In"
-                          ? canCheckIn ? "Check In" : "Checked In"
-                          : canCheckOut ? "Check Out" : checkOutTime ? "Attendance Complete" : "Check In First"
+                        "Check-in required first"
                       )}
                     </button>
                   </div>
@@ -642,50 +684,38 @@ useEffect(() => {
           onDeleteLeave={handleDeleteLeave}
         />
 
+        <div className="flex items-center justify-center gap-2 mt-6 mb-6">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+          >
+            Previous
+          </button>
 
+          {[...Array(totalPages)].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`px-4 py-2 rounded font-medium ${
+                currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
 
-                  <div className="flex items-center justify-center gap-2 mt-6 mb-6">
-
-                          <button
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage((prev) => prev - 1)}
-                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
-                          >
-                            Previous
-                          </button>
-
-                          {[...Array(totalPages)].map((_, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setCurrentPage(index + 1)}
-                              className={`px-4 py-2 rounded font-medium ${
-                                currentPage === index + 1
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-gray-200 hover:bg-gray-300"
-                              }`}
-                            >
-                              {index + 1}
-                            </button>
-                          ))}
-
-                          <button
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage((prev) => prev + 1)}
-                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
-                          >
-                            Next
-                          </button>
-
-                  </div>
-
-
-
-
-
-
-
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
+          >
+            Next
+          </button>
+        </div>
       </div>
-      <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5  w-full px-5 sm:px-10 ">
+
+      <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5 w-full px-5 sm:px-10">
         <h1 className="flex items-center justify-center w-full text-2xl text-black dark:text-white font-bold">
           Leave List
         </h1>
@@ -707,11 +737,7 @@ useEffect(() => {
       </button>
 
       {openModel && (
-        <LeaveModel
-          onClose={handleCloseLeaveModal}
-          setLeaveData={syncLeavesToStorage}
-          editingLeave={leaveToEdit}
-        />
+        <LeaveModel onClose={handleCloseLeaveModal} setLeaveData={syncLeavesToStorage} editingLeave={leaveToEdit} />
       )}
     </div>
   );

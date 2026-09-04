@@ -94,9 +94,14 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
                 <h1 className="mx-1">{" - "}</h1>
                 <h1>{formattedDate(endDate)}</h1>
               </div>
-              <h1 className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[20%] px-2 text-center break-words">
-                {type}
-              </h1>
+              <div className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex flex-col items-center justify-center w-[20%] px-2 text-center break-words">
+                <span>{type}</span>
+                {(item.user_name || item.employee_name || item.userName) && (
+                  <span className="text-[11px] font-normal text-blue-600 dark:text-[#73FBFD] truncate max-w-full">
+                    {item.user_name || item.employee_name || item.userName}
+                  </span>
+                )}
+              </div>
               <h1 className="text-base text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-start w-[34%] px-4 break-words">
                 {reason}
               </h1>
@@ -172,9 +177,16 @@ const AttendanceList = ({ LeaveData = [], currId, setCurrId, onEditLeave, onDele
                   <h1 className="text-[#000000] dark:text-[#FFFFFF] text-base font-semibold flex-2/5">
                     Type
                   </h1>
-                  <h1 className="text-[#000000] dark:text-[#FFFFFF] text-sm font-light flex-3/5">
-                    {type}
-                  </h1>
+                  <div className="flex flex-col">
+                    <h1 className="text-[#000000] dark:text-[#FFFFFF] text-sm font-light">
+                      {type}
+                    </h1>
+                    {(item.user_name || item.employee_name || item.userName) && (
+                      <span className="text-xs text-blue-600 dark:text-[#73FBFD]">
+                        {item.user_name || item.employee_name || item.userName}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex  justify-between w-full  items-center gap-y-3 ">

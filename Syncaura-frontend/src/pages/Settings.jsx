@@ -17,17 +17,17 @@ const Settings = () => {
   const [direction, setDirection] = useState(0);
 
   const tabData = [
-  { key: "profileTab", component: Profile },
-  { key: "accountSecurity", component: AccountSecurity },
-  { key: "themeTab", component: Theme },
-  { key: "notificationsTab", component: Notifications },
-  { key: "subscriptionTab", component: Subscription },
-  { key: "privacyData", component: PrivacyData },
-];
+    { key: "profileTab", component: Profile },
+    { key: "accountSecurity", component: AccountSecurity },
+    { key: "themeTab", component: Theme },
+    { key: "notificationsTab", component: Notifications },
+    { key: "subscriptionTab", component: Subscription },
+    { key: "privacyData", component: PrivacyData },
+  ];
 
-    const handleTabChange = (tab) => {
-    const currentIndex = tabData.findIndex(t => t.key === currTab);
-    const nextIndex = tabData.findIndex(t => t.key === tab);
+  const handleTabChange = (tab) => {
+    const currentIndex = tabData.findIndex((item) => item.key === currTab);
+    const nextIndex = tabData.findIndex((item) => item.key === tab);
 
     setDirection(nextIndex > currentIndex ? 1 : -1);
     setCurrTab(tab);
@@ -39,19 +39,18 @@ const Settings = () => {
   return (
     <div className="w-full py-5 flex flex-col bg-white dark:bg-black mt-2 h-full">
       <div className="px-2 xl:px-6">
-
         <div className="px-5 py-2">
           <h1 className="font-bold text-3xl text-black dark:text-white">
-          {t("settings")}
+            {t("settings")}
           </h1>
 
           <h2 className="text-lg text-gray-500 dark:text-gray-400 mt-1">
-          {t("settingsSubtitle")}
+            {t("settingsSubtitle")}
           </h2>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 px-4 py-3">
-          {tabData.map(({ key }, idx) => (
+          {tabData.map(({ key }) => (
             <Tab
               key={key}
               name={t(key)}
@@ -64,9 +63,9 @@ const Settings = () => {
       </div>
 
       <div className="mt-6 flex-1">
-          <div className="px-6 md:px-10">
-            {ActiveComponent && <ActiveComponent />}
-          </div>
+        <div className="px-6 md:px-10">
+          {ActiveComponent && <ActiveComponent />}
+        </div>
       </div>
     </div>
   );

@@ -26,11 +26,28 @@ CREATE TABLE IF NOT EXISTS users (
   
 
   --new changes , sharad
-   ALTER TABLE users
-  ADD COLUMN first_name VARCHAR(80),
-  ADD COLUMN last_name VARCHAR(80),
-  ADD COLUMN phone VARCHAR(20),
-  ADD COLUMN language VARCHAR(10) DEFAULT 'en';
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS first_name VARCHAR(80),
+ADD COLUMN IF NOT EXISTS last_name VARCHAR(80),
+ADD COLUMN IF NOT EXISTS phone VARCHAR(20),
+ADD COLUMN IF NOT EXISTS profile_pic TEXT,
+ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT 'en';
+
+  ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS co_admin_id UUID
+  REFERENCES users(id)
+  ON DELETE SET NULL;
+
+  ALTER TABLE users
+ADD CONSTRAINT users_role_check
+CHECK (role IN ('admin', 'co-admin', 'user'));
+
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS invitation_token_hash TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS invitation_token_expires_at TIMESTAMP DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS invited_at TIMESTAMP DEFAULT NULL;
+
+
 -- Projects
 CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -140,6 +157,7 @@ CREATE TABLE IF NOT EXISTS channels (
   max_members INTEGER DEFAULT 5,
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
   is_public BOOLEAN DEFAULT true,
+  profile_pic TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

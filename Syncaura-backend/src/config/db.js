@@ -30,16 +30,11 @@ pool.on('error', (err) => {
   console.error('Unexpected error on idle database client:', err.message);
 });
 
-pool.connect()
-  .then(() => console.log("✅ PostgreSQL Connected"))
-  .catch((err) => console.error("❌ PostgreSQL Connection Error:", err));
-
-
-  pool.query("SELECT current_database(), current_schema()")
+pool.query("SELECT current_database(), current_schema()")
   .then((res) => {
-    
-
-    
+    console.log("✅ PostgreSQL Connected");
+    console.log("Connected DB:", res.rows[0].current_database);
+    console.log("Current Schema:", res.rows[0].current_schema); 
   })
   .catch(console.error);
 
@@ -64,6 +59,8 @@ export const initDB = async () => {
 //     console.log("DB Test Success ✅", res.rows);
 //   }
 // });
+
+
 
 export default pool;
 
