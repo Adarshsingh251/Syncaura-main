@@ -59,6 +59,20 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE projects
+ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT false;
+
+ALTER TABLE projects
+ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- Project Members
+CREATE TABLE IF NOT EXISTS project_members (
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (project_id, user_id)
+);
+
 
 -- Tasks
 CREATE TABLE IF NOT EXISTS tasks (
@@ -222,6 +236,7 @@ CREATE TABLE IF NOT EXISTS leaves (
   from_date TIMESTAMP NOT NULL,
   to_date TIMESTAMP NOT NULL,
   reason TEXT NOT NULL,
+  leave_type VARCHAR(100) DEFAULT 'Casual Leave',
   status VARCHAR(50) DEFAULT 'pending',
   reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
   reviewed_at TIMESTAMP DEFAULT NULL,

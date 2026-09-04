@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import MotionSelect from "../projects/Model/MotionSelect";
 
-export default function DocumentModal({ onClose, addReport }) {
+export default function DocumentModal({ onClose, addReport, initialData }) {
+  const isEditing = Boolean(initialData);
   const {
     register,
     handleSubmit,
@@ -14,10 +15,10 @@ export default function DocumentModal({ onClose, addReport }) {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      title: "",
-      category: "",
-      type: "PDF",
-      description: "",
+      title: initialData?.title || initialData?.name || "",
+      category: initialData?.category || "GENERAL",
+      type: initialData?.type || "PDF",
+      description: initialData?.content || initialData?.description || "",
     },
   });
 
@@ -61,44 +62,50 @@ export default function DocumentModal({ onClose, addReport }) {
     const rawFiles = data.attachments ? Array.from(data.attachments) : [];
     
     // Read all files as Data URLs so they can be viewed, opened in new tab, and downloaded
-    const attachments = await Promise.all(
-      rawFiles.map(async (file) => {
-        let dataUrl = "";
-        try {
-          dataUrl = await fileToDataURL(file);
-        } catch {
-          dataUrl = URL.createObjectURL(file);
-        }
-        return {
-          name: file.name,
-          file_name: file.name,
-          size: file.size,
-          type: file.type,
-          file_url: dataUrl,
-          url: dataUrl,
-        };
-      })
-    );
+    let attachments = initialData?.attachments || [];
+    if (rawFiles.length > 0) {
+      const newAttachments = await Promise.all(
+        rawFiles.map(async (file) => {
+          let dataUrl = "";
+          try {
+            dataUrl = await fileToDataURL(file);
+          } catch {
+            dataUrl = URL.createObjectURL(file);
+          }
+          return {
+            name: file.name,
+            file_name: file.name,
+            size: file.size,
+            type: file.type,
+            file_url: dataUrl,
+            url: dataUrl,
+          };
+        })
+      );
+      attachments = [...newAttachments, ...attachments];
+    }
 
     const finalTitle =
       data.title?.trim() ||
+      initialData?.title ||
       rawFiles[0]?.name ||
       `${data.type || "Document"} Report`;
 
     const reportPayload = {
+      ...(initialData || {}),
       title: finalTitle,
       name: finalTitle,
-      category: data.category || "GENERAL",
-      type: data.type || (rawFiles[0]?.name?.split(".").pop()?.toUpperCase()) || "DOCUMENT",
-      content: data.description?.trim() || "Uploaded document",
-      description: data.description?.trim() || "Uploaded document",
+      category: data.category || initialData?.category || "GENERAL",
+      type: data.type || (rawFiles[0]?.name?.split(".").pop()?.toUpperCase()) || initialData?.type || "DOCUMENT",
+      content: data.description?.trim() || initialData?.content || "Uploaded document",
+      description: data.description?.trim() || initialData?.description || "Uploaded document",
       attachments,
-      file_url: attachments[0]?.url || null,
-      file_name: attachments[0]?.name || null,
-      status: "Active",
-      created_at: new Date().toISOString(),
+      file_url: attachments[0]?.url || initialData?.file_url || null,
+      file_name: attachments[0]?.name || initialData?.file_name || null,
+      status: initialData?.status || "Active",
       updated_at: new Date().toISOString(),
-      versions: [{ version: "v1.0", date: new Date().toISOString() }],
+      created_at: initialData?.created_at || new Date().toISOString(),
+      versions: initialData?.versions || [{ version: "v1.0", date: new Date().toISOString() }],
     };
 
     addReport(reportPayload);
@@ -186,10 +193,10 @@ export default function DocumentModal({ onClose, addReport }) {
           <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-4">
             <div>
               <h2 className="text-xl font-bold text-black dark:text-white">
-                Upload Document
+                {isEditing ? "Edit Document" : "Upload Document"}
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Upload supported files (.pdf, .docx, .txt, .png, etc.)
+                {isEditing ? "Update document metadata, category or add revised files" : "Upload supported files (.pdf, .docx, .txt, .png, etc.)"}
               </p>
             </div>
 
@@ -366,7 +373,7 @@ export default function DocumentModal({ onClose, addReport }) {
               "
             >
               <Upload size={16} />
-              <span>Upload Document</span>
+              <span>{isEditing ? "Update Document" : "Upload Document"}</span>
             </motion.button>
           </form>
         </motion.div>

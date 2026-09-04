@@ -33,7 +33,7 @@ const IssuesAndAlerts = ({ notifications = [], loading = false }) => {
       </h2>
 
       <motion.div
-        className="flex items-stretch gap-4 w-full"
+        className="flex flex-wrap items-stretch gap-4 w-full"
         variants={container}
         initial="hidden"
         animate="show"
@@ -47,7 +47,7 @@ const IssuesAndAlerts = ({ notifications = [], loading = false }) => {
             key={notification.id || notification._id}
             variants={card}
             whileHover={{ y: -4, scale: 1.02 }}
-            className="flex-1 min-w-0 p-4 rounded-xl bg-blue-50/40 dark:bg-[#161b22] border border-transparent dark:border-zinc-800/50 flex items-center gap-4 hover:shadow-md transition"
+            className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)] min-w-0 p-4 rounded-xl bg-blue-50/40 dark:bg-[#161b22] border border-transparent dark:border-zinc-800/50 flex items-center gap-4 hover:shadow-md transition"
           >
 
             <div className="shrink-0">
@@ -79,13 +79,15 @@ const IssuesAndAlerts = ({ notifications = [], loading = false }) => {
 
         ))}
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="shrink-0 bg-gray-100 dark:bg-[#161b22] hover:bg-gray-200 dark:hover:bg-zinc-800 px-4 rounded-xl text-[13px] font-bold text-gray-500 dark:text-white border border-gray-200 dark:border-zinc-800 transition"
-        >
-          View<br/>All
-        </motion.button>
+        {!loading && notifications.length > 0 && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="shrink-0 bg-gray-100 dark:bg-[#161b22] hover:bg-gray-200 dark:hover:bg-zinc-800 px-4 py-2 rounded-xl text-[13px] font-bold text-gray-500 dark:text-white border border-gray-200 dark:border-zinc-800 transition"
+          >
+            View All
+          </motion.button>
+        )}
 
       </motion.div>
 
