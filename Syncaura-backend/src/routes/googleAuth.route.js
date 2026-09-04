@@ -9,8 +9,12 @@ import { generateAccessToken, generateRefreshToken, assignRefreshId } from "../u
 const router = express.Router();
 
 const getOAuth2Client = () => {
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:5000/auth/google/callback";
+  const redirectUri =
+    process.env.GOOGLE_REDIRECT_URI ||
+    "http://localhost:5000/auth/callback";
+
   console.log("Creating OAuth2Client with redirectUri:", redirectUri);
+
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
