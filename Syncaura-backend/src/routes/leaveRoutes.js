@@ -8,6 +8,7 @@ import {
   deleteLeave,
   getMyLeaves,
   getAllLeaves,
+  getLeaveBalance,
   approveLeave, 
   rejectLeave,
   updateLeaveStatus,
@@ -17,6 +18,9 @@ const router = express.Router();
 
 // Apply a new leave request (all authenticated roles)
 router.post('/applyleave', auth, applyLeave);
+
+// Get my leave balance
+router.get('/balance', auth, getLeaveBalance);
 
 // Get my leaves (regular user / employee)
 router.get('/myleaves', auth, getMyLeaves);

@@ -1,6 +1,11 @@
 import pool from "./db.js";
 
+let globalIO = null;
+
+export const getIO = () => globalIO;
+
 const socketHandler = (io) => {
+  globalIO = io;
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 

@@ -26,6 +26,7 @@ export const auth = async (req, res, next) => {
 
 
     const user = result.rows[0];
+    delete user.password_hash;
     req.user = user;
     
     // Map Google tokens if needed
