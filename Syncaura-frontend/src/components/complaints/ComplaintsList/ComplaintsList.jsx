@@ -2,7 +2,6 @@ import {
   CircleAlert,
   Clock,
   CircleCheck,
-  Eye,
   FileText,
   ExternalLink,
 } from "lucide-react";
@@ -121,7 +120,7 @@ export default function ComplaintsList({
           <div className="text-xs xl:text-sm font-semibold uppercase col-span-2 text-center w-full text-gray-700 dark:text-gray-200">
             Complaint ID
           </div>
-          <div className="text-xs xl:text-sm font-semibold uppercase col-span-3 text-left w-full text-gray-700 dark:text-gray-200">
+          <div className="text-xs xl:text-sm font-semibold uppercase col-span-4 text-left w-full text-gray-700 dark:text-gray-200">
             Subject & Category
           </div>
           <div className="text-xs xl:text-sm font-semibold uppercase col-span-1 text-center w-full text-gray-700 dark:text-gray-200">
@@ -132,9 +131,6 @@ export default function ComplaintsList({
           </div>
           <div className="text-xs xl:text-sm font-semibold uppercase col-span-2 text-center w-full text-gray-700 dark:text-gray-200">
             Status
-          </div>
-          <div className="text-xs xl:text-sm font-semibold uppercase col-span-1 text-center w-full text-gray-700 dark:text-gray-200">
-            Actions
           </div>
         </div>
 
@@ -201,13 +197,24 @@ export default function ComplaintsList({
                 </div>
 
                 {/* 3. Subject & Category */}
-                <div className="text-sm w-full flex flex-col items-start justify-center col-span-3">
+                <div className="text-sm w-full flex flex-col items-start justify-center col-span-4 gap-0.5">
                   <span className="font-semibold text-gray-900 dark:text-white truncate max-w-full" title={title}>
                     {title}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    {category}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                      {category}
+                    </span>
+                    {(item.task_title || item.task_id) ? (
+                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-1.5 py-0.5 rounded">
+                        📌 Task: {item.task_title || title.replace(/^issue:\s*/i, '')}
+                      </span>
+                    ) : String(category || '').toUpperCase() === 'TASK' || title.toLowerCase().startsWith('issue:') ? (
+                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-1.5 py-0.5 rounded">
+                        📌 Task Issue
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
                 {/* 4. Document Column */}
@@ -276,21 +283,6 @@ export default function ComplaintsList({
                     </div>
                   )}
                 </div>
-
-                {/* 7. Actions */}
-                <div className="flex items-center justify-center w-full col-span-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveId(id);
-                    }}
-                    className="p-1.5 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer"
-                    title="View Complaint"
-                    aria-label="View complaint details"
-                  >
-                    <Eye className="size-4 text-blue-600 dark:text-[#73FBFD]" />
-                  </button>
-                </div>
               </motion.div>
             );
           })}
@@ -346,9 +338,20 @@ export default function ComplaintsList({
                 </div>
               </div>
 
-              <div className="flex flex-col justify-center items-start w-full">
+              <div className="flex flex-col justify-center items-start w-full gap-0.5">
                 <h4 className="text-base font-bold text-[#000000] dark:text-[#FFFFFF]">{title}</h4>
-                <h5 className="text-xs font-semibold text-blue-600 dark:text-[#73FBFD]">{category}</h5>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h5 className="text-xs font-semibold text-blue-600 dark:text-[#73FBFD]">{category}</h5>
+                  {(item.task_title || item.task_id) ? (
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-1.5 py-0.5 rounded">
+                      📌 Task: {item.task_title || title.replace(/^issue:\s*/i, '')}
+                    </span>
+                  ) : String(category || '').toUpperCase() === 'TASK' || title.toLowerCase().startsWith('issue:') ? (
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 px-1.5 py-0.5 rounded">
+                      📌 Task Issue
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
               {docInfo && (
@@ -405,17 +408,6 @@ export default function ComplaintsList({
                       <span className="text-xs font-semibold capitalize">{status.replace("-", " ")}</span>
                     </div>
                   )}
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveId(id);
-                    }}
-                    className="p-1.5 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-full"
-                    title="View Complaint"
-                  >
-                    <Eye className="size-4 text-blue-600 dark:text-[#73FBFD]" />
-                  </button>
                 </div>
               </div>
             </div>

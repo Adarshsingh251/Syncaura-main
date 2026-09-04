@@ -6,6 +6,7 @@ import {
   Clock,
   Flag,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { getAssigneeBadge, getTaskCreatorInfo } from "./taskUtils";
 
@@ -40,14 +41,22 @@ const isOverdue = (dateStr) => {
   return new Date(dateStr) < new Date();
 };
 
-const TaskCard = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
+const TaskCard = ({
+  task,
+  onOpen,
+  onDelete,
+  canDelete,
+  usersList = [],
+  currentUser = null,
+  onRaiseIssue,
+}) => {
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
   const completedSubtasks =
     task.subtasks?.filter((s) => s.status === "DONE").length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
   const deadline = task.deadline;
   const overdue = isOverdue(deadline) && task.status !== "DONE";
-  const creatorInfo = getTaskCreatorInfo(task, usersList);
+  const creatorInfo = getTaskCreatorInfo(task, usersList, currentUser);
 
   return (
     <motion.div
@@ -86,27 +95,74 @@ const TaskCard = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
             >
               👤 Self-created
             </span>
-          ) : creatorInfo && creatorInfo.name ? (
+          ) : (
             <span
-              className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded-md truncate max-w-[120px]"
-              title={creatorInfo.label}
+              className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 px-1.5 py-0.5 rounded-md truncate max-w-[130px]"
+              title={creatorInfo?.label || "Assigned by Admin"}
             >
-              By {creatorInfo.name}
+              👤 By {creatorInfo?.name || "Admin"}
             </span>
-          ) : null}
+          )}
         </div>
-        {canDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(task.id);
-            }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover shrink-0"
-            aria-label="Delete task"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        )}
+
+        <div className="flex items-center gap-1 shrink-0">
+          {task.task_issue_status ? (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                onRaiseIssue?.(task);
+              }}
+              title={`Issue status: ${task.task_issue_status}. Click to view or raise another.`}
+              className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg border transition-colors cursor-pointer ${
+                task.task_issue_status === "resolved"
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50"
+                  : task.task_issue_status === "in-progress"
+                  ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200 dark:border-blue-800/50"
+                  : task.task_issue_status === "closed"
+                  ? "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-700"
+                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-800/50"
+              }`}
+            >
+              {task.task_issue_status === "resolved" ? (
+                <span>✅ Issue Resolved</span>
+              ) : task.task_issue_status === "in-progress" ? (
+                <span>⏳ Issue In Progress</span>
+              ) : task.task_issue_status === "closed" ? (
+                <span>🔒 Issue Closed</span>
+              ) : (
+                <>
+                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                  <span>Issue Open</span>
+                </>
+              )}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRaiseIssue?.(task);
+              }}
+              title="Raise an issue for this task"
+              className="flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 hover:text-red-600 dark:hover:text-red-400 bg-amber-50 dark:bg-amber-950/30 hover:bg-red-50 dark:hover:bg-red-950/40 border border-amber-200 dark:border-amber-800/40 hover:border-red-200 px-2 py-0.5 rounded-lg transition-colors btn-hover"
+            >
+              <AlertTriangle className="w-3 h-3 text-amber-500" />
+              <span>Issue</span>
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(task.id);
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
+              aria-label="Delete task"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Title */}

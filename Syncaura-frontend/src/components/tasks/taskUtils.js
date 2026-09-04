@@ -115,6 +115,7 @@ export const getTaskCreatorInfo = (task, usersList = [], currentUser = null) => 
   let creatorEmail = task.creator_user_email || "";
   let creatorRole = task.creator_user_role || "";
 
+  // If creator is not in direct fields, search in usersList or currentUser
   if (!creatorName && task.created_by) {
     const matched = (usersList || []).find((u) => String(u.id) === String(task.created_by));
     if (matched) {
@@ -128,20 +129,55 @@ export const getTaskCreatorInfo = (task, usersList = [], currentUser = null) => 
     }
   }
 
-  const isSelfAssigned =
-    (task.created_by && task.assigned_to && String(task.created_by) === String(task.assigned_to)) ||
-    (creatorEmail && assignee?.email && creatorEmail.toLowerCase() === assignee.email.toLowerCase()) ||
-    (creatorName && assignee?.name && creatorName.toLowerCase() === assignee.name.toLowerCase());
+  const isCreatorAdmin =
+    creatorRole &&
+    (creatorRole.toLowerCase() === "admin" ||
+      creatorRole.toLowerCase() === "co-admin" ||
+      creatorRole.toLowerCase() === "coadmin");
+
+  let isSelfAssigned = false;
+  // If creator is admin/co-admin and assignee is different, it is definitely not self-assigned
+  if (!isCreatorAdmin) {
+    if (
+      task.created_by &&
+      task.assigned_to &&
+      isUUID(task.created_by) &&
+      isUUID(task.assigned_to) &&
+      String(task.created_by).toLowerCase() === String(task.assigned_to).toLowerCase()
+    ) {
+      isSelfAssigned = true;
+    } else if (
+      creatorEmail &&
+      assignee?.email &&
+      creatorEmail.trim() !== "" &&
+      creatorEmail.trim().toLowerCase() === assignee.email.trim().toLowerCase()
+    ) {
+      isSelfAssigned = true;
+    } else if (
+      creatorName &&
+      assignee?.name &&
+      creatorName.trim() !== "" &&
+      creatorName.trim().toLowerCase() === assignee.name.trim().toLowerCase()
+    ) {
+      isSelfAssigned = true;
+    }
+  }
+
+  // Determine display name
+  const displayName = creatorName || (!isSelfAssigned ? "Admin" : "");
+  const displayRole = creatorRole || (!isSelfAssigned ? "admin" : "user");
 
   return {
-    name: creatorName,
+    name: displayName,
     email: creatorEmail,
-    role: creatorRole,
+    role: displayRole,
     isSelfAssigned: Boolean(isSelfAssigned),
     label: isSelfAssigned
       ? "Self-created"
-      : creatorName
-      ? `Assigned by ${creatorName}${creatorRole ? ` (${creatorRole})` : ""}`
+      : displayName
+      ? `Assigned by ${displayName}${displayRole && displayRole.toLowerCase() !== "user" && displayRole.toLowerCase() !== "admin" ? ` (${displayRole})` : ""}`
       : "Assigned by Admin",
   };
 };
+
+

@@ -17,6 +17,7 @@ import {
   ChevronUp,
   ChevronDown,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import {
   fetchTasks,
@@ -26,6 +27,7 @@ import {
 import KanbanColumn from "../components/tasks/KanbanColumn";
 import CreateTaskModal from "../components/tasks/CreateTaskModal";
 import TaskDetailModal from "../components/tasks/TaskDetailModal";
+import RaiseTaskIssueModal from "../components/tasks/RaiseTaskIssueModal";
 import { getAssigneeBadge, getAssigneeDisplay, getTaskCreatorInfo } from "../components/tasks/taskUtils";
 import { toast } from "react-toastify";
 import api from "../config/axios";
@@ -76,11 +78,19 @@ const StatCard = ({ label, value, icon: Icon, color }) => (
 );
 
 // ── List Row ─────────────────────────────────────────────────────────────────
-const ListRow = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
+const ListRow = ({
+  task,
+  onOpen,
+  onDelete,
+  canDelete,
+  usersList = [],
+  currentUser = null,
+  onRaiseIssue,
+}) => {
   const status = STATUS_LABELS[task.status] || STATUS_LABELS.TODO;
   const overdue = isOverdue(task.deadline, task.status);
-  const assigneeInfo = getAssigneeBadge(task, usersList);
-  const creatorInfo = getTaskCreatorInfo(task, usersList);
+  const assigneeInfo = getAssigneeBadge(task, usersList, currentUser);
+  const creatorInfo = getTaskCreatorInfo(task, usersList, currentUser);
 
   return (
     <motion.tr
@@ -148,17 +158,31 @@ const ListRow = ({ task, onOpen, onDelete, canDelete, usersList = [] }) => {
         </div>
       </td>
       <td className="py-3 px-3">
-        {canDelete && (
+        <div className="flex items-center justify-end gap-1.5">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(task.id);
+              onRaiseIssue?.(task);
             }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
+            title="Raise an issue for this task"
+            className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-red-600 dark:hover:text-red-400 bg-amber-50 dark:bg-amber-950/30 hover:bg-red-50 dark:hover:bg-red-950/40 border border-amber-200 dark:border-amber-800/40 px-2 py-1 rounded-lg transition-colors btn-hover"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <AlertTriangle className="w-3 h-3 text-amber-500" />
+            <span>Issue</span>
           </button>
-        )}
+          {canDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(task.id);
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 btn-hover"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </td>
     </motion.tr>
   );
@@ -185,6 +209,7 @@ const Tasks = () => {
   const [projectFilter, setProjectFilter] = useState("all");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [issueTask, setIssueTask] = useState(null);
   const [sortField, setSortField] = useState("createdAt");
   const [sortDir, setSortDir] = useState("desc");
   const [createLoading, setCreateLoading] = useState(false);
@@ -507,6 +532,8 @@ const Tasks = () => {
                     onDeleteTask={handleDelete}
                     canDeleteTask={canDeleteTask}
                     usersList={usersList}
+                    currentUser={currentUser}
+                    onRaiseIssue={setIssueTask}
                   />
                 ))}
               </motion.div>
@@ -562,7 +589,7 @@ const Tasks = () => {
                         <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden lg:table-cell">
                           Assigned & Origin
                         </th>
-                        <th className="py-3 px-3 w-10" />
+                        <th className="py-3 px-3 w-28 text-right" />
                       </tr>
                     </thead>
                     <AnimatePresence>
@@ -575,6 +602,8 @@ const Tasks = () => {
                             onDelete={handleDelete}
                             canDelete={canDeleteTask(task)}
                             usersList={usersList}
+                            currentUser={currentUser}
+                            onRaiseIssue={setIssueTask}
                           />
                         ))}
                       </tbody>
@@ -607,6 +636,22 @@ const Tasks = () => {
             canDelete={canDeleteTask(selectedTask)}
             isAdmin={isAdmin}
             usersList={usersList}
+            currentUser={currentUser}
+            onRaiseIssue={(t) => {
+              setSelectedTask(null);
+              setIssueTask(t);
+            }}
+          />
+        )}
+        {issueTask && (
+          <RaiseTaskIssueModal
+            key="raise-issue-modal"
+            task={issueTask}
+            onClose={() => setIssueTask(null)}
+            onSuccess={() => {
+              setIssueTask(null);
+              dispatch(fetchTasks());
+            }}
           />
         )}
       </AnimatePresence>

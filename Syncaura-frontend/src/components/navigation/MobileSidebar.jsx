@@ -100,7 +100,7 @@ export default function MobileSidebar({ open, setOpen }) {
       count: 0,
     },
     {
-      label: "complaints",
+      label: "Issues & Complaints",
       icon: AlertTriangle,
       path: "/complaints",
       count: 0,
@@ -115,12 +115,6 @@ export default function MobileSidebar({ open, setOpen }) {
       label: "myAttendance",
       icon: UserCheck,
       path: "/my-attendance",
-      count: 0,
-    },
-    {
-      label: "Issue Status",
-      icon: ClipboardCheck,
-      path: "/issue-status",
       count: 0,
     },
     {
@@ -311,14 +305,6 @@ export default function MobileSidebar({ open, setOpen }) {
         >
           <div className="space-y-1">
             {dynamicMenuItems.map((item) => {
-              // INSERT THIS PROTECTION CHECK HERE:
-              if (
-                item.path === "/issue-status" &&
-                !["admin", "co-admin"].includes(user?.role)
-              ) {
-                return null;
-              }
-
               const Icon = item.icon;
 
               return (

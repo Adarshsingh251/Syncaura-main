@@ -3,7 +3,14 @@ import { Funnel, Search } from 'lucide-react'
 import { useState } from 'react'
 import ComplaintFilters from '../ComplaintFilters'
 
-const Complaintheader = ({ search, setSearch, onApplyFilters, appliedFilters, onResetFilters }) => {
+const Complaintheader = ({
+  search,
+  setSearch,
+  onApplyFilters,
+  appliedFilters,
+  onResetFilters,
+  title = "Issues & Complaints",
+}) => {
     const [openFilter, setOpenFilter] = useState(false);
     const hasActiveFilters = Boolean(
       appliedFilters && (
@@ -13,9 +20,9 @@ const Complaintheader = ({ search, setSearch, onApplyFilters, appliedFilters, on
     );
 
     return (
-        <div className="flex transition-colors duration-500 flex-col md:flex-row px-6 items-center justify-between gap-4 mb-6">
+        <div className="flex transition-colors duration-500 flex-col md:flex-row px-6 items-center justify-between gap-4 mb-4">
             <h1 className="text-2xl sm:text-3xl flex-5/9 font-semibold text-black dark:text-[#FFFFFF]">
-                Complaints Management
+                {title}
             </h1>
 
             <div className="flex items-center justify-center sm:justify-end gap-3 flex-2/9">

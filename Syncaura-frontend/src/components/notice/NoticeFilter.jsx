@@ -17,28 +17,28 @@ export default function NoticeFilter({ onClose, onApply }) {
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-10">
+    <div className="w-full px-4 sm:px-6 lg:px-10 relative">
+      <motion.button
+        initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+        exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+        whileHover={{ scale: 1.15, rotate: 90 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        className="absolute top-2 right-6 sm:right-8 lg:right-12 z-50 p-2 rounded-full cursor-pointer"
+        onClick={() => {
+          onApply(null);
+          onClose();
+        }}
+      >
+        <X className="text-black dark:text-white size-5" />
+      </motion.button>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full bg-white dark:bg-black rounded-2xl shadow-[0_0_10px_1px_#ACACAC33] p-4 sm:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center lg:items-center"
       >
-        <motion.button
-          initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
-          whileHover={{ scale: 1.15, rotate: 90 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className="fixed top-4 right-10 md:right-15 z-100"
-          onClick={() => {
-            onApply(null);
-            onClose();
-          }}
-        >
-          <X className="text-black dark:text-white size-5" />
-        </motion.button>
 
         {/* Date Range */}
         <div className="flex flex-col items-start justify-center gap-2 w-full lg:w-1/3">

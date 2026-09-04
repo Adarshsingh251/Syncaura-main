@@ -25,7 +25,6 @@ const Home = lazy(() => import("./pages/Home"));
 const RoleSelection = lazy(() => import("./pages/RoleSelection"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const GithubCallback = lazy(() => import("./pages/GithubCallback"));
-const IssueStatus = lazy(() => import("./pages/IssueStatus"));
 const Profile = lazy(() => import("./pages/Profile"));
 
 import NotFound from "./pages/NotFound";
@@ -163,11 +162,6 @@ export default function App() {
               <Route path="/complaints" element={<MainLayout TopbarComponent={Header} SideBar={MobileSidebar}><Complaints /></MainLayout>} />
               <Route path="/settings" element={<MainLayout TopbarComponent={Header} SideBar={MobileSidebar}><Settings /></MainLayout>} />
               <Route path="/meet/:id" element={<CurrentMeet />} />
-            </Route>
-
-            {/* Admin and Co-Admin Specific Routes */}
-            <Route element={<ProtectRoute allowedRoles={["admin", "co-admin"]} />}>
-              <Route path="/issue-status" element={<MainLayout TopbarComponent={Header} SideBar={MobileSidebar}><IssueStatus /></MainLayout>} />
             </Route>
 
             {/* Admin Only Routes */}

@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import Tab from "../components/settings/TabStyle";
 
-import Profile from "../components/settings/tabs/Profile";
 import AccountSecurity from "../components/settings/tabs/AccountSecurity";
 import Theme from "../components/settings/tabs/Theme";
 import Notifications from "../components/settings/tabs/Notifications";
@@ -13,11 +12,10 @@ import PrivacyData from "../components/settings/tabs/PrivacyData";
 const Settings = () => {
   const { t } = useTranslation();
 
-  const [currTab, setCurrTab] = useState("profileTab");
+  const [currTab, setCurrTab] = useState("accountSecurity");
   const [direction, setDirection] = useState(0);
 
   const tabData = [
-    { key: "profileTab", component: Profile },
     { key: "accountSecurity", component: AccountSecurity },
     { key: "themeTab", component: Theme },
     { key: "notificationsTab", component: Notifications },

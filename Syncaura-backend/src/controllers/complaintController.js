@@ -1,16 +1,17 @@
 import pool from '../config/db.js';
 import ROLES from '../config/roles.js';
+import { validate as isUUID } from 'uuid';
 import {
   notifyAdminsAboutComplaint,
   notifyUserAboutComplaint,
 } from '../utils/notifications.js';
 
 /**
- * Create a new complaint
+ * Create a new complaint / issue
  */
 export const createComplaint = async (req, res, next) => {
   try {
-    const { title, description, category, severity, priority, isAnonymous, attachments = [] } = req.body || {};
+    const { title, description, category, severity, priority, isAnonymous, attachments = [], taskId, task_id } = req.body || {};
 
     if (!title || !description || !category) {
       return res.status(400).json({
@@ -19,10 +20,12 @@ export const createComplaint = async (req, res, next) => {
       });
     }
 
+    const resolvedTaskId = (taskId || task_id) && isUUID(String(taskId || task_id)) ? String(taskId || task_id) : null;
+
     const result = await pool.query(
       `INSERT INTO complaints (
-        title, description, category, severity, priority, is_anonymous, filed_by, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'open') RETURNING *`,
+        title, description, category, severity, priority, is_anonymous, filed_by, status, task_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'open', $8) RETURNING *`,
       [
         title, 
         description, 
@@ -30,7 +33,8 @@ export const createComplaint = async (req, res, next) => {
         severity || 'medium', 
         priority || 'normal', 
         isAnonymous || false, 
-        req.user.id
+        req.user.id,
+        resolvedTaskId
       ]
     );
 
@@ -56,6 +60,13 @@ export const createComplaint = async (req, res, next) => {
     complaint.filer_name = req.user.name || "Employee";
     complaint.filer_email = req.user.email;
 
+    if (resolvedTaskId) {
+      const tRes = await pool.query("SELECT title FROM tasks WHERE id = $1", [resolvedTaskId]);
+      if (tRes.rowCount > 0) {
+        complaint.task_title = tRes.rows[0].title;
+      }
+    }
+
     // Notify admins about new complaint
     try {
       await notifyAdminsAboutComplaint(complaint, 'created');
@@ -65,7 +76,7 @@ export const createComplaint = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Complaint filed successfully',
+      message: 'Issue filed successfully',
       data: complaint
     });
   } catch (error) {
@@ -89,6 +100,7 @@ export const getAllComplaints = async (req, res, next) => {
         u.email as user_email,
         u.name as name,
         u.email as email,
+        t.title as task_title,
         COALESCE(
           json_agg(
             json_build_object(
@@ -100,6 +112,7 @@ export const getAllComplaints = async (req, res, next) => {
         ) AS attachments
       FROM complaints c 
       LEFT JOIN users u ON c.filed_by = u.id 
+      LEFT JOIN tasks t ON c.task_id = t.id
       LEFT JOIN complaint_attachments ca ON c.id = ca.complaint_id
       WHERE 1=1
     `;
@@ -125,7 +138,7 @@ export const getAllComplaints = async (req, res, next) => {
 
     const skip = (page - 1) * limit;
     query += `
-      GROUP BY c.id, u.name, u.email
+      GROUP BY c.id, u.name, u.email, t.title
       ORDER BY c.created_at DESC
       LIMIT $${paramCount++} OFFSET $${paramCount++}
     `;
@@ -167,6 +180,7 @@ export const getMyComplaints = async (req, res, next) => {
         u.email as user_email,
         u.name as name,
         u.email as email,
+        t.title as task_title,
         COALESCE(
           json_agg(
             json_build_object(
@@ -178,6 +192,7 @@ export const getMyComplaints = async (req, res, next) => {
         ) AS attachments
       FROM complaints c
       LEFT JOIN users u ON c.filed_by = u.id
+      LEFT JOIN tasks t ON c.task_id = t.id
       LEFT JOIN complaint_attachments ca
         ON c.id = ca.complaint_id
       WHERE c.filed_by = $1
@@ -193,7 +208,7 @@ export const getMyComplaints = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     query += `
-      GROUP BY c.id, u.name, u.email
+      GROUP BY c.id, u.name, u.email, t.title
       ORDER BY c.created_at DESC
       LIMIT $${params.length + 1}
       OFFSET $${params.length + 2}

@@ -39,6 +39,8 @@ pool.query("SELECT current_database(), current_schema()")
     // Auto-migrate schema updates
     try {
       await pool.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT;
+        ALTER TABLE leaves ADD COLUMN IF NOT EXISTS leave_type VARCHAR(100) DEFAULT 'Casual Leave';
         ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT false;
         ALTER TABLE projects ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES users(id) ON DELETE SET NULL;
         ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE SET NULL;
@@ -51,6 +53,7 @@ pool.query("SELECT current_database(), current_schema()")
         ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_name VARCHAR(255);
         ALTER TABLE document_versions ADD COLUMN IF NOT EXISTS version_number VARCHAR(50) DEFAULT 'v1.0';
         ALTER TABLE document_versions ADD COLUMN IF NOT EXISTS title VARCHAR(255);
+        ALTER TABLE complaints ADD COLUMN IF NOT EXISTS task_id UUID REFERENCES tasks(id) ON DELETE SET NULL;
         CREATE TABLE IF NOT EXISTS project_members (
           project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
           user_id UUID REFERENCES users(id) ON DELETE CASCADE,

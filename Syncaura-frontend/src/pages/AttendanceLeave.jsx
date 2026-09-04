@@ -20,6 +20,7 @@ import api from "../config/axios";
 
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
+import AdminAttendanceList from "../components/AttendanceLeave/AdminAttendanceList";
 import { toast } from "react-toastify";
 
 const initialAttendanceStats = [
@@ -79,6 +80,7 @@ const AttendanceLeave = () => {
   const currentUser = user || storedUser;
   const currentRole = (currentUser?.role || "").toLowerCase();
   const isAdminOrCoAdmin = currentRole === "admin" || currentRole === "co-admin" || currentRole === "coadmin";
+  const [activeAdminView, setActiveAdminView] = useState("leaves"); // "leaves" | "attendance"
 
   const [selectedId, setSelectedId] = useState(0);
   const [openModel, setOpenModel] = useState(false);
@@ -640,6 +642,37 @@ const AttendanceLeave = () => {
         </AnimatePresence>
       </div>
 
+      {isAdminOrCoAdmin && (
+        <div className="flex items-center gap-2.5 px-5 sm:px-10 mt-3 mb-1">
+          <button
+            type="button"
+            onClick={() => setActiveAdminView("leaves")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeAdminView === "leaves"
+                ? "bg-blue-600 text-white dark:bg-[#73FBFD] dark:text-black shadow-xs"
+                : "bg-gray-100 dark:bg-[#1E1E1E] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2A2A2A]"
+            }`}
+          >
+            Leave Requests
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveAdminView("attendance")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeAdminView === "attendance"
+                ? "bg-blue-600 text-white dark:bg-[#73FBFD] dark:text-black shadow-xs"
+                : "bg-gray-100 dark:bg-[#1E1E1E] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2A2A2A]"
+            }`}
+          >
+            Employee Daily Attendance
+          </button>
+        </div>
+      )}
+
+      {isAdminOrCoAdmin && activeAdminView === "attendance" ? (
+        <AdminAttendanceList defaultDate={attendanceDate} />
+      ) : (
+        <>
       <motion.div
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
@@ -813,23 +846,20 @@ const AttendanceLeave = () => {
           shadow-[0_4px_10px_0_rgba(0,0,0,0.25)]
           px-10 py-4"
         >
-          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[20%] text-left px-3">
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[22%] text-left px-3">
             Applicant
           </h1>
-          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[15%] text-center px-2">
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[16%] text-center px-2">
             Leave Type
           </h1>
-          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[20%] text-center px-2">
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[22%] text-center px-2">
             Duration
           </h1>
-          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[23%] text-left px-3">
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[24%] text-left px-3">
             Reason
           </h1>
-          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[14%] text-center">
+          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[16%] text-center">
             Status
-          </h1>
-          <h1 className="uppercase text-xs font-semibold dark:text-[#FFFFFF] text-[#000000] w-[8%] text-center">
-            Actions
           </h1>
         </div>
 
@@ -888,14 +918,18 @@ const AttendanceLeave = () => {
           onDeleteLeave={handleDeleteLeave}
         />
       </div>
+      </>
+      )}
 
-      <button
-        onClick={handleOpenCreateModal}
-        className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-6 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover flex items-center gap-2 shadow-lg"
-      >
-        <Plus className="size-5 lg:size-6" />
-        <span>Apply Leave</span>
-      </button>
+      {(!isAdminOrCoAdmin || activeAdminView === "leaves") && (
+        <button
+          onClick={handleOpenCreateModal}
+          className="fixed cursor-pointer bottom-8 right-8 rounded-2xl font-semibold px-6 py-3 z-30 bg-[#2457C5] text-[#EDEDED] dark:bg-[#73FBFD] dark:text-[#000000] text-base lg:text-xl btn-hover flex items-center gap-2 shadow-lg"
+        >
+          <Plus className="size-5 lg:size-6" />
+          <span>Apply Leave</span>
+        </button>
+      )}
 
       {openModel && (
         <LeaveModel

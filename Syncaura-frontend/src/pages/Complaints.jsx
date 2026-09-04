@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { CircleAlert, CircleCheck, Clock, Plus } from "lucide-react";
+import { CircleAlert, CircleCheck, Clock, Plus, Layers, AlertTriangle, FileText } from "lucide-react";
 import NewComplaintModal from "../components/complaints/NewComplaintModal";
 import ComplaintsList from "../components/complaints/ComplaintsList/ComplaintsList";
 import Complaintheader from "../components/complaints/complaintHeader/Complaintheader";
@@ -29,6 +29,7 @@ export default function Complaints() {
 
   const { complaints = [], isLoading, error } = useSelector((state) => state.complaint);
 
+  const [activeTab, setActiveTab] = useState("all"); // 'all' | 'task_issues' | 'general'
   const [activeId, setActiveId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [searchComplaints, setSearchComplaints] = useState("");
@@ -88,9 +89,30 @@ export default function Complaints() {
     return <CircleCheck className="size-4 text-gray-500" />;
   };
 
+  const isTaskIssue = (item) => {
+    if (!item) return false;
+    if (item.task_id != null && String(item.task_id).trim() !== "") return true;
+    if (Boolean(item.task_title)) return true;
+    const cat = String(item.category || "").trim().toUpperCase();
+    if (cat === "TASK" || cat === "TASK ISSUE" || cat === "TASK_ISSUE") return true;
+    const title = String(item.title || "").trim().toLowerCase();
+    if (title.startsWith("issue:") || title.startsWith("issue -") || title.startsWith("[issue]")) return true;
+    return false;
+  };
+
+  const allItems = Array.isArray(complaints) ? complaints : [];
+  const taskIssuesCount = allItems.filter((c) => isTaskIssue(c)).length;
+  const generalCount = allItems.filter((c) => !isTaskIssue(c)).length;
+
   const filteredComplaints = useMemo(() => {
-    let result = Array.isArray(complaints) ? [...complaints] : [];
-    if (!appliedFilters && !debounceSearch) return result;
+    let result = [...allItems];
+
+    // Tab filter
+    if (activeTab === "task_issues") {
+      result = result.filter((item) => isTaskIssue(item));
+    } else if (activeTab === "general") {
+      result = result.filter((item) => !isTaskIssue(item));
+    }
 
     if (debounceSearch) {
       const q = debounceSearch.toLowerCase();
@@ -99,6 +121,7 @@ export default function Complaints() {
           (item.title || "").toLowerCase().includes(q) ||
           (item.category || "").toLowerCase().includes(q) ||
           (item.description || "").toLowerCase().includes(q) ||
+          (item.task_title || "").toLowerCase().includes(q) ||
           (item.filer_name || "").toLowerCase().includes(q) ||
           (item.filer_email || "").toLowerCase().includes(q) ||
           String(item.id || "").toLowerCase().includes(q)
@@ -123,7 +146,7 @@ export default function Complaints() {
     }
 
     return result;
-  }, [complaints, appliedFilters, debounceSearch]);
+  }, [allItems, activeTab, appliedFilters, debounceSearch]);
 
   const handleApplyFilters = (newFilters) => {
     setAppliedFilters(newFilters);
@@ -149,10 +172,10 @@ export default function Complaints() {
     try {
       const id = complaintItem.id || complaintItem._id;
       await dispatch(updateComplaintStatus({ id, status: newStatus })).unwrap();
-      toast.success(`Complaint status updated to ${newStatus}`);
+      toast.success(`Status updated to ${newStatus}`);
       fetchComplaintsData();
     } catch (err) {
-      toast.error(err || "Failed to update complaint status");
+      toast.error(err || "Failed to update status");
     }
   };
 
@@ -174,10 +197,80 @@ export default function Complaints() {
             onApplyFilters={handleApplyFilters}
             appliedFilters={appliedFilters}
             onResetFilters={handleResetFilters}
+            title={isAdminOrCoAdmin ? "Issues & Complaints Management" : "My Issues & Complaints"}
           />
 
-          {isLoading && <p className="text-center text-gray-400 py-10">Loading complaints...</p>}
-          {error && <p className="text-center text-red-400 py-10">Failed to load complaints.</p>}
+          {/* Quick Filter Tabs */}
+          <div className="px-6 mb-5 flex items-center gap-2 overflow-x-auto scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setActiveTab("all")}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer btn-hover ${
+                activeTab === "all"
+                  ? "bg-blue-600 dark:bg-[#73FBFD] text-white dark:text-black shadow-sm"
+                  : "bg-gray-100 dark:bg-[#202124] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d2f33]"
+              }`}
+            >
+              <Layers className="size-3.5" />
+              <span>All</span>
+              <span
+                className={`px-1.5 py-0.2 text-[10px] rounded-full font-bold ${
+                  activeTab === "all"
+                    ? "bg-white/20 text-white dark:bg-black/20 dark:text-black"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                }`}
+              >
+                {allItems.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("task_issues")}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer btn-hover ${
+                activeTab === "task_issues"
+                  ? "bg-amber-600 dark:bg-amber-500 text-white dark:text-black shadow-sm"
+                  : "bg-gray-100 dark:bg-[#202124] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d2f33]"
+              }`}
+            >
+              <AlertTriangle className="size-3.5 text-amber-500 dark:text-amber-400" />
+              <span>Task Issues</span>
+              <span
+                className={`px-1.5 py-0.2 text-[10px] rounded-full font-bold ${
+                  activeTab === "task_issues"
+                    ? "bg-white/20 text-white dark:bg-black/20 dark:text-black"
+                    : "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300"
+                }`}
+              >
+                {taskIssuesCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("general")}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer btn-hover ${
+                activeTab === "general"
+                  ? "bg-purple-600 dark:bg-purple-500 text-white dark:text-black shadow-sm"
+                  : "bg-gray-100 dark:bg-[#202124] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d2f33]"
+              }`}
+            >
+              <FileText className="size-3.5 text-purple-500 dark:text-purple-400" />
+              <span>General Complaints</span>
+              <span
+                className={`px-1.5 py-0.2 text-[10px] rounded-full font-bold ${
+                  activeTab === "general"
+                    ? "bg-white/20 text-white dark:bg-black/20 dark:text-black"
+                    : "bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300"
+                }`}
+              >
+                {generalCount}
+              </span>
+            </button>
+          </div>
+
+          {isLoading && <p className="text-center text-gray-400 py-10">Loading...</p>}
+          {error && <p className="text-center text-red-400 py-10">Failed to load complaints and issues.</p>}
           {!isLoading && !error && (
             <ComplaintsList
               COMPLAINTS={filteredComplaints}
@@ -195,7 +288,7 @@ export default function Complaints() {
             className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-blue-600 dark:bg-[#73FBFD] dark:text-black transition duration-300 px-6 py-3 text-white shadow-lg hover:bg-blue-500 dark:hover:bg-[#2cc4c7] btn-hover cursor-pointer z-20"
           >
             <Plus size={18} />
-            <span className="font-semibold text-sm">New Complaint</span>
+            <span className="font-semibold text-sm">Raise Issue / Complaint</span>
           </button>
 
           {showModal && (

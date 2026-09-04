@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Edit3, Trash2, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSelector } from "react-redux";
 
 const statusColor = {
   approved:
@@ -32,6 +33,17 @@ const AttendanceList = ({
   onEditLeave,
   onDeleteLeave,
 }) => {
+  const user = useSelector((state) => state.auth.user);
+  let storedUser = null;
+  try {
+    storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    // ignore
+  }
+  const currentUser = user || storedUser;
+  const currentUserId = currentUser?.id || currentUser?._id;
+  const currentUserEmail = (currentUser?.email || "").toLowerCase();
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -87,6 +99,12 @@ const AttendanceList = ({
           const userEmail = item.user_email || item.email || item.userEmail || "—";
           const leaveType = type || item.leave_type || "Leave";
 
+          const isOwner = Boolean(
+            (item.user_id && currentUserId && String(item.user_id) === String(currentUserId)) ||
+            (item.user_email && currentUserEmail && item.user_email.toLowerCase() === currentUserEmail) ||
+            (!item.user_id && !isAdminOrCoAdmin)
+          );
+
           return (
             <motion.div
               variants={itemVariants}
@@ -107,7 +125,7 @@ const AttendanceList = ({
               />
 
               {/* 1. Applicant (Name & Unique Email) */}
-              <div className="flex flex-col items-start justify-center w-[20%] px-3 text-left">
+              <div className="flex flex-col items-start justify-center w-[22%] px-3 text-left">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-full">
                   {userName}
                 </span>
@@ -120,14 +138,14 @@ const AttendanceList = ({
               </div>
 
               {/* 2. Leave Type */}
-              <div className="text-sm text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[15%] px-2 text-center">
+              <div className="text-sm text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[16%] px-2 text-center">
                 <span className="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-xs font-semibold text-blue-700 dark:text-[#73FBFD] border border-blue-200 dark:border-blue-800">
                   {leaveType}
                 </span>
               </div>
 
               {/* 3. Duration */}
-              <div className="text-xs lg:text-sm text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[20%] px-2 flex-wrap text-center">
+              <div className="text-xs lg:text-sm text-[#000000] dark:text-[#F8F8F8] font-medium flex items-center justify-center w-[22%] px-2 flex-wrap text-center">
                 <span className="text-gray-800 dark:text-gray-200 font-semibold">{formattedDate(startDate)}</span>
                 <span className="mx-1 text-gray-400">→</span>
                 <span className="text-gray-800 dark:text-gray-200 font-semibold">{formattedDate(endDate)}</span>
@@ -135,15 +153,15 @@ const AttendanceList = ({
 
               {/* 4. Reason */}
               <div
-                className="text-sm text-gray-700 dark:text-gray-300 font-normal flex items-center justify-start w-[23%] px-3 break-words line-clamp-2"
+                className="text-sm text-gray-700 dark:text-gray-300 font-normal flex items-center justify-start w-[24%] px-3 break-words line-clamp-2"
                 title={reason}
               >
                 {reason || "—"}
               </div>
 
-              {/* 5. Status */}
-              <div className="flex items-center justify-center w-[14%]">
-                {isAdminOrCoAdmin ? (
+              {/* 5. Status & Smart Inline Actions */}
+              <div className="flex items-center justify-center w-[16%] gap-2">
+                {isAdminOrCoAdmin && !isOwner ? (
                   <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={normalizedStatus}
@@ -164,48 +182,45 @@ const AttendanceList = ({
                     </select>
                   </div>
                 ) : (
-                  <div
-                    className={`${
-                      statusColor[normalizedStatus] || "text-gray-700 bg-gray-100"
-                    } px-3 py-1 flex items-center justify-center gap-1.5 rounded-2xl`}
-                  >
-                    {statusIcon[normalizedStatus]}
-                    <p className="text-xs font-semibold capitalize">{status}</p>
-                  </div>
-                )}
-              </div>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <div
+                      className={`${
+                        statusColor[normalizedStatus] || "text-gray-700 bg-gray-100"
+                      } px-3 py-1 flex items-center justify-center gap-1.5 rounded-2xl`}
+                    >
+                      {statusIcon[normalizedStatus]}
+                      <p className="text-xs font-semibold capitalize">{status}</p>
+                    </div>
 
-              {/* 6. Actions */}
-              <div className="text-base font-medium flex items-center justify-center gap-1 w-[8%]">
-                {!isAdminOrCoAdmin && normalizedStatus === "pending" ? (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrId(idx);
-                        onEditLeave?.(item);
-                      }}
-                      className="p-1.5 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer"
-                      title="Edit Leave"
-                      aria-label="Edit leave"
-                    >
-                      <Edit3 className="size-4 text-[#2461E6] dark:text-[#73FBFD]" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrId(idx);
-                        onDeleteLeave?.(item);
-                      }}
-                      className="p-1.5 hover:bg-red-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer"
-                      title="Delete Leave"
-                      aria-label="Delete leave"
-                    >
-                      <Trash2 className="size-4 text-[#C71212] dark:text-[#FF6B6B]" />
-                    </button>
-                  </>
-                ) : (
-                  <span className="text-xs text-gray-400 dark:text-gray-600">—</span>
+                    {isOwner && normalizedStatus === "pending" && (
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrId(idx);
+                            onEditLeave?.(item);
+                          }}
+                          className="p-1 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer"
+                          title="Edit Leave"
+                          aria-label="Edit leave"
+                        >
+                          <Edit3 className="size-3.5 text-[#2461E6] dark:text-[#73FBFD]" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrId(idx);
+                            onDeleteLeave?.(item);
+                          }}
+                          className="p-1 hover:bg-red-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer"
+                          title="Delete Leave"
+                          aria-label="Delete leave"
+                        >
+                          <Trash2 className="size-3.5 text-[#C71212] dark:text-[#FF6B6B]" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </motion.div>
@@ -227,6 +242,12 @@ const AttendanceList = ({
           const userName = item.user_name || item.employee_name || item.userName || "Employee";
           const userEmail = item.user_email || item.email || item.userEmail || "—";
           const leaveType = type || item.leave_type || "Casual Leave";
+
+          const isOwner = Boolean(
+            (item.user_id && currentUserId && String(item.user_id) === String(currentUserId)) ||
+            (item.user_email && currentUserEmail && item.user_email.toLowerCase() === currentUserEmail) ||
+            (!item.user_id && !isAdminOrCoAdmin)
+          );
 
           return (
             <motion.div
@@ -278,7 +299,7 @@ const AttendanceList = ({
                   <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase">
                     Status:
                   </span>
-                  {isAdminOrCoAdmin ? (
+                  {isAdminOrCoAdmin && !isOwner ? (
                     <select
                       value={normalizedStatus}
                       onChange={(e) => onStatusChange?.(item, e.target.value)}
@@ -308,7 +329,7 @@ const AttendanceList = ({
                   )}
                 </div>
 
-                {!isAdminOrCoAdmin && normalizedStatus === "pending" && (
+                {isOwner && normalizedStatus === "pending" && (
                   <div className="flex items-center gap-1">
                     <button
                       onClick={(e) => {
@@ -344,3 +365,4 @@ const AttendanceList = ({
 };
 
 export default AttendanceList;
+

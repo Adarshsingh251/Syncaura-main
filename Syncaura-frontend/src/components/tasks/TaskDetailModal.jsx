@@ -65,6 +65,8 @@ const TaskDetailModal = ({
   canDelete,
   isAdmin = false,
   usersList = [],
+  currentUser = null,
+  onRaiseIssue,
 }) => {
   const dispatch = useDispatch();
   const [subtaskInput, setSubtaskInput] = useState("");
@@ -211,6 +213,51 @@ const TaskDetailModal = ({
             </div>
           )}
 
+          {/* Issue Banner */}
+          {task.task_issue_status && (
+            <div
+              className={`rounded-xl p-3.5 border flex flex-col gap-1.5 ${
+                task.task_issue_status === "resolved"
+                  ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-200"
+                  : task.task_issue_status === "in-progress"
+                  ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/40 text-blue-800 dark:text-blue-200"
+                  : task.task_issue_status === "closed"
+                  ? "bg-gray-50 dark:bg-gray-800/40 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300"
+                  : "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/40 text-amber-800 dark:text-amber-200"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-xs">
+                  {task.task_issue_status === "resolved" ? (
+                    <span>✅ Task Issue is Resolved</span>
+                  ) : task.task_issue_status === "in-progress" ? (
+                    <span>⏳ Task Issue is In Progress</span>
+                  ) : task.task_issue_status === "closed" ? (
+                    <span>🔒 Task Issue is Closed</span>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                      <span>⚠️ Task Issue is Open</span>
+                    </>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onRaiseIssue?.(task)}
+                  className="text-[11px] underline font-medium hover:opacity-80"
+                >
+                  View / Raise details
+                </button>
+              </div>
+              {task.task_issue_resolution && (
+                <div className="mt-1 pt-1.5 border-t border-black/10 dark:border-white/10 text-xs">
+                  <span className="font-semibold">Resolution Note: </span>
+                  <span className="opacity-90">{task.task_issue_resolution}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Description */}
           {task.description && (
             <div>
@@ -282,10 +329,10 @@ const TaskDetailModal = ({
               </p>
               <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                 <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{getAssigneeDisplay(task, usersList)}</span>
+                <span className="truncate">{getAssigneeDisplay(task, usersList, currentUser)}</span>
               </div>
               {(() => {
-                const cInfo = getTaskCreatorInfo(task, usersList);
+                const cInfo = getTaskCreatorInfo(task, usersList, currentUser);
                 if (!cInfo) return null;
                 return (
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
@@ -450,25 +497,36 @@ const TaskDetailModal = ({
             ) : null}
           </div>
 
-          {/* Save Button */}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saveLoading}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#2457C5] dark:bg-[#73FBFD] text-white dark:text-black text-sm font-semibold hover:bg-blue-700 dark:hover:bg-[#5af4f5] transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed btn-hover"
-          >
-            {saveLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                Save
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onRaiseIssue?.(task)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-red-600 dark:hover:text-red-400 bg-amber-50 dark:bg-amber-950/30 hover:bg-red-50 dark:hover:bg-red-950/40 border border-amber-200 dark:border-amber-800/40 transition-colors btn-hover"
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <span>Raise Issue</span>
+            </button>
+
+            {/* Save Button */}
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saveLoading}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#2457C5] dark:bg-[#73FBFD] text-white dark:text-black text-sm font-semibold hover:bg-blue-700 dark:hover:bg-[#5af4f5] transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed btn-hover"
+            >
+              {saveLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Save
+                </>
+              )}
+            </button>
+          </div>
 
         </div>
       </motion.div>

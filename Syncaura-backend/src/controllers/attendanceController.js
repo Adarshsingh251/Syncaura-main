@@ -351,3 +351,109 @@ export const checkOut = async (req, res) => {
     return res.status(500).json({ success: false, message: "Check-out failed", error: error.message });
   }
 };
+
+/**
+ * GET /api/attendance/all
+ * Admin & Co-Admin only - Get attendance records of all employees for a given date.
+ */
+export const getAllEmployeesAttendance = async (req, res) => {
+  try {
+    await ensureAttendanceTableExists();
+
+    const { date, search } = req.query;
+    const targetDate = date || new Date().toISOString().split('T')[0];
+
+    // Fetch all users with their attendance on targetDate and approved leaves
+    const query = `
+      SELECT 
+        u.id as user_id,
+        u.name,
+        u.email,
+        u.role,
+        u.profile_pic,
+        a.id as attendance_id,
+        a.date,
+        a.check_in_time,
+        a.check_out_time,
+        a.working_hours,
+        a.status as raw_status,
+        a.notes,
+        (
+          SELECT l.leave_type 
+          FROM leaves l 
+          WHERE l.user_id = u.id 
+            AND l.status = 'approved' 
+            AND $1::date >= l.from_date 
+            AND $1::date <= l.to_date 
+          LIMIT 1
+        ) as approved_leave_type
+      FROM users u
+      LEFT JOIN attendance a ON u.id = a.user_id AND a.date = $1::date
+      ORDER BY u.name ASC
+    `;
+
+    const result = await pool.query(query, [targetDate]);
+    let records = result.rows.map((row) => {
+      let status = "Absent";
+      if (row.approved_leave_type) {
+        status = "On Leave";
+      } else if (row.check_in_time || row.raw_status) {
+        status = row.raw_status || "Present";
+      }
+
+      return {
+        userId: row.user_id,
+        name: row.name || "Employee",
+        email: row.email || "—",
+        role: row.role || "employee",
+        profilePic: row.profile_pic || null,
+        date: targetDate,
+        checkInTime: row.check_in_time || null,
+        checkOutTime: row.check_out_time || null,
+        workingHours: row.working_hours !== null && row.working_hours !== undefined 
+          ? parseFloat(row.working_hours) 
+          : (row.check_in_time ? (row.check_out_time ? 8.0 : null) : 0),
+        status: status,
+        leaveType: row.approved_leave_type || null,
+      };
+    });
+
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      records = records.filter(r => 
+        r.name.toLowerCase().includes(q) || 
+        r.email.toLowerCase().includes(q) ||
+        r.status.toLowerCase().includes(q)
+      );
+    }
+
+    const totalEmployees = records.length;
+    const presentCount = records.filter(r => {
+      const s = r.status.toLowerCase();
+      return s === 'present' || s === 'late';
+    }).length;
+    const absentCount = records.filter(r => r.status.toLowerCase() === 'absent').length;
+    const leaveCount = records.filter(r => {
+      const s = r.status.toLowerCase();
+      return s === 'on leave' || s === 'leave';
+    }).length;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        date: targetDate,
+        summary: {
+          totalEmployees,
+          presentCount,
+          absentCount,
+          leaveCount,
+        },
+        records,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching all employees attendance:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch attendance records", error: error.message });
+  }
+};
+

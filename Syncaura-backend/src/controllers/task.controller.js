@@ -132,11 +132,15 @@ export const getAllTasks = async (req, res) => {
       SELECT t.*, t.assigned_to AS "assignedTo",
         u.name AS assigned_user_name, u.email AS assigned_user_email,
         u_creator.name AS creator_user_name, u_creator.email AS creator_user_email, u_creator.role AS creator_user_role,
-        p.name AS project_name, p.name AS project_title
+        p.name AS project_name, p.name AS project_title,
+        latest_issue.status AS task_issue_status, latest_issue.id AS task_issue_id, latest_issue.resolution AS task_issue_resolution
       FROM tasks t
       LEFT JOIN users u ON (t.assigned_to = u.id::text OR t.assigned_to = u.email OR LOWER(t.assigned_to) = LOWER(u.name))
       LEFT JOIN users u_creator ON (t.created_by = u_creator.id)
       LEFT JOIN projects p ON t.project_id = p.id
+      LEFT JOIN LATERAL (
+        SELECT id, status, resolution FROM complaints WHERE task_id = t.id ORDER BY created_at DESC LIMIT 1
+      ) latest_issue ON true
     `;
     const conditions = [];
     const values = [];
@@ -246,9 +250,18 @@ export const getTaskById = async (req, res) => {
     const isAdminOrCoAdmin = isUserAdminOrCoAdmin(req.user);
 
     const taskResult = await pool.query(
-      `SELECT t.*, t.assigned_to AS "assignedTo", u.name AS assigned_user_name, u.email AS assigned_user_email 
+      `SELECT t.*, t.assigned_to AS "assignedTo", 
+        u.name AS assigned_user_name, u.email AS assigned_user_email,
+        u_creator.name AS creator_user_name, u_creator.email AS creator_user_email, u_creator.role AS creator_user_role,
+        p.name AS project_name, p.name AS project_title,
+        latest_issue.status AS task_issue_status, latest_issue.id AS task_issue_id, latest_issue.resolution AS task_issue_resolution
        FROM tasks t
        LEFT JOIN users u ON (t.assigned_to = u.id::text OR t.assigned_to = u.email OR LOWER(t.assigned_to) = LOWER(u.name))
+       LEFT JOIN users u_creator ON (t.created_by = u_creator.id)
+       LEFT JOIN projects p ON t.project_id = p.id
+       LEFT JOIN LATERAL (
+         SELECT id, status, resolution FROM complaints WHERE task_id = t.id ORDER BY created_at DESC LIMIT 1
+       ) latest_issue ON true
        WHERE t.id = $1`,
       [id]
     );
@@ -306,7 +319,7 @@ export const updateTask = async (req, res) => {
       return res.status(403).json({ message: "Forbidden: Not authorized to update this task" });
     }
  
-    const result = await pool.query(
+    await pool.query(
       `UPDATE tasks SET 
         title = COALESCE($1, title),
         description = COALESCE($2, description),
@@ -319,22 +332,43 @@ export const updateTask = async (req, res) => {
         end_date = COALESCE($9, end_date),
         reminder_at = COALESCE($10, reminder_at),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $11 RETURNING *, assigned_to AS "assignedTo"`,
+      WHERE id = $11`,
       [
         title, description, priority, assignedTo, deadline, status, 
         projectId, startDate, endDate, reminderAt, id
       ]
     );
  
+    const updatedRes = await pool.query(
+      `SELECT t.*, t.assigned_to AS "assignedTo",
+        u.name AS assigned_user_name, u.email AS assigned_user_email,
+        u_creator.name AS creator_user_name, u_creator.email AS creator_user_email, u_creator.role AS creator_user_role,
+        p.name AS project_name, p.name AS project_title,
+        latest_issue.status AS task_issue_status, latest_issue.id AS task_issue_id, latest_issue.resolution AS task_issue_resolution
+       FROM tasks t
+       LEFT JOIN users u ON (t.assigned_to = u.id::text OR t.assigned_to = u.email OR LOWER(t.assigned_to) = LOWER(u.name))
+       LEFT JOIN users u_creator ON (t.created_by = u_creator.id)
+       LEFT JOIN projects p ON t.project_id = p.id
+       LEFT JOIN LATERAL (
+         SELECT id, status, resolution FROM complaints WHERE task_id = t.id ORDER BY created_at DESC LIMIT 1
+       ) latest_issue ON true
+       WHERE t.id = $1`,
+      [id]
+    );
+    const updatedTask = updatedRes.rows[0];
+
+    const subtasksResult = await pool.query("SELECT * FROM subtasks WHERE task_id = $1", [id]);
+    updatedTask.subtasks = subtasksResult.rows;
+
     await logTaskActivity({
       taskId: id,
       action: "TASK_UPDATED",
       changedBy: req.user?.id,
       oldValue: { title: existingTask.title, description: existingTask.description, priority: existingTask.priority, status: existingTask.status },
-      newValue: result.rows[0]
+      newValue: updatedTask
     });
  
-    res.json(result.rows[0]);
+    res.json(updatedTask);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
