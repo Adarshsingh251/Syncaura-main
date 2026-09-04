@@ -110,13 +110,18 @@ CREATE TABLE IF NOT EXISTS subtasks (
 -- Meetings
 CREATE TABLE IF NOT EXISTS meetings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
   title VARCHAR(255) NOT NULL,
   description TEXT,
+
   start_time TIMESTAMP NOT NULL,
-  end_time TIMESTAMP NOT NULL,
+  end_time TIMESTAMP,
+
   created_by UUID REFERENCES users(id) ON DELETE CASCADE,
+
   google_event_id VARCHAR(255),
   google_meet_link TEXT,
+  
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
