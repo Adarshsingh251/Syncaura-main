@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../../config/axios";
 import { motion } from "framer-motion";
-import StatCard from "./admindashboard/StatCard";
+import StatCard from "./admindashboard/statCard";
 import ProjectStatus from "./admindashboard/ProjectStatus";
 import ProjectRisks from "./admindashboard/ProjectRisks";
 import ProductivityTrend from "./admindashboard/ProductivityTrend";
@@ -31,15 +31,17 @@ const AdminDashboard = () => {
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    Promise.all([api.get("/projects"), api.get("/tasks"), api.get("/notifications", { params: { limit: 5 } })])
-      .then(([projectsResponse, tasksResponse, notificationsResponse]) => {
+    Promise.all([api.get("/projects"), api.get("/tasks"), api.get("/notifications", { params: { limit: 5 } }), api.get("/users/all")])
+      .then(([projectsResponse, tasksResponse, notificationsResponse, usersResponse]) => {
         setProjects(Array.isArray(projectsResponse.data) ? projectsResponse.data : []);
         setTasks(Array.isArray(tasksResponse.data) ? tasksResponse.data : []);
         setNotifications(notificationsResponse.data?.data || []);
+        setTotalUsers(Array.isArray(usersResponse.data) ? usersResponse.data.length : null);
       })
       .catch((requestError) => setError(requestError.response?.data?.message || "Unable to load admin dashboard"))
       .finally(() => setLoading(false));
@@ -70,7 +72,7 @@ const AdminDashboard = () => {
           <StatCard title="COMPLETED" value={loading ? "..." : completedProjects} icon={<FaCheckCircle />} iconBg="bg-green-50 dark:bg-green-950/20" iconColor="text-green-600 dark:text-green-500" percent="" percentBg="bg-green-50 dark:bg-green-900/20" percentColor="text-green-600 dark:text-green-500" />
         </motion.div>
         <motion.div variants={item}>
-          <StatCard title="TOTAL USERS" value="N/A" icon={<LuUsers />} iconBg="bg-purple-50 dark:bg-purple-950/20" iconColor="text-purple-500" percent="" percentBg="bg-green-50 dark:bg-green-900/20" percentColor="text-green-600 dark:text-green-500" />
+          <StatCard title="TOTAL USERS" value={loading ? "..." : (totalUsers ?? "N/A")} icon={<LuUsers />} iconBg="bg-purple-50 dark:bg-purple-950/20" iconColor="text-purple-500" percent="" percentBg="bg-green-50 dark:bg-green-900/20" percentColor="text-green-600 dark:text-green-500" />
         </motion.div>
       </motion.div>
 
