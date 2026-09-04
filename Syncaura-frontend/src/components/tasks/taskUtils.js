@@ -1,4 +1,4 @@
-﻿export const isUUID = (str) => {
+export const isUUID = (str) => {
   if (!str || typeof str !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
 };
@@ -104,4 +104,44 @@ export const getAssigneeDisplay = (task, usersList = [], currentUser = null) => 
 
 export const getAssigneeBadge = (task, usersList = [], currentUser = null) => {
   return resolveAssignee(task, usersList, currentUser);
+};
+
+export const getTaskCreatorInfo = (task, usersList = [], currentUser = null) => {
+  if (!task) return null;
+
+  const assignee = resolveAssignee(task, usersList, currentUser);
+
+  let creatorName = task.creator_user_name || "";
+  let creatorEmail = task.creator_user_email || "";
+  let creatorRole = task.creator_user_role || "";
+
+  if (!creatorName && task.created_by) {
+    const matched = (usersList || []).find((u) => String(u.id) === String(task.created_by));
+    if (matched) {
+      creatorName = matched.name;
+      creatorEmail = matched.email;
+      creatorRole = matched.role;
+    } else if (currentUser && String(currentUser.id) === String(task.created_by)) {
+      creatorName = currentUser.name;
+      creatorEmail = currentUser.email;
+      creatorRole = currentUser.role;
+    }
+  }
+
+  const isSelfAssigned =
+    (task.created_by && task.assigned_to && String(task.created_by) === String(task.assigned_to)) ||
+    (creatorEmail && assignee?.email && creatorEmail.toLowerCase() === assignee.email.toLowerCase()) ||
+    (creatorName && assignee?.name && creatorName.toLowerCase() === assignee.name.toLowerCase());
+
+  return {
+    name: creatorName,
+    email: creatorEmail,
+    role: creatorRole,
+    isSelfAssigned: Boolean(isSelfAssigned),
+    label: isSelfAssigned
+      ? "Self-created"
+      : creatorName
+      ? `Assigned by ${creatorName}${creatorRole ? ` (${creatorRole})` : ""}`
+      : "Assigned by Admin",
+  };
 };

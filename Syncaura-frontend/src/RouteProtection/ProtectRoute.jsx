@@ -35,3 +35,4 @@ const ProtectRoute = ({ allowedRoles, publicOnly = false }) => {
 };
 
 export default ProtectRoute;
+

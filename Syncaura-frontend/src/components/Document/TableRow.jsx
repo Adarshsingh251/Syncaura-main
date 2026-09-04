@@ -11,6 +11,7 @@ const TableRow = ({
   document,
   onView,
   onEdit,
+  canEdit = true,
 }) => {
   const { t } = useTranslation();
 
@@ -37,7 +38,7 @@ const TableRow = ({
       <div className="hidden md:flex items-center w-full px-10">
 
         {/* Name */}
-        <div className="w-[30%] flex items-center gap-5 justify-start min-w-0 pr-2">
+        <div className={`${canEdit ? "w-[30%]" : "w-[35%]"} flex items-center gap-5 justify-start min-w-0 pr-2`}>
           <FileText className={`size-8 flex-shrink-0 ${docColor}`} />
           <h1 className="text-base font-medium text-black dark:text-white truncate">
             {name}
@@ -45,28 +46,28 @@ const TableRow = ({
         </div>
 
         {/* Type */}
-        <div className="w-[12%] flex items-center justify-start">
+        <div className={`${canEdit ? "w-[12%]" : "w-[13%]"} flex items-center justify-start`}>
           <h1 className="uppercase text-base text-black font-medium dark:text-white truncate">
             {type}
           </h1>
         </div>
 
         {/* Version */}
-        <div className="w-[10%] flex items-center justify-start">
+        <div className={`${canEdit ? "w-[10%]" : "w-[11%]"} flex items-center justify-start`}>
           <h1 className="text-base font-medium text-black dark:text-white">
             {version}
           </h1>
         </div>
 
         {/* Date */}
-        <div className="w-[15%] flex items-center justify-start">
+        <div className={`${canEdit ? "w-[15%]" : "w-[15%]"} flex items-center justify-start`}>
           <h1 className="text-base font-medium text-black dark:text-white">
             {formatDateYYYYMMDD(date)}
           </h1>
         </div>
 
         {/* Status */}
-        <div className="w-[11%] flex items-center justify-center">
+        <div className={`${canEdit ? "w-[11%]" : "w-[12%]"} flex items-center justify-center`}>
           <div
             className={`w-25 flex items-center justify-center py-1.5 rounded-md text-sm font-medium ${statusColor[status] || "bg-gray-100 text-gray-700"
               }`}
@@ -76,7 +77,7 @@ const TableRow = ({
         </div>
 
         {/* Document (View Action) */}
-        <div className="w-[14%] flex items-center justify-center">
+        <div className={`${canEdit ? "w-[14%]" : "w-[14%]"} flex items-center justify-center`}>
           <button
             type="button"
             onClick={(e) => {
@@ -90,18 +91,20 @@ const TableRow = ({
         </div>
 
         {/* Edit */}
-        <div className="w-[8%] flex items-center justify-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit?.();
-            }}
-            className="text-[#2461E6] dark:text-[#73FBFD] hover:underline font-medium text-sm cursor-pointer btn-hover"
-          >
-            {t("edit", "Edit")}
-          </button>
-        </div>
+        {canEdit && (
+          <div className="w-[8%] flex items-center justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.();
+              }}
+              className="text-[#2461E6] dark:text-[#73FBFD] hover:underline font-medium text-sm cursor-pointer btn-hover"
+            >
+              {t("edit", "Edit")}
+            </button>
+          </div>
+        )}
 
       </div>
 
@@ -177,18 +180,20 @@ const TableRow = ({
           </div>
 
           {/* Edit */}
-          <div className="flex justify-end pt-1">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.();
-              }}
-              className="text-sm font-medium text-[#2461E6] dark:text-[#73FBFD] hover:underline cursor-pointer btn-hover"
-            >
-              {t("edit", "Edit")}
-            </button>
-          </div>
+          {canEdit && (
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.();
+                }}
+                className="text-sm font-medium text-[#2461E6] dark:text-[#73FBFD] hover:underline cursor-pointer btn-hover"
+              >
+                {t("edit", "Edit")}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -19,6 +19,8 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
   const currentUserEmail = currentUser?.email || "";
 
   const [usersList, setUsersList] = useState([]);
+  const [projectsList, setProjectsList] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
   useEffect(() => {
     if (isAdmin) {
@@ -27,6 +29,17 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
         .then((res) => setUsersList(res.data || []))
         .catch((err) => console.error("Failed to load users:", err));
     }
+
+    setLoadingProjects(true);
+    api
+      .get("/projects")
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setProjectsList(res.data);
+        }
+      })
+      .catch((err) => console.error("Failed to load projects:", err))
+      .finally(() => setLoadingProjects(false));
   }, [isAdmin]);
 
   // Default task deadline in days (set by admin in dashboard, default 10 days)
@@ -44,6 +57,7 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
     title: "",
     description: "",
     priority: "medium",
+    projectId: "",
     deadline: isAdmin ? "" : defaultDeadline,
     assignedTo: isAdmin ? "" : currentUserEmail,
     status: "TODO",
@@ -72,6 +86,8 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
     }
     const payload = {
       ...form,
+      projectId: form.projectId || undefined,
+      project_id: form.projectId || undefined,
       assignedTo: isAdmin ? form.assignedTo : currentUserEmail || form.assignedTo,
     };
 
@@ -129,6 +145,28 @@ const CreateTaskModal = ({ onClose, onSubmit, isLoading, isAdmin = false }) => {
             {errors.title && (
               <p className="text-xs text-red-500 mt-1">{errors.title}</p>
             )}
+          </div>
+
+          {/* Project Selection */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+              {t("create_task_project_label", "Project")}
+            </label>
+            <select
+              name="projectId"
+              value={form.projectId}
+              onChange={handleChange}
+              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-[#2d2f33] bg-white dark:bg-[#111214] text-[#0A0A0A] dark:text-white outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-[#73FBFD]/30 transition-all cursor-pointer"
+            >
+              <option value="">
+                {loadingProjects ? "Loading projects..." : t("select_a_project", "Select a Project (Optional)...")}
+              </option>
+              {projectsList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name || p.title} {p.status ? `(${p.status})` : ""}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Description */}

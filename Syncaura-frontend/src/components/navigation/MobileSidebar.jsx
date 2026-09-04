@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-
 import {
   LayoutDashboard,
   Folder,
@@ -15,8 +14,8 @@ import {
   X,
   LogOut,
   User,
+  ClipboardCheck,
 } from "lucide-react";
-
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -116,6 +115,12 @@ export default function MobileSidebar({ open, setOpen }) {
       label: "myAttendance",
       icon: UserCheck,
       path: "/my-attendance",
+      count: 0,
+    },
+    {
+      label: "Issue Status",
+      icon: ClipboardCheck,
+      path: "/issue-status",
       count: 0,
     },
     {
@@ -297,21 +302,27 @@ export default function MobileSidebar({ open, setOpen }) {
           className="
             flex-1
             min-h-0
-
             overflow-y-auto
             overflow-x-hidden
-
             px-2
             pb-4
-
             min-w-[240px]
           "
         >
           <div className="space-y-1">
             {dynamicMenuItems.map((item) => {
+              // INSERT THIS PROTECTION CHECK HERE:
+              if (
+                item.path === "/issue-status" &&
+                !["admin", "co-admin"].includes(user?.role)
+              ) {
+                return null;
+              }
+
               const Icon = item.icon;
 
               return (
+
                 <NavLink
                   key={item.label}
                   to={item.path}

@@ -21,7 +21,7 @@ import {
   toggleSubtaskStatus,
   deleteTask,
 } from "../../redux/features/taskThunks";
-import { getAssigneeDisplay } from "./taskUtils";
+import { getAssigneeDisplay, getTaskCreatorInfo } from "./taskUtils";
 
 const PRIORITY_COLORS = {
   high: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
@@ -198,6 +198,19 @@ const TaskDetailModal = ({
 
         {/* Scrollable content */}
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+          {/* Project Tag */}
+          {(task.project_name || task.project_title) && (
+            <div className="bg-blue-50/60 dark:bg-[#73FBFD]/10 border border-blue-100 dark:border-[#73FBFD]/20 rounded-xl p-3 flex items-center gap-2.5">
+              <span className="text-base">📁</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Project</span>
+                <span className="text-xs font-bold text-blue-600 dark:text-[#73FBFD] truncate">
+                  {task.project_name || task.project_title}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Description */}
           {task.description && (
             <div>
@@ -271,6 +284,24 @@ const TaskDetailModal = ({
                 <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                 <span className="truncate">{getAssigneeDisplay(task, usersList)}</span>
               </div>
+              {(() => {
+                const cInfo = getTaskCreatorInfo(task, usersList);
+                if (!cInfo) return null;
+                return (
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                    <span className="font-semibold text-gray-600 dark:text-gray-300">Origin:</span>
+                    {cInfo.isSelfAssigned ? (
+                      <span className="text-purple-600 dark:text-purple-400 font-medium">
+                        Self-created by user
+                      </span>
+                    ) : (
+                      <span>
+                        {cInfo.label}
+                      </span>
+                    )}
+                  </p>
+                );
+              })()}
             </div>
           </div>
 

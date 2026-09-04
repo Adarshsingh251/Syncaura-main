@@ -233,6 +233,103 @@ const AttendanceLeave = () => {
     };
   }, [attendanceStorageKey]);
 
+  // Helper to fetch user's current browser location
+  const getUserLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        return reject(new Error("Geolocation is not supported by your browser."));
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          });
+        },
+        (error) => {
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
+    });
+  };
+
+  useEffect(() => {
+    const emptyState = getInitialAttendanceState();
+
+    try {
+      const storedValue = localStorage.getItem(attendanceStorageKey);
+      const storedState = storedValue ? JSON.parse(storedValue) : emptyState;
+      attendanceStateRef.current = {
+        presentDays: Number.isFinite(storedState.presentDays)
+          ? storedState.presentDays
+          : emptyState.presentDays,
+        records:
+          storedState.records && typeof storedState.records === "object"
+            ? storedState.records
+            : {},
+      };
+    } catch {
+      attendanceStateRef.current = emptyState;
+    }
+
+    const todayRecord = attendanceStateRef.current.records[getToday()] || {};
+    let isCurrent = true;
+
+    if (isCurrent) {
+      setCheckInTime(todayRecord.in || null);
+      setCheckOutTime(todayRecord.out || null);
+      setSelectedTab(todayRecord.in && !todayRecord.out ? "Check-Out" : "Check-In");
+    }
+
+    // Task 6: Keep correct attendance status after refresh by fetching from backend API
+    const syncStatusWithBackend = async () => {
+      try {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        const response = await api.get(`/attendance/my-attendance?month=${month}&year=${year}`);
+        if (response.data && response.data.success && Array.isArray(response.data.records)) {
+          const todayStr = getToday();
+          const todayRec = response.data.records.find((r) => r.date === todayStr);
+          if (todayRec && isCurrent) {
+            const inTime = (todayRec.check_in_time && todayRec.check_in_time !== "-") ? todayRec.check_in_time : null;
+            const outTime = (todayRec.check_out_time && todayRec.check_out_time !== "-") ? todayRec.check_out_time : null;
+            setCheckInTime(inTime);
+            setCheckOutTime(outTime);
+            setSelectedTab(inTime && !outTime ? "Check-Out" : "Check-In");
+
+            const currentRecords = { ...attendanceStateRef.current.records };
+            currentRecords[todayStr] = {
+              ...currentRecords[todayStr],
+              in: inTime,
+              out: outTime,
+              status: todayRec.status || "Present",
+            };
+            attendanceStateRef.current.records = currentRecords;
+            try {
+              localStorage.setItem(attendanceStorageKey, JSON.stringify(attendanceStateRef.current));
+            } catch { /* ignore */ }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not sync attendance status from backend:", err.message);
+      }
+    };
+
+    syncStatusWithBackend();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [attendanceStorageKey]);
+
   // Whenever the selected attendance date changes (via the date picker), reflect
   // that date's stored check-in/check-out times instead of always showing today's.
   useEffect(() => {
@@ -245,7 +342,7 @@ const AttendanceLeave = () => {
   const canCheckIn = !checkInTime;
   const canCheckOut = Boolean(checkInTime && !checkOutTime);
 
-  const handleConfirmAttendance = () => {
+  const handleConfirmAttendance = async () => {
     if (selectedTab === "Check-In" && !canCheckIn) {
       toast.info("You have already checked in for this date.");
       return;
@@ -261,70 +358,119 @@ const AttendanceLeave = () => {
     }
 
     setIsSubmitting(true);
-    const now = new Date();
-    const formattedTime = now.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+
+    // Task 1 & 2: Ask for current location using browser location feature
+    let locationData;
+    try {
+      locationData = await getUserLocation();
+    } catch (geoErr) {
+      setIsSubmitting(false);
+      // Task 4: Handle Location Permission Error
+      if (geoErr.code === 1) { // PERMISSION_DENIED
+        toast.error("Location permission is required to mark office attendance.");
+      } else if (geoErr.code === 2) { // POSITION_UNAVAILABLE
+        toast.error("Location information is unavailable. Please enable GPS and try again.");
+      } else if (geoErr.code === 3) { // TIMEOUT
+        toast.error("Location request timed out. Please try again.");
+      } else {
+        toast.error(geoErr.message || "Location permission is required to mark office attendance.");
+      }
+      return;
+    }
 
     const isToday = attendanceDate === getToday();
+    const endpoint = selectedTab === "Check-In" ? "/attendance/check-in" : "/attendance/check-out";
 
-    setTimeout(() => {
-      const currentRecords = { ...attendanceStateRef.current.records };
-      const selectedRecord = currentRecords[attendanceDate] || {};
+    // Task 1 & 2: Send latitude, longitude, and location accuracy to backend
+    const payload = {
+      latitude: locationData.latitude,
+      longitude: locationData.longitude,
+      accuracy: locationData.accuracy,
+      date: attendanceDate,
+    };
 
-      if (selectedTab === "Check-In") {
-        currentRecords[attendanceDate] = {
-          ...selectedRecord,
-          in: formattedTime,
-          status: "Present",
-        };
-        if (!selectedRecord.in) {
-          attendanceStateRef.current.presentDays += 1;
+    try {
+      const response = await api.post(endpoint, payload);
+
+      if (response.data && response.data.success) {
+        const serverTime =
+          response.data.data?.check_in_time ||
+          response.data.data?.check_out_time ||
+          new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+
+        const currentRecords = { ...attendanceStateRef.current.records };
+        const selectedRecord = currentRecords[attendanceDate] || {};
+
+        if (selectedTab === "Check-In") {
+          currentRecords[attendanceDate] = {
+            ...selectedRecord,
+            in: serverTime,
+            status: "Present",
+            lat: locationData.latitude,
+            lng: locationData.longitude,
+            accuracy: locationData.accuracy,
+          };
+          if (!selectedRecord.in) {
+            attendanceStateRef.current.presentDays += 1;
+          }
+          setCheckInTime(serverTime);
+          setSelectedTab("Check-Out");
+          toast.success(
+            response.data.message ||
+              (isToday
+                ? `Checked in successfully at ${serverTime}!`
+                : `Checked in for ${attendanceDate} at ${serverTime}!`)
+          );
+        } else {
+          currentRecords[attendanceDate] = {
+            ...selectedRecord,
+            out: serverTime,
+          };
+          setCheckOutTime(serverTime);
+          toast.success(
+            response.data.message ||
+              (isToday
+                ? `Checked out successfully at ${serverTime}!`
+                : `Checked out for ${attendanceDate} at ${serverTime}!`)
+          );
         }
-        setCheckInTime(formattedTime);
-        setSelectedTab("Check-Out");
-        toast.success(
-          isToday
-            ? `Checked in successfully at ${formattedTime}!`
-            : `Checked in for ${attendanceDate} at ${formattedTime}!`,
+
+        attendanceStateRef.current.records = currentRecords;
+
+        try {
+          localStorage.setItem(
+            attendanceStorageKey,
+            JSON.stringify(attendanceStateRef.current)
+          );
+        } catch {
+          // ignore storage quota issues
+        }
+
+        setAttendanceStats((prev) =>
+          prev.map((stat) =>
+            stat.title === "Present Days"
+              ? { ...stat, value: attendanceStateRef.current.presentDays }
+              : stat
+          )
         );
+
+        setShowPopup(false);
       } else {
-        currentRecords[attendanceDate] = {
-          ...selectedRecord,
-          out: formattedTime,
-        };
-        setCheckOutTime(formattedTime);
-        toast.success(
-          isToday
-            ? `Checked out successfully at ${formattedTime}!`
-            : `Checked out for ${attendanceDate} at ${formattedTime}!`,
-        );
+        // Task 5: Show Location Errors
+        toast.error(response.data?.message || "Attendance verification failed.");
       }
-
-      attendanceStateRef.current.records = currentRecords;
-
-      try {
-        localStorage.setItem(
-          attendanceStorageKey,
-          JSON.stringify(attendanceStateRef.current),
-        );
-      } catch {
-        // silently ignore quota issues
-      }
-
-      setAttendanceStats((prev) =>
-        prev.map((stat) =>
-          stat.title === "Present Days"
-            ? { ...stat, value: attendanceStateRef.current.presentDays }
-            : stat,
-        ),
-      );
-
+    } catch (apiErr) {
+      console.warn("Attendance API error response:", apiErr);
+      const backendMsg = apiErr.response?.data?.message || apiErr.response?.data?.error || apiErr.message;
+      // Task 5: Show Location Errors (e.g. "You are outside the workplace attendance area.")
+      toast.error(backendMsg || "Attendance location verification failed. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      setShowPopup(false);
-    }, 1000);
+    }
   };
 
   useEffect(() => {
@@ -613,7 +759,7 @@ const AttendanceLeave = () => {
                     <div className="flex items-center justify-between gap-3">
                       {["Check-In", "Check-Out"].map((item) => {
                         const isSelected = selectedTab === item;
-                        const isDisabled = item === "Check-In" ? !canCheckIn : !canCheckOut;
+                        const isDisabled = isSubmitting || (item === "Check-In" ? !canCheckIn : !canCheckOut);
 
                         return (
                           <motion.button
@@ -652,7 +798,7 @@ const AttendanceLeave = () => {
                       {isSubmitting ? (
                         <>
                           <Loader className="size-4 animate-spin" />
-                          Confirming...
+                          Verifying location...
                         </>
                       ) : selectedTab === "Check-In" ? (
                         canCheckIn ? (
