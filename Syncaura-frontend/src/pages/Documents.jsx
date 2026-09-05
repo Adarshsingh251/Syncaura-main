@@ -37,7 +37,7 @@ export default function Documents() {
     }
   });
 
-  const tab = ["All Files", "Recent", "Shared with me", "Archived"];
+  const tab = ["All Files", "Recent", "Shared with me"];
   const [selectedTab, setSelectedTab] = useState("All Files");
   const [showModal, setShowModal] = useState(false);
   const [editingDoc, setEditingDoc] = useState(null);
@@ -89,9 +89,7 @@ export default function Documents() {
       });
     } else if (selectedTab === "Shared with me") {
       result = result.filter((item) => item.shared || item.is_shared);
-    } else if (selectedTab === "Archived" || selectedTab === "Achived") {
-      result = result.filter((item) => item.status === "Archived" || item.is_archived);
-    }
+    } 
 
     // Filter by Search text
     if (debouncedValue) {
