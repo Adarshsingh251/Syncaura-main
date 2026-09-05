@@ -48,7 +48,7 @@ const initialAttendanceStats = [
   },
   {
     title: "Work From Home",
-    value: 3,
+    value: 0,
     borderColor: "border-[#2461E6] dark:border-[#73FBFD]",
     icon: <Laptop className="size-3.5 text-[#2461E6] dark:text-[#73FBFD]" />,
   },

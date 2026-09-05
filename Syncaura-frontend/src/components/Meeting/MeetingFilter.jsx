@@ -8,7 +8,7 @@ export default function MeetingFilter({ onClose, onApply, currentFilters }) {
   const [hasDoc, setHasDoc] = useState(currentFilters?.hasDoc || "All");
   const [date, setDate] = useState(currentFilters?.date || "");
 
-  const platformOptions = ["All", "Zoom", "Google Meet", "Teams"];
+  const platformOptions = ["All", "Google Meet"];
   const docOptions = ["All", "Yes", "No"];
 
   const handleApply = () => {

@@ -112,65 +112,14 @@ export default function Meetings() {
   const getMeetingType = useCallback((startTime, endTime) => {
     const now = new Date();
     const start = new Date(startTime);
-    const end = endTime ? new Date(endTime) : start;
+    const end = endTime ? new Date(endTime) : new Date(start.getTime() + 60 * 60 * 1000);
 
     if (now >= start && now <= end) return "ongoing";
     if (now < start) return "upcoming";
     return "past";
   }, []);
 
-  const demoMeetings = useMemo(() => {
-    const now = new Date();
-    return [
-      {
-        id: 1,
-        title: "Weekly Team Standup",
-        startTime: new Date(now.getTime() - 15 * 60 * 1000).toISOString(),
-        endTime: new Date(now.getTime() + 45 * 60 * 1000).toISOString(),
-        platform: "Zoom",
-        avatarCount: 4,
-        isDoc: true,
-      },
-      {
-        id: 2,
-        title: "Q3 Product Roadmap Review",
-        startTime: new Date(now.getTime() + 2 * 3600 * 1000).toISOString(),
-        endTime: new Date(now.getTime() + 3 * 3600 * 1000).toISOString(),
-        platform: "Google Meet",
-        avatarCount: 4,
-        isDoc: true,
-      },
-      {
-        id: 3,
-        title: "Design System Sync",
-        startTime: new Date(now.getTime() + 26 * 3600 * 1000).toISOString(),
-        endTime: new Date(now.getTime() + 27 * 3600 * 1000).toISOString(),
-        platform: "Google Meet",
-        avatarCount: 2,
-        isDoc: false,
-      },
-      {
-        id: 4,
-        title: "Weekly All Hands",
-        startTime: new Date(now.getTime() - 24 * 3600 * 1000).toISOString(),
-        endTime: new Date(now.getTime() - 23 * 3600 * 1000).toISOString(),
-        platform: "Zoom",
-        avatarCount: 5,
-        isDoc: false,
-      },
-      {
-        id: 5,
-        title: "Frontend Architecture",
-        startTime: new Date(now.getTime() - 72 * 3600 * 1000).toISOString(),
-        endTime: new Date(now.getTime() - 71 * 3600 * 1000).toISOString(),
-        platform: "Teams",
-        avatarCount: 1,
-        isDoc: false,
-      },
-    ];
-  }, []);
-
-  const displayMeetings = reduxMeetings.length > 0 ? reduxMeetings : demoMeetings;
+  const displayMeetings = reduxMeetings;
 
   const handleFilterChange = useCallback(
     (filter) => {

@@ -286,10 +286,10 @@ export const createMeeting = async (req, res) => {
     // ---------------------------------------
     // 1. Validate required fields
     // ---------------------------------------
-    if (!title || !startTime || !endTime) {
+    if (!title || !startTime) {
       return res.status(400).json({
         success: false,
-        message: "Title, start time and end time are required"
+        message: "Title and start time are required"
       });
     }
 
@@ -311,12 +311,12 @@ export const createMeeting = async (req, res) => {
     // 3. Convert time for local DB
     // ---------------------------------------
     const cleanStartTime = parseToLocalString(startTime);
-    const cleanEndTime = parseToLocalString(endTime);
+    const cleanEndTime = endTime ? parseToLocalString(endTime) : null;
 
     // ---------------------------------------
     // 4. Validate time range
     // ---------------------------------------
-    if (new Date(cleanEndTime) <= new Date(cleanStartTime)) {
+    if (cleanEndTime && new Date(cleanEndTime) <= new Date(cleanStartTime)) {
       return res.status(400).json({
         success: false,
         message: "End time must be after start time"
@@ -327,7 +327,8 @@ export const createMeeting = async (req, res) => {
     // 5. Format time for Google Calendar
     // ---------------------------------------
     const formattedStart = formatForGoogle(startTime);
-    const formattedEnd = formatForGoogle(endTime);
+    const defaultEndTimeStr = new Date(new Date(cleanStartTime).getTime() + 60 * 60 * 1000).toISOString();
+    const formattedEnd = endTime ? formatForGoogle(endTime) : formatForGoogle(defaultEndTimeStr);
 
     let calendarEvent = null;
 
@@ -369,33 +370,40 @@ export const createMeeting = async (req, res) => {
     // 7. Extract Google information
     // ---------------------------------------
     const googleEventId = calendarEvent?.id || null;
-    const meetLink = calendarEvent?.hangoutLink || null;
+    let meetLink = calendarEvent?.hangoutLink || calendarEvent?.meetLink || null;
+
+    // If Google Calendar is not connected or returns no link, generate a Google Meet room link
+    if (!meetLink) {
+      const chars = "abcdefghijklmnopqrstuvwxyz";
+      const seg = (len) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+      meetLink = `https://meet.google.com/${seg(3)}-${seg(4)}-${seg(3)}`;
+    }
 
     // ---------------------------------------
     // 8. Insert meeting into database
     // ---------------------------------------
     const result = await pool.query(
-  `INSERT INTO meetings (
-    title,
-    description,
-    start_time,
-    end_time,
-    created_by,
-    google_event_id,
-    google_meet_link
-  )
-  VALUES ($1, $2, $3, $4, $5, $6, $7)
-  RETURNING *`,
-  [
-    title,
-    description,
-    cleanStartTime,
-    cleanEndTime,
-    userId,
-    googleEventId,
-    meetLink
-  ]
-);
+      `INSERT INTO meetings (
+        title,
+        description,
+        start_time,
+        end_time,
+        created_by,
+        google_event_id,
+        google_meet_link
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`,
+      [
+        title,
+        description || null,
+        cleanStartTime,
+        cleanEndTime || null,
+        userId,
+        googleEventId || null,
+        meetLink || null
+      ]
+    );
 
     const meeting = result.rows[0];
 
@@ -404,12 +412,19 @@ export const createMeeting = async (req, res) => {
     // ---------------------------------------
     if (participants && Array.isArray(participants)) {
       for (const email of participants) {
-        await pool.query(
-          `INSERT INTO meeting_participants
-           (meeting_id, email)
-           VALUES ($1, $2)`,
-          [meeting.id, email]
-        );
+        if (email && typeof email === 'string' && email.trim()) {
+          try {
+            await pool.query(
+              `INSERT INTO meeting_participants
+               (meeting_id, email)
+               VALUES ($1, $2)
+               ON CONFLICT (meeting_id, email) DO NOTHING`,
+              [meeting.id, email.trim()]
+            );
+          } catch (partErr) {
+            console.warn("Error inserting participant:", partErr.message);
+          }
+        }
       }
 
       meeting.participants = participants;
@@ -453,6 +468,11 @@ export const getMeetings = async (req, res) => {
         [meeting.id]
       );
       meeting.participants = participantsResult.rows.map((r) => r.email);
+
+      if (!meeting.google_meet_link) {
+        const hash = (meeting.id || "").replace(/[^a-zA-Z]/g, "").slice(0, 10).padEnd(10, "x").toLowerCase();
+        meeting.google_meet_link = `https://meet.google.com/${hash.slice(0, 3)}-${hash.slice(3, 7)}-${hash.slice(7, 10)}`;
+      }
     }
 
     res.json(meetings);
@@ -480,6 +500,11 @@ export const getMeetingById = async (req, res) => {
       [id]
     );
     meeting.participants = participantsResult.rows.map((r) => r.email);
+
+    if (!meeting.google_meet_link) {
+      const hash = (meeting.id || "").replace(/[^a-zA-Z]/g, "").slice(0, 10).padEnd(10, "x").toLowerCase();
+      meeting.google_meet_link = `https://meet.google.com/${hash.slice(0, 3)}-${hash.slice(3, 7)}-${hash.slice(7, 10)}`;
+    }
 
     res.json(meeting);
   } catch (err) {
@@ -531,13 +556,14 @@ export const updateMeeting = async (req, res) => {
         : existing.start_time;
 
     const finalEndTime =
-      endTime
-        ? parseToLocalString(endTime)
+      endTime !== undefined
+        ? (endTime ? parseToLocalString(endTime) : null)
         : existing.end_time;
 
     if (
-      new Date(finalEndTime) <=
-      new Date(finalStartTime)
+      finalEndTime &&
+      finalStartTime &&
+      new Date(finalEndTime) <= new Date(finalStartTime)
     ) {
       return res.status(400).json({
         success: false,
@@ -552,34 +578,25 @@ export const updateMeeting = async (req, res) => {
       existing.google_event_id &&
       req.googleTokens
     ) {
+      const gDefaultEnd = finalStartTime
+        ? new Date(new Date(finalStartTime).getTime() + 60 * 60 * 1000).toISOString()
+        : null;
 
       try {
-
         await updateCalendarEvent(
           existing.google_event_id,
           {
             tokens: req.googleTokens,
-
             userId: req.user?.id,
-
             title: finalTitle,
-
             description: finalDescription,
-
-            startTime:
-              formatForGoogle(
-                finalStartTime
-              ),
-
-            endTime:
-              formatForGoogle(
-                finalEndTime
-              )
+            startTime: formatForGoogle(finalStartTime),
+            endTime: finalEndTime
+              ? formatForGoogle(finalEndTime)
+              : (gDefaultEnd ? formatForGoogle(gDefaultEnd) : null)
           }
         );
-
       } catch (error) {
-
         console.warn(
           "Google Calendar update failed:",
           error.message

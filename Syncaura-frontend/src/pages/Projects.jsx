@@ -2,7 +2,6 @@ import { ChevronDown, ListFilter, Plus, X, Edit3, Eye, Calendar, CheckCircle2, F
 import { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Tab from "../components/projects/Tab";
-import { PROJECTS } from "../constant/constant";
 import CreateNewProject from "../components/projects/Model/CreateNewProject";
 import ProjectCard from "../components/projects/ProjectCard";
 import { AnimatePresence, motion } from "framer-motion";

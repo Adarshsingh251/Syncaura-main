@@ -79,7 +79,7 @@ export default function MobileSidebar({ open, setOpen }) {
       label: "meetings",
       icon: Calendar,
       path: "/meetings",
-      count: 2,
+      count: 0,
     },
     {
       label: "tasks",

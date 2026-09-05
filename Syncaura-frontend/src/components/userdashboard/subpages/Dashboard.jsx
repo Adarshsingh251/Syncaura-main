@@ -252,20 +252,20 @@ const Dashboard = () => {
           <div className="flex flex-col xsm:flex-row items-center justify-center md:justify-start w-full gap-6 md:gap-10 px-2 sm:px-6 md:px-10 py-2">
             <div className="text-black dark:text-white">
               <CircularProgress
-                percentage={(19 / 25) * 100}
+                percentage={completionPercentage}
                 size={160}
                 progressColor="#127FEC"
                 trackColor="#E5E7EB"
                 label="FINISHED"
-                data="75%"
+                data={`${completionPercentage}%`}
                 textColor="currentColor"
                 labelColor="#94A3B8"
                 innerBg="bg-white dark:bg-[#1E1E1E]"
               />
             </div>
             <h1 className="text-[#636679] dark:text-gray-400 font-bold text-base sm:text-lg text-center md:text-left">
-              You've completed <span className="text-[#127FEC]">19</span> of{" "}
-              <span className="text-[#127FEC]">25</span> tasks this sprint
+              You've completed <span className="text-[#127FEC]">{completedTasks}</span> of{" "}
+              <span className="text-[#127FEC]">{totalTasks}</span> tasks this sprint
             </h1>
           </div>
         </div>
