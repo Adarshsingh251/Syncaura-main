@@ -256,7 +256,7 @@ export default function MobileSidebar({ open, setOpen }) {
               dark:text-white
             "
           >
-            FlowBit
+            Syncaura
           </div>
 
           {/* Close button - Mobile only */}

@@ -45,7 +45,7 @@ useEffect(() => {
           <div
             className="text-2xl font-bold text-blue-600 dark:text-[#4FE6E6]"
           >
-            FlowBit
+            Syncaura
           </div>
 
           <nav
@@ -156,7 +156,7 @@ useEffect(() => {
         <div className="flex items-center justify-between px-6 py-5">
           {/* Logo */}
           <div className="text-[23px] font-bold tracking-tight text-blue-600 dark:text-[#4FE6E6]">
-            FlowBit
+            Syncaura
           </div>
              <div className="flex items-center gap-2">
   <button
