@@ -4,12 +4,12 @@ import { useMedia } from "../context/MediaContext";
 import { Mic, MicOff, Hand } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { calculateLayout } from "../constant/constant";
-import SidePanel from "../components/FlowBitMeeting/SidePanel";
-import PaginationDots from "../components/FlowBitMeeting/PaginationDots";
-import ControlBar from "../components/FlowBitMeeting/ControlBar";
-import MeetingCard from "../components/FlowBitMeeting/MeetingCard";
-import MeetingCardParent from "../components/FlowBitMeeting/MeetingCardParent";
-import ParticipantGrid from "../components/FlowBitMeeting/ParticipantGrid";
+import SidePanel from "../components/FlowbitMeeting/SidePanel";
+import PaginationDots from "../components/FlowbitMeeting/PaginationDots";
+import ControlBar from "../components/FlowbitMeeting/ControlBar";
+import MeetingCard from "../components/FlowbitMeeting/MeetingCard";
+import MeetingCardParent from "../components/FlowbitMeeting/MeetingCardParent";
+import ParticipantGrid from "../components/FlowbitMeeting/ParticipantGrid";
 
 const FlowBitMeetingPage = () => {
   const dispatch = useDispatch();
