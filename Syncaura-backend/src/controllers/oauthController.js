@@ -39,6 +39,12 @@ const getOauth2Client = (req) => {
  */
 export const initiateGoogleLogin = async (req, res) => {
   try {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error("Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in backend environment variables.");
+      const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+      return res.redirect(`${clientUrl}/signin?error=${encodeURIComponent("Google Client ID or Secret is not configured on the backend.")}`);
+    }
+
     const { client: oauth2Client, redirectUri } = getOauth2Client(req);
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
