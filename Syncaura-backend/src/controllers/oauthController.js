@@ -12,13 +12,26 @@ const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/calendar",
 ];
 
+const getRedirectUri = (req) => {
+  if (process.env.GOOGLE_REDIRECT_URI && process.env.GOOGLE_REDIRECT_URI.trim()) {
+    return process.env.GOOGLE_REDIRECT_URI.trim();
+  }
+  const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+  const host = req.get('host');
+  return `${protocol}://${host}/api/auth/google/callback`;
+};
+
 // Instantiating local oauthClient for auth login/signup flow
-const getOauth2Client = () => {
-  return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI || "http://localhost:5000/auth/google/callback"
-  );
+const getOauth2Client = (req) => {
+  const redirectUri = getRedirectUri(req);
+  return {
+    client: new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      redirectUri
+    ),
+    redirectUri,
+  };
 };
 
 /**
@@ -26,12 +39,13 @@ const getOauth2Client = () => {
  */
 export const initiateGoogleLogin = async (req, res) => {
   try {
-    const oauth2Client = getOauth2Client();
+    const { client: oauth2Client, redirectUri } = getOauth2Client(req);
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
       scope: GOOGLE_SCOPES,
       state: "login",
       prompt: "consent",
+      redirect_uri: redirectUri,
     });
 
     res.redirect(authUrl);
@@ -51,8 +65,8 @@ export const handleGoogleCallback = async (req, res) => {
       return res.status(400).json({ message: "Google authorization code missing" });
     }
 
-    const oauth2Client = getOauth2Client();
-    const { tokens } = await oauth2Client.getToken(code);
+    const { client: oauth2Client, redirectUri } = getOauth2Client(req);
+    const { tokens } = await oauth2Client.getToken({ code, redirect_uri: redirectUri });
     oauth2Client.setCredentials(tokens);
 
     // Get user info from Google API
