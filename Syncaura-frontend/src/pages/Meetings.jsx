@@ -3,7 +3,7 @@ import { FaSearch, FaBars } from "react-icons/fa";
 import MeetingCard from "../components/Meeting/Main/Card/MeetingCard";
 import ScheduleMeetingModal from "../components/Meeting/Main/Model/ScheduleMeetingModal";
 import FilterTabs from "../components/Meeting/Main/Tab/FilterTabs";
-import Sidebar from "../components/Meeting/Sidebar/Sidebar";
+import Sidebar from "../components/Meeting/sidebar/Sidebar";
 import MeetingFilter from "../components/Meeting/MeetingFilter";
 import Pagination from "../components/common/Pagination";
 import { AnimatePresence, motion } from "framer-motion";
