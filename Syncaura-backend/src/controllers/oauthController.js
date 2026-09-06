@@ -39,17 +39,21 @@ const getOauth2Client = (req) => {
  */
 export const initiateGoogleLogin = async (req, res) => {
   try {
+    const rawOrigin = req.query.origin || (req.get('referer') ? new URL(req.get('referer')).origin : null);
+    const clientOrigin = rawOrigin || process.env.CLIENT_URL || "https://flowbit.pages.dev";
+
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
       console.error("Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in backend environment variables.");
-      const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-      return res.redirect(`${clientUrl}/signin?error=${encodeURIComponent("Google Client ID or Secret is not configured on the backend.")}`);
+      return res.redirect(`${clientOrigin}/signin?error=${encodeURIComponent("Google Client ID or Secret is not configured on the backend.")}`);
     }
 
     const { client: oauth2Client, redirectUri } = getOauth2Client(req);
+    const statePayload = Buffer.from(JSON.stringify({ origin: clientOrigin, t: Date.now() })).toString('base64');
+
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
       scope: GOOGLE_SCOPES,
-      state: "login",
+      state: statePayload,
       prompt: "consent",
       redirect_uri: redirectUri,
     });
@@ -65,10 +69,21 @@ export const initiateGoogleLogin = async (req, res) => {
  * Handle Google callback, register or login user, generate tokens, and redirect to frontend
  */
 export const handleGoogleCallback = async (req, res) => {
+  let clientUrl = process.env.CLIENT_URL || "https://flowbit.pages.dev";
+
+  if (req.query.state) {
+    try {
+      const parsed = JSON.parse(Buffer.from(req.query.state, 'base64').toString('utf8'));
+      if (parsed?.origin) {
+        clientUrl = parsed.origin;
+      }
+    } catch (e) {}
+  }
+
   try {
     const { code } = req.query;
     if (!code) {
-      return res.status(400).json({ message: "Google authorization code missing" });
+      return res.redirect(`${clientUrl}/signin?error=${encodeURIComponent("Google authorization code missing")}`);
     }
 
     const { client: oauth2Client, redirectUri } = getOauth2Client(req);
@@ -80,7 +95,7 @@ export const handleGoogleCallback = async (req, res) => {
     const { data: userInfo } = await oauth2.userinfo.get();
 
     if (!userInfo.email) {
-      return res.status(400).json({ message: "Google account does not have a valid email address" });
+      return res.redirect(`${clientUrl}/signin?error=${encodeURIComponent("Google account does not have a valid email address")}`);
     }
 
     const email = userInfo.email.toLowerCase();
@@ -139,11 +154,9 @@ export const handleGoogleCallback = async (req, res) => {
     });
 
     // Redirect user back to frontend AuthCallback route
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
     res.redirect(`${clientUrl}/auth/callback?token=${accessToken}&refreshToken=${refreshToken}&role=${user.role}&name=${encodeURIComponent(user.name)}`);
   } catch (error) {
     console.error("Google OAuth login callback error:", error);
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
     res.redirect(`${clientUrl}/signin?error=${encodeURIComponent("Google OAuth Login failed: " + error.message)}`);
   }
 };

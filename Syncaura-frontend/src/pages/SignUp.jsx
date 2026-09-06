@@ -63,7 +63,7 @@ export default function SignUpPage() {
 
   const handleGoogleLogin = () => {
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    window.location.href = `${apiBase}/api/auth/google`;
+    window.location.href = `${apiBase}/api/auth/google?origin=${encodeURIComponent(window.location.origin)}`;
   };
 
   const handleGithubLogin = () => {
