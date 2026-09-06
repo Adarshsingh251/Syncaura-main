@@ -31,23 +31,23 @@ const ProjectStatus = ({ projects = [], tasks = [], loading = false }) => {
             style={{ width: percentage(completed) }}
           ></div>
         </div>
-        <div className="flex flex-wrap items-center mx-13 gap-28">
+        <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-[#1e88e5] dark:bg-[#00f2ff] dark:shadow-[0_0_8px_#00f2ff]"></div>
-            <span className="text-l font-bold text-black dark:text-white dark:text-l dark:font-medium whitespace-nowrap">
+            <div className="w-3.5 h-3.5 rounded-full bg-[#1e88e5] dark:bg-[#00f2ff] dark:shadow-[0_0_8px_#00f2ff]"></div>
+            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap">
               Active ({loading ? "..." : active})
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-[#f44336] dark:bg-[#ff4d4d] dark:shadow-[0_0_8px_#ff4d4d]"></div>
-            <span className="text-l font-bold  text-black dark:text-white dark:text-l dark:font-medium whitespace-nowrap">
+            <div className="w-3.5 h-3.5 rounded-full bg-[#f44336] dark:bg-[#ff4d4d] dark:shadow-[0_0_8px_#ff4d4d]"></div>
+            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap">
               Delayed ({loading ? "..." : delayed})
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-[#1b8e4c] dark:bg-[#39ff14] dark:shadow-[0_0_8px_#39ff14]"></div>
-            <span className="text-l font-bold  text-black dark:text-white dark:text-l dark:font-medium whitespace-nowrap">
+            <div className="w-3.5 h-3.5 rounded-full bg-[#1b8e4c] dark:bg-[#39ff14] dark:shadow-[0_0_8px_#39ff14]"></div>
+            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap">
               Completed ({loading ? "..." : completed})
             </span>
           </div>

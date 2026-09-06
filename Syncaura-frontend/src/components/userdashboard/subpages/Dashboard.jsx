@@ -192,24 +192,24 @@ const Dashboard = () => {
 </div>
 
       {/* 1. Health Status + My Completion Progress */}
-      <div className="flex flex-col lg:flex-row w-full gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 w-full gap-6 items-stretch">
         {/* 1. Health Status */}
-        <div className="flex flex-col w-full gap-4 sm:gap-5 py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#2d2f31] shadow-none">
+        <div className="flex flex-col justify-between w-full gap-4 sm:gap-5 py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#2d2f31] shadow-none">
           <div className="flex items-center justify-start w-full">
-            <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-xl sm:text-2xl">
+            <h2 className="text-gray-900 dark:text-white font-bold text-xl sm:text-2xl">
               Health Status
-            </h1>
+            </h2>
           </div>
-          <div className="flex flex-col xsm:flex-row items-center md:items-center justify-center md:justify-start w-full gap-6 sm:gap-10 md:gap-20 px-2 sm:px-6 md:px-10 py-2">
-            <div className="[--chart-text:#000000] dark:[--chart-text:#FFFFFF]">
+          <div className="flex flex-col xsm:flex-row items-center justify-center md:justify-start w-full gap-6 sm:gap-8 md:gap-12 px-2 sm:px-4 py-2">
+            <div className="[--chart-text:#000000] dark:[--chart-text:#FFFFFF] shrink-0">
               <CircularProgress
                 percentage={completionPercentage}
                 startAngle={20}
-                size={160}
+                size={150}
                 label="TASKS DONE"
                 data={workloadLoading ? "..." : `${completionPercentage}%`}
-                fontSize={28}
-                textSize={12}
+                fontSize={26}
+                textSize={11}
                 textColor="var(--chart-text)"
                 labelColor="#94A3B8"
                 progressColor="#127FEC"
@@ -219,54 +219,61 @@ const Dashboard = () => {
               />
             </div>
             <div className="flex flex-col items-center md:items-start justify-center gap-2 text-center md:text-left">
-              <h1 className="text-[#94A3B8] dark:text-gray-400 font-semibold text-base sm:text-lg">
+              <h3 className="text-slate-500 dark:text-gray-400 font-semibold text-base sm:text-lg">
                 Personal Task Progress
-              </h1>
+              </h3>
               <div className="flex items-center gap-3">
-                <h1 className="text-black dark:text-white font-bold text-xl sm:text-3xl">
+                <h4 className="text-gray-900 dark:text-white font-bold text-xl sm:text-3xl">
                   {workloadLoading ? "..." : `${completedTasks}/${totalTasks}`}
-                </h1>
+                </h4>
                 <div className="flex items-center justify-center px-3 py-1 rounded-full bg-[#ECFDF5] dark:bg-green-900/20 border border-[#D1FAE5]">
                   <p className="text-[#10B981] dark:text-green-400 font-bold text-[9px] sm:text-[10px] tracking-wide uppercase">
                     COMPLETED
                   </p>
                 </div>
               </div>
-              <h1 className="text-[#CBD5E1] dark:text-gray-500 font-medium text-xs sm:text-sm tracking-wide">
+              <p className="text-slate-400 dark:text-gray-500 font-medium text-xs sm:text-sm tracking-wide">
                 {workloadError ||
                   (totalTasks
                     ? `${completionPercentage}% of assigned tasks`
                     : "No assigned tasks")}
-              </h1>
+              </p>
             </div>
           </div>
         </div>
 
-        {/* My Completion Progress (moved here from the deleted Analytics tab) */}
-        <div className="flex flex-col w-full lg:w-1/2 gap-4 sm:gap-5 py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#2d2f31] shadow-none">
+        {/* 2. My Completion Progress */}
+        <div className="flex flex-col justify-between w-full gap-4 sm:gap-5 py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#2d2f31] shadow-none">
           <div className="flex items-center justify-start w-full">
-            <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-xl sm:text-2xl">
+            <h2 className="text-gray-900 dark:text-white font-bold text-xl sm:text-2xl">
               My Completion Progress
-            </h1>
+            </h2>
           </div>
-          <div className="flex flex-col xsm:flex-row items-center justify-center md:justify-start w-full gap-6 md:gap-10 px-2 sm:px-6 md:px-10 py-2">
-            <div className="text-black dark:text-white">
+          <div className="flex flex-col xsm:flex-row items-center justify-center md:justify-start w-full gap-6 sm:gap-8 md:gap-12 px-2 sm:px-4 py-2">
+            <div className="text-black dark:text-white shrink-0">
               <CircularProgress
                 percentage={completionPercentage}
-                size={160}
+                size={150}
                 progressColor="#127FEC"
                 trackColor="#E5E7EB"
                 label="FINISHED"
                 data={`${completionPercentage}%`}
+                fontSize={26}
+                textSize={11}
                 textColor="currentColor"
                 labelColor="#94A3B8"
                 innerBg="bg-white dark:bg-[#1E1E1E]"
               />
             </div>
-            <h1 className="text-[#636679] dark:text-gray-400 font-bold text-base sm:text-lg text-center md:text-left">
-              You've completed <span className="text-[#127FEC]">{completedTasks}</span> of{" "}
-              <span className="text-[#127FEC]">{totalTasks}</span> tasks this sprint
-            </h1>
+            <div className="flex flex-col items-center md:items-start justify-center gap-2 text-center md:text-left">
+              <h3 className="text-slate-500 dark:text-gray-400 font-semibold text-base sm:text-lg">
+                Sprint Goal Completion
+              </h3>
+              <p className="text-slate-600 dark:text-gray-300 font-bold text-base sm:text-lg text-center md:text-left">
+                You've completed <span className="text-[#127FEC]">{completedTasks}</span> of{" "}
+                <span className="text-[#127FEC]">{totalTasks}</span> tasks this sprint
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -297,9 +304,9 @@ const Dashboard = () => {
       {/* 4. Upcoming Deadlines with Filter Functionality */}
       <div className="flex flex-col items-center justify-start w-full gap-y-7 shadow-[0_0_10px_0_#54545440] dark:shadow-[0_0_12px_#00000080] py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-transparent dark:border-[#2A2A2A]">
         <div className="flex items-center justify-between w-full">
-          <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-2xl">
+          <h2 className="text-gray-900 dark:text-white font-bold text-xl sm:text-2xl">
             Upcoming Deadlines
-          </h1>
+          </h2>
           <div className="flex items-center gap-4">
             {/* Filter Dropdown/Toggle Simulation */}
             <select 
@@ -313,7 +320,7 @@ const Dashboard = () => {
             </select>
             <motion.p
               whileHover={{ scale: 1.08, x: 6 }}
-              className="text-[#C05328] dark:text-blue-400 text-lg font-medium cursor-pointer hover:underline"
+              className="text-blue-600 dark:text-[#73FBFD] text-sm font-semibold cursor-pointer hover:underline"
             >
               View All
             </motion.p>
@@ -354,8 +361,8 @@ const Dashboard = () => {
       {/* 6. Issues & Alerts with Dismiss Logic */}
       <div className="flex flex-col items-center justify-start w-full gap-y-7 shadow-[0_0_10px_0_#54545440] dark:shadow-[0_0_12px_#00000080] py-4 px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 rounded-xl bg-white dark:bg-[#1E1E1E] border border-transparent dark:border-[#2A2A2A]">
         <div className="flex items-center justify-between w-full">
-          <h1 className="text-[#6E7184] dark:text-gray-200 font-bold text-2xl">Issues & Alerts</h1>
-          <motion.p whileHover={{ scale: 1.08, x: 6 }} className="text-[#C05328] dark:text-blue-400 text-lg font-medium cursor-pointer hover:underline">View All</motion.p>
+          <h2 className="text-gray-900 dark:text-white font-bold text-xl sm:text-2xl">Issues & Alerts</h2>
+          <motion.p whileHover={{ scale: 1.08, x: 6 }} className="text-blue-600 dark:text-[#73FBFD] text-sm font-semibold cursor-pointer hover:underline">View All</motion.p>
         </div>
         <div className="flex flex-wrap gap-4 md:gap-5 w-full justify-center xl:justify-start">
           <AnimatePresence>
@@ -377,8 +384,9 @@ const Dashboard = () => {
               </motion.div>
             ))}
           </AnimatePresence>
-          {!notificationsLoading && !notificationsError && notifications.length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">No alerts.</p>}
-          {notificationsError && <p className="text-sm text-red-500">Unable to load alerts.</p>}
+          {!notificationsLoading && notifications.length === 0 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">No alerts at this time.</p>
+          )}
         </div>
       </div>
     </div>

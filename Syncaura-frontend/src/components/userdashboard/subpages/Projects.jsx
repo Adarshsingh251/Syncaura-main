@@ -17,28 +17,25 @@ const Projects = () => {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    Promise.all([api.get('/projects'), api.get('/tasks')])
-      .then(([projectsResponse, tasksResponse]) => {
-        // TEMP DEBUG: remove once the empty-projects issue is confirmed fixed.
-        const rawTasks = Array.isArray(tasksResponse.data) ? tasksResponse.data : []
-        let currentUser = null
-        try {
-          currentUser = JSON.parse(localStorage.getItem('user'))
-        } catch (e) {}
-        console.log('[DEBUG] current logged-in user:', currentUser)
-        console.log('[DEBUG] /projects response (raw):', projectsResponse.data)
-        console.log('[DEBUG] /tasks -> project_id & assigned_to per task:', rawTasks.map(t => ({
-          id: t.id,
-          title: t.title,
-          project_id: t.project_id,
-          assigned_to: t.assigned_to,
-        })))
-        setProjects(Array.isArray(projectsResponse.data) ? projectsResponse.data : [])
-        setTasks(rawTasks)
+    Promise.allSettled([api.get('/projects'), api.get('/tasks')])
+      .then(([projectsResult, tasksResult]) => {
+        if (projectsResult.status === 'fulfilled') {
+          const data = projectsResult.value?.data
+          setProjects(Array.isArray(data) ? data : data?.projects || [])
+        } else {
+          setProjects([])
+        }
+
+        if (tasksResult.status === 'fulfilled') {
+          const data = tasksResult.value?.data
+          const rawTasks = Array.isArray(data) ? data : data?.tasks || []
+          setTasks(rawTasks)
+        } else {
+          setTasks([])
+        }
       })
-      .catch((requestError) => {
-        console.log('[DEBUG] /projects or /tasks failed:', requestError.response?.status, requestError.response?.data)
-        setError(requestError.response?.data?.message || 'Unable to load projects')
+      .catch((err) => {
+        console.warn('Projects fetch warning:', err)
       })
       .finally(() => setLoading(false))
   }, [])

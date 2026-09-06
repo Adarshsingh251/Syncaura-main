@@ -21,6 +21,7 @@ import api from "../config/axios";
 import LeaveModel from "../components/AttendanceLeave/LeaveModel";
 import AttendanceLeaveFilter from "../components/AttendanceLeave/AttendanceLeaveFilter";
 import AdminAttendanceList from "../components/AttendanceLeave/AdminAttendanceList";
+import Pagination from "../components/common/Pagination";
 import { toast } from "react-toastify";
 
 const initialAttendanceStats = [
@@ -521,6 +522,18 @@ const AttendanceLeave = () => {
     return result;
   }, [leaveData, debouncedValue, appliedFilters]);
 
+  const LEAVE_PAGE_SIZE = 8;
+  const totalLeavePages = Math.ceil(filteredLeaveHistory.length / LEAVE_PAGE_SIZE) || 1;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedValue, appliedFilters]);
+
+  const paginatedLeaveHistory = useMemo(() => {
+    const startIndex = (currentPage - 1) * LEAVE_PAGE_SIZE;
+    return filteredLeaveHistory.slice(startIndex, startIndex + LEAVE_PAGE_SIZE);
+  }, [filteredLeaveHistory, currentPage, LEAVE_PAGE_SIZE]);
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -603,7 +616,7 @@ const AttendanceLeave = () => {
   };
 
   return (
-    <div className="relative w-full min-h-[calc(92vh)] flex flex-col bg-[#FFFFFF] dark:bg-[#000000]">
+    <div className="relative w-full min-h-[calc(92vh)] flex flex-col bg-[#FFFFFF] dark:bg-[#000000] pb-28">
       {/* Header Section Updated for Perfect Alignment */}
       <div className="relative flex flex-col lg:flex-row gap-y-3 items-center justify-between px-5 py-5 border-b border-[#EDEDED] dark:border-[#575757]">
         <h1 className="text-xl lg:text-2xl font-medium text-[#000000] dark:text-[#FFFFFF] w-full lg:w-auto">
@@ -612,7 +625,7 @@ const AttendanceLeave = () => {
         <div className="flex w-full flex-3/5 md:flex-2/5 2xl:flex-3/5 items-center justify-center gap-2 ">
           <Link
             to="/my-attendance"
-            className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-4xl font-semibold text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap"
+            className="btn-hover px-4 py-2 bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black flex items-center gap-2 rounded-xl font-semibold text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap"
           >
             <UserCheck className="size-4" />
             <span>My Attendance</span>
@@ -620,26 +633,27 @@ const AttendanceLeave = () => {
 
           <button
             onClick={() => setShowFilter((prev) => !prev)}
-            className={`btn-hover px-4 py-2 bg-white dark:bg-[#000000] flex items-center gap-2 border rounded-4xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#989696] dark:border-[#989696]"} `}
+            className={`btn-hover px-4 py-2 flex items-center justify-center gap-2 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              showFilter || appliedFilters
+                ? "border-[#2461E6] bg-blue-50 dark:bg-blue-950/40 text-[#2461E6] dark:border-[#73FBFD] dark:text-[#73FBFD]"
+                : "border-gray-200 bg-white dark:border-[#2A2A2A] dark:bg-[#121212] text-gray-800 dark:text-gray-200 hover:border-blue-500 dark:hover:border-[#73FBFD]"
+            }`}
           >
-            <Funnel
-              className={`size-5 ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"} `}
-            />
-            <span
-              className={`text-base ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#575757] dark:text-[#8f8e8e]"} font-semibold`}
-            >
-              Filter
-            </span>
+            <Funnel className="size-4" />
+            <span>{appliedFilters ? "Filtered" : "Filter"}</span>
+            {appliedFilters && (
+              <span className="size-2 rounded-full bg-[#2461E6] dark:bg-[#73FBFD]" />
+            )}
           </button>
 
-          {/* Search bar width optimized */}
-          <div className="flex items-center gap-2 bg-[#EDEDED] dark:bg-[#2E2F2F] px-3 py-2 rounded-4xl w-[160px] sm:w-[180px] lg:w-[200px]">
-            <Search className="size-5 text-gray-500 dark:text-[#A19C9C] shrink-0" />
+          {/* Search bar */}
+          <div className="flex items-center gap-2 bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#2A2A2A] px-3.5 py-2 rounded-xl w-[170px] sm:w-[200px] lg:w-[220px] shadow-xs">
+            <Search className="size-4 text-gray-400 dark:text-gray-500 shrink-0" />
             <input
               onChange={(e) => setSearch(e.target.value)}
               value={search}
-              placeholder="Search"
-              className="bg-transparent dark:text-[#A19C9C] dark:placeholder:text-[#A19C9C] text-[#5C5C5C] placeholder:text-[#5C5C5C] outline-none text-sm w-full"
+              placeholder="Search leaves..."
+              className="bg-transparent dark:text-gray-200 dark:placeholder:text-gray-500 text-gray-800 placeholder:text-gray-400 outline-none text-sm font-medium w-full"
             />
           </div>
         </div>
@@ -923,7 +937,7 @@ const AttendanceLeave = () => {
         </div>
 
         <AttendanceList
-          LeaveData={filteredLeaveHistory}
+          LeaveData={paginatedLeaveHistory}
           currId={selectedId}
           setCurrId={setSelectedId}
           isAdminOrCoAdmin={isAdminOrCoAdmin}
@@ -932,50 +946,44 @@ const AttendanceLeave = () => {
           onDeleteLeave={handleDeleteLeave}
         />
 
-        <div className="flex items-center justify-center gap-2 mt-6 mb-6">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
-          >
-            Previous
-          </button>
-
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentPage(index + 1)}
-              className={`px-4 py-2 rounded font-medium ${
-                currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
-              }`}
-            >
-              {index + 1}
-            </button>
-          ))}
-
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-gray-300"
-          >
-            Next
-          </button>
+        {/* Desktop Pagination */}
+        <div className="px-6 mt-4 mb-6">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalLeavePages}
+            totalItems={filteredLeaveHistory.length}
+            pageSize={LEAVE_PAGE_SIZE}
+            onPageChange={setCurrentPage}
+            itemLabel="leave requests"
+          />
         </div>
       </div>
 
-      <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5 w-full px-5 sm:px-10">
+      <div className="flex bg-[#FFFFFF] dark:bg-[#000000] flex-col items-center justify-center gap-5 md:hidden mt-5 w-full px-5 sm:px-10 pb-16">
         <h1 className="flex items-center justify-center w-full text-2xl text-black dark:text-white font-bold">
           Leave List
         </h1>
         <AttendanceList
           currId={selectedId}
           setCurrId={setSelectedId}
-          LeaveData={filteredLeaveHistory}
+          LeaveData={paginatedLeaveHistory}
           isAdminOrCoAdmin={isAdminOrCoAdmin}
           onStatusChange={handleStatusChange}
           onEditLeave={handleOpenEditModal}
           onDeleteLeave={handleDeleteLeave}
         />
+
+        {/* Mobile Pagination */}
+        <div className="w-full mt-2">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalLeavePages}
+            totalItems={filteredLeaveHistory.length}
+            pageSize={LEAVE_PAGE_SIZE}
+            onPageChange={setCurrentPage}
+            itemLabel="leave requests"
+          />
+        </div>
       </div>
       </>
       )}

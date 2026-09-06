@@ -142,7 +142,7 @@ const MeetingCard = memo(function MeetingCard(props) {
         onClick={handleOpenDetails}
         className="
           block sm:hidden
-          w-full max-w-[350px] min-h-[153px]
+          w-full min-h-[153px]
           rounded-[20px]
           bg-white dark:bg-[#2E2F2F]
           shadow-[0px_0px_10px_3px_#D2D2D233]
@@ -250,19 +250,19 @@ const MeetingCard = memo(function MeetingCard(props) {
           hidden sm:flex
           flex-col
           justify-between
-          w-[300px]
-          h-[290px]
+          w-full
+          min-h-[280px]
           bg-white
           dark:bg-[#2F2F2F]
-          rounded-[28px]
+          rounded-[24px]
           border border-[#ECECEC]
           dark:border-[#3B3B3B]
           shadow-[0_4px_12px_rgba(0,0,0,0.08)]
           dark:shadow-[0_0_25px_rgba(115,251,253,0.18)]
-          p-4
+          p-5
           transition-all duration-200
           cursor-pointer
-          hover:scale-[1.02]
+          hover:scale-[1.01]
         "
       >
         {/* Top */}

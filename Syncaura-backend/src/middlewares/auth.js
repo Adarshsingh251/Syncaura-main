@@ -37,7 +37,6 @@ export const auth = async (req, res, next) => {
       token_type: user.google_token_type,
       expiry_date: user.google_expiry_date
     };
-    console.log("Google Tokens:", req.googleTokens);
     
     return next();
   } catch (err) {

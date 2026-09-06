@@ -58,7 +58,7 @@ const PrivacyData = () => {
       downloadAnchor.setAttribute("href", dataStr);
       downloadAnchor.setAttribute(
         "download",
-        `syncaura_profile_data_${user?.id || "user"}.json`
+        `flowbit_profile_data_${user?.id || "user"}.json`
       );
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();

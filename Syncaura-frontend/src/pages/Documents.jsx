@@ -8,6 +8,7 @@ import ViewDocumentModal from "../components/Document/ViewDocumentModal";
 import VersionHistoryDrawer from "../components/Document/DetailAboutDcument/VersionHistoryDrawer";
 import { AnimatePresence, motion } from "framer-motion";
 import DocumentFilter from "../components/Document/DocumentFilter";
+import Pagination from "../components/common/Pagination";
 import api from "../config/axios";
 import { toast } from "react-toastify";
 
@@ -151,9 +152,18 @@ export default function Documents() {
     return result;
   }, [safeDocuments, selectedTab, debouncedValue, appliedFilters]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 8;
+
   useEffect(() => {
-    setSelectedDocList(filteredDocuments);
-  }, [filteredDocuments]);
+    setCurrentPage(1);
+  }, [selectedTab, debouncedValue, appliedFilters]);
+
+  const totalPages = Math.ceil(filteredDocuments.length / PAGE_SIZE) || 1;
+  const paginatedDocuments = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredDocuments.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredDocuments, currentPage, PAGE_SIZE]);
 
   const handleApplyFilters = (newFilters) => {
     setAppliedFilters(newFilters);
@@ -326,19 +336,23 @@ export default function Documents() {
         <div className="flex items-center relative md:static justify-center md:justify-end flex-nowrap gap-5 px-2 sm:px-7 w-full sm:w-auto">
           <button
             onClick={() => setShowFilter((prev) => !prev)}
-            className={`btn-hover px-4 py-2 bg-white dark:bg-[#292828] flex items-center gap-2 border rounded-xl ${showFilter || appliedFilters ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#EAECEF] dark:border-[#575757]"
-              }`}
+            className={`px-4 py-2 flex items-center gap-2 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              showFilter || appliedFilters
+                ? "border-[#2461E6] bg-blue-50 dark:bg-blue-950/40 text-[#2461E6] dark:border-[#73FBFD] dark:text-[#73FBFD]"
+                : "border-gray-200 bg-white dark:border-[#2A2A2A] dark:bg-[#121212] text-gray-800 dark:text-gray-200 hover:border-blue-500 dark:hover:border-[#73FBFD]"
+            }`}
           >
-            <ListFilter className={`size-5 ${showFilter || appliedFilters ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"}`} />
-            <h1 className={`text-sm ${showFilter || appliedFilters ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"} font-semibold`}>
-              {appliedFilters ? "Filter Active" : "Filter"}
-            </h1>
+            <ListFilter className="size-4" />
+            <span>{appliedFilters ? "Filtered" : "Filter"}</span>
+            {appliedFilters && (
+              <span className="size-2 rounded-full bg-[#2461E6] dark:bg-[#73FBFD]" />
+            )}
           </button>
 
           {appliedFilters && (
             <button
               onClick={() => setAppliedFilters(null)}
-              className="text-xs font-semibold text-red-500 dark:text-red-400 hover:underline btn-hover"
+              className="text-xs font-semibold text-red-500 dark:text-red-400 hover:underline cursor-pointer"
             >
               Clear Filters
             </button>
@@ -347,25 +361,29 @@ export default function Documents() {
           <AnimatePresence mode="wait">
             {showFilter && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full absolute left-0 top-16 md:top-45 xl:top-35 z-100"
               >
-                <DocumentFilter onClose={() => setShowFilter(false)} onApply={handleApplyFilters} />
+                <DocumentFilter
+                  currentFilters={appliedFilters}
+                  onClose={() => setShowFilter(false)}
+                  onApply={handleApplyFilters}
+                />
               </motion.div>
             )}
           </AnimatePresence>
 
-          <div className="flex col-span-5 items-center w-full gap-x-2 bg-[#EDEDED] dark:bg-[#2E2F2F] px-4 rounded-3xl py-2">
-            <Search className="size-5 text-gray-500" />
+          <div className="flex col-span-5 items-center w-full gap-x-2 bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#2A2A2A] px-3.5 rounded-xl py-2 shadow-xs">
+            <Search className="size-4 text-gray-400 dark:text-gray-500 shrink-0" />
             <input
               onChange={(e) => setSearch(e.target.value)}
               type="text"
               value={search}
-              placeholder="Search"
-              className="flex-1 outline-none text-[#A19C9C] dark:text-[#acabab] text-sm placeholder:text-sm placeholder:text-[#A19C9C] dark:placeholder:text-[#acabab]"
+              placeholder="Search documents..."
+              className="flex-1 outline-none text-gray-800 dark:text-gray-200 text-sm font-medium placeholder:text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent"
             />
           </div>
         </div>
@@ -443,7 +461,7 @@ export default function Documents() {
           )}
 
           {/* Empty State */}
-          {!loading && !error && (selectedDocList || []).length === 0 && (
+          {!loading && !error && filteredDocuments.length === 0 && (
             <p className="text-gray-400 text-center py-10">
               No documents found.
             </p>
@@ -451,8 +469,7 @@ export default function Documents() {
 
           {/* Document Rows */}
           <div className="flex flex-col items-center justify-center w-full gap-3">
-
-            {(selectedDocList || []).map((item, idx) => (
+            {paginatedDocuments.map((item, idx) => (
               <div
                 onClick={() => setViewingDoc(item)}
                 key={item._id || item.id || idx}
@@ -489,25 +506,17 @@ export default function Documents() {
               </div>
             ))}
 
-            {/* View All */}
-            {(selectedDocList || []).length < filteredDocuments.length && (
-              <div className="w-full flex items-center justify-center mt-4">
-                <button
-                  onClick={() => {
-                    setSelectedDocList((prev) => [
-                      ...(prev || []),
-                      ...filteredDocuments.slice(
-                        (prev || []).length,
-                        (prev || []).length + 8
-                      ),
-                    ]);
-                  }}
-                  className="flex items-center justify-center text-[#C05328] text-xl hover:underline btn-hover"
-                >
-                  View All Reports and Documents
-                </button>
-              </div>
-            )}
+            {/* Pagination Controls */}
+            <div className="w-full mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredDocuments.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+                itemLabel="documents"
+              />
+            </div>
 
           </div>
 

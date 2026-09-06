@@ -11,11 +11,11 @@ const SprintSuccessRate = () => {
         <p className="p-6 text-sm text-gray-500">Sprint history is unavailable.</p>
         {[].map((sprint) => (
           <div key={index} className="w-full mb-4">
-            <div className="flex justify-between items-center  mx-10">
-              <span className="text-l font-bold text-gray-900 dark:text-gray-300 dark:font-semibold">
+            <div className="flex justify-between items-center mx-10">
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-300">
                 {sprint.name}
               </span>
-              <span className={`text-l font-bold text-gray-900 ${sprint.textColor}`}>
+              <span className={`text-sm font-bold text-gray-900 dark:text-white ${sprint.textColor}`}>
                 {sprint.rate}%
               </span>
             </div>

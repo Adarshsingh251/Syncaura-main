@@ -5,6 +5,7 @@ import NewComplaintModal from "../components/complaints/NewComplaintModal";
 import ComplaintsList from "../components/complaints/ComplaintsList/ComplaintsList";
 import Complaintheader from "../components/complaints/complaintHeader/Complaintheader";
 import ComplaintSlider from "../components/complaints/ComplaintSlider";
+import Pagination from "../components/common/Pagination";
 import {
   getMyComplaints,
   getAllComplaints,
@@ -35,6 +36,8 @@ export default function Complaints() {
   const [searchComplaints, setSearchComplaints] = useState("");
   const [debounceSearch, setDebounceSearch] = useState("");
   const [appliedFilters, setAppliedFilters] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 8;
 
   const fetchComplaintsData = useCallback(() => {
     let active = user;
@@ -148,6 +151,16 @@ export default function Complaints() {
     return result;
   }, [allItems, activeTab, appliedFilters, debounceSearch]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, debounceSearch, appliedFilters]);
+
+  const totalPages = Math.ceil(filteredComplaints.length / PAGE_SIZE) || 1;
+  const paginatedComplaints = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredComplaints.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredComplaints, currentPage, PAGE_SIZE]);
+
   const handleApplyFilters = (newFilters) => {
     setAppliedFilters(newFilters);
   };
@@ -190,7 +203,7 @@ export default function Complaints() {
           onStatusChange={handleStatusChange}
         />
       ) : (
-        <div className="relative w-full transition-colors duration-500 border-t dark:border-[#000000] h-full bg-[#FFFFFF] dark:bg-[#000000] pt-6 pb-24 overflow-hidden">
+        <div className="relative w-full transition-colors duration-500 border-t dark:border-[#000000] min-h-full bg-[#FFFFFF] dark:bg-[#000000] pt-6 pb-24 overflow-y-auto">
           <Complaintheader
             search={searchComplaints}
             setSearch={setSearchComplaints}
@@ -272,15 +285,29 @@ export default function Complaints() {
           {isLoading && <p className="text-center text-gray-400 py-10">Loading...</p>}
           {error && <p className="text-center text-red-400 py-10">Failed to load complaints and issues.</p>}
           {!isLoading && !error && (
-            <ComplaintsList
-              COMPLAINTS={filteredComplaints}
-              activeId={activeId}
-              setActiveId={setActiveId}
-              statusStyle={statusStyle}
-              statusIcon={statusIcon}
-              isAdminOrCoAdmin={isAdminOrCoAdmin}
-              onStatusChange={handleStatusChange}
-            />
+            <div className="flex flex-col w-full">
+              <ComplaintsList
+                COMPLAINTS={paginatedComplaints}
+                activeId={activeId}
+                setActiveId={setActiveId}
+                statusStyle={statusStyle}
+                statusIcon={statusIcon}
+                isAdminOrCoAdmin={isAdminOrCoAdmin}
+                onStatusChange={handleStatusChange}
+              />
+
+              {/* Pagination */}
+              <div className="px-6 mt-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filteredComplaints.length}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setCurrentPage}
+                  itemLabel="complaints"
+                />
+              </div>
+            </div>
           )}
 
           <button

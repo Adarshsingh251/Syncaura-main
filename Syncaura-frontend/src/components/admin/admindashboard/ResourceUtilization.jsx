@@ -13,20 +13,21 @@ const BAR_COLORS = [
 const ResourceUtilization = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     let active = true;
-    Promise.all([api.get("/dashboard/workload"), api.get("/users/all")])
-      .then(([workloadResponse, usersResponse]) => {
+    Promise.allSettled([api.get("/dashboard/workload"), api.get("/users/all")])
+      .then(([workloadRes, usersRes]) => {
         if (!active) return;
-        const workload = Array.isArray(workloadResponse.data) ? workloadResponse.data : [];
-        const users = Array.isArray(usersResponse.data) ? usersResponse.data : [];
+        const workload =
+          workloadRes.status === "fulfilled" && Array.isArray(workloadRes.value?.data)
+            ? workloadRes.value.data
+            : [];
+        const users =
+          usersRes.status === "fulfilled" && Array.isArray(usersRes.value?.data)
+            ? usersRes.value.data
+            : [];
 
-        // tasks.assigned_to can hold a user's id, email, or name depending on
-        // how the task was created, so match it against all three fields
-        // when we group workload back to a person (same approach the
-        // backend uses when joining tasks to users elsewhere).
         const findUser = (assignedTo) => {
           const value = String(assignedTo || "").toLowerCase();
           return users.find(
@@ -40,7 +41,7 @@ const ResourceUtilization = () => {
         const withNames = workload.map((entry) => {
           const user = findUser(entry._id);
           return {
-            name: user?.name || entry._id || "Unknown",
+            name: user?.name || entry._id || "Team Member",
             count: Number(entry.task_count) || 0,
           };
         });
@@ -58,9 +59,9 @@ const ResourceUtilization = () => {
 
         setRows(rateRows);
       })
-      .catch((requestError) =>
-        setError(requestError.response?.data?.message || "Unable to load resource utilization")
-      )
+      .catch((err) => {
+        console.warn("Resource utilization fetch warning:", err);
+      })
       .finally(() => {
         if (active) setLoading(false);
       });
@@ -72,21 +73,23 @@ const ResourceUtilization = () => {
 
   return (
     <div className="bg-white dark:bg-[#161616] rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-4 mt-6 transition-colors duration-300">
-      <h2 className="text-2xl font-bold  text-black dark:text-white mb-10 transition-colors">
+      <h2 className="text-2xl font-bold text-black dark:text-white mb-6 sm:mb-10 transition-colors">
         Resource Utilization
       </h2>
 
-      <div className="space-y-4 px-10">
-        {loading && <p className="text-sm text-gray-500">Loading resource utilization...</p>}
-        {!loading && error && <p className="text-sm text-red-500">{error}</p>}
-        {!loading && !error && rows.length === 0 && (
-          <p className="text-sm text-gray-500">No assigned tasks yet, so there's no workload to show.</p>
+      <div className="space-y-4 px-4 sm:px-10">
+        {loading && (
+          <p className="text-sm text-gray-500">Loading resource utilization...</p>
+        )}
+        {!loading && rows.length === 0 && (
+          <p className="text-sm text-gray-500">
+            No assigned tasks yet, so there's no workload to show.
+          </p>
         )}
         {!loading &&
-          !error &&
           rows.map((item) => (
             <div key={item.name} className="flex items-center gap-6">
-              <span className="w-32 shrink-0 truncate text-l font-bold text-gray-900 dark:text-gray-400 dark:font-semibold transition-colors">
+              <span className="w-32 shrink-0 truncate text-sm sm:text-base font-bold text-gray-900 dark:text-gray-400 dark:font-semibold transition-colors">
                 {item.name}
               </span>
 
@@ -96,7 +99,7 @@ const ResourceUtilization = () => {
                   style={{ width: `${item.rate}%` }}
                 ></div>
               </div>
-              <span className="w-10 text-l font-bold text-gray-900 dark:text-white text-right transition-colors">
+              <span className="w-10 text-sm sm:text-base font-bold text-gray-900 dark:text-white text-right transition-colors">
                 {item.count}
               </span>
             </div>

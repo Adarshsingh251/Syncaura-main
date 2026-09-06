@@ -54,11 +54,11 @@ const ProjectRisks = ({ projects = [], tasks = [], loading = false }) => {
         <table className="w-full text-left">
 
           <thead>
-            <tr className="bg-gray-50/50 dark:bg-[#161b22] text-[13px] uppercase tracking-wider text-gray-400 border-b border-gray-100 dark:border-zinc-800">
-              <th className="py-4 px-6 text-l font-semibold dark:text-white">Project Name</th>
-              <th className="py-4 px-6 text-l font-semibold dark:text-white">Risk Description</th>
-              <th className="py-4 px-6 text-l font-semibold dark:text-white">Owner</th>
-              <th className="py-4 pr-20 text-l text-right font-semibold dark:text-white">Severity</th>
+            <tr className="bg-gray-50/50 dark:bg-[#161b22] text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-400 border-b border-gray-100 dark:border-zinc-800">
+              <th className="py-3.5 px-6">Project Name</th>
+              <th className="py-3.5 px-6">Risk Description</th>
+              <th className="py-3.5 px-6">Owner</th>
+              <th className="py-3.5 pr-20 text-right">Severity</th>
             </tr>
           </thead>
 

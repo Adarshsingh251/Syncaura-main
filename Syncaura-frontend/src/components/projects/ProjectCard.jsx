@@ -150,7 +150,7 @@ const ProjectCard = ({
   };
 
   return (
-    <div className="relative bg-white dark:bg-[#2E2F2F] w-60 md:w-80 flex flex-col gap-12 shrink-0 box-border px-4 py-3 rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.25)] transition-colors duration-300">
+    <div className="relative bg-white dark:bg-[#2E2F2F] w-full flex flex-col justify-between gap-8 box-border p-5 rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.15)] border border-gray-100 dark:border-gray-800/80 transition-colors duration-300 hover:shadow-lg">
       {/* Header */}
       <div className="flex flex-col w-full gap-3">
         <div className="flex items-center justify-between w-full relative">

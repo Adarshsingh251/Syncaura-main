@@ -30,28 +30,28 @@ const Complaintheader = ({
       {/* Filter Button */}
       <button
         onClick={() => setOpenFilter((prev) => !prev)}
-        className={`btn-hover rounded-full flex items-center justify-center border px-4 py-2 text-sm gap-2 transition-colors cursor-pointer ${
+        className={`btn-hover px-4 py-2 flex items-center justify-center gap-2 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
             openFilter || hasActiveFilters
-              ? "border-[#2461E6] bg-blue-50/50 dark:bg-[#73FBFD]/10 text-[#2461E6] dark:border-[#73FBFD] dark:text-[#73FBFD] font-medium"
-              : "border-gray-300 text-black dark:border-[#777575] dark:text-[#8A8A8A]"
-          } `}
+              ? "border-[#2461E6] bg-blue-50 dark:bg-blue-950/40 text-[#2461E6] dark:border-[#73FBFD] dark:text-[#73FBFD]"
+              : "border-gray-200 bg-white dark:border-[#2A2A2A] dark:bg-[#121212] text-gray-800 dark:text-gray-200 hover:border-blue-500 dark:hover:border-[#73FBFD]"
+          }`}
       >
         <Funnel className="size-4" />
-        <span>Filter</span>
+        <span>{hasActiveFilters ? "Filtered" : "Filter"}</span>
         {hasActiveFilters && (
-          <span className="size-2 rounded-full bg-blue-600 dark:bg-[#73FBFD]" />
+          <span className="size-2 rounded-full bg-[#2461E6] dark:bg-[#73FBFD]" />
         )}
       </button>
 
        <AnimatePresence mode="wait">
         {openFilter && (
-         <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="w-full absolute left-0 top-30 md:top-20 z-100"
-    >
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="w-full absolute left-0 top-30 md:top-20 z-100"
+          >
            <ComplaintFilters
              currentFilters={appliedFilters}
              onClose={() => setOpenFilter(false)}
@@ -62,24 +62,24 @@ const Complaintheader = ({
         )}
       </AnimatePresence>
    
-                <div
-                    className="flex w-3/5 sm:w-full items-center gap-x-2 
-             bg-[#EDEDED] dark:bg-[#2E2F2F] 
-             px-4 rounded-3xl h-10"
-                >
-                    <Search className="size-4 sm:size-5 text-[#777575] shrink-0" />
+      <div
+        className="flex w-3/5 sm:w-full items-center gap-x-2 
+          bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#2A2A2A]
+          px-3.5 rounded-xl h-10 shadow-xs"
+      >
+        <Search className="size-4 text-gray-400 dark:text-gray-500 shrink-0" />
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search"
-                        className="flex-1 min-w-0 text-lg outline-none 
-               text-gray-700 dark:text-[#8A8A8A] font-semibold
-               dark:placeholder:text-[#8A8A8A]
-               placeholder:text-sm placeholder:text-[#989696]"
-                    />
-                </div>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search issues..."
+          className="flex-1 min-w-0 text-sm outline-none 
+            text-gray-800 dark:text-gray-200 font-medium
+            dark:placeholder:text-gray-500
+            placeholder:text-gray-400"
+        />
+      </div>
 
             </div>
         </div>

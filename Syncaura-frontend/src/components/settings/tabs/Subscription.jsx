@@ -37,7 +37,7 @@ const Subscription = () => {
               CURRENT PLAN
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              Syncaura Workspace Enterprise
+              Flowbit Workspace Enterprise
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
               Your organization account is active with full features enabled.

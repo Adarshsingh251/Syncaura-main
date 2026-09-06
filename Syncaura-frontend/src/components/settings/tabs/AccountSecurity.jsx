@@ -108,7 +108,7 @@ const AccountSecurity = () => {
               </div>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xl">
                 {t("twoStepDesc") ||
-                  "Add an extra layer of security to your Syncaura workspace by requiring an authenticator code."}
+                  "Add an extra layer of security to your Flowbit workspace by requiring an authenticator code."}
               </p>
             </div>
           </div>

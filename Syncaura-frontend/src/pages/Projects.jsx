@@ -1,11 +1,12 @@
 import { ChevronDown, ListFilter, Plus, X, Edit3, Eye, Calendar, CheckCircle2, Flag, Tally2, Check, Users, User, Shield } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import Tab from "../components/projects/Tab";
 import CreateNewProject from "../components/projects/Model/CreateNewProject";
 import ProjectCard from "../components/projects/ProjectCard";
 import { AnimatePresence, motion } from "framer-motion";
 import ProjectFilter from "../components/projects/ProjectFilter";
+import Pagination from "../components/common/Pagination";
 import { toast } from "react-toastify";
 import api from "../config/axios";
 
@@ -173,6 +174,20 @@ const Projects = () => {
     return 0;
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 8;
+
+  // Reset pagination on filter, tab, sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [currTab, appliedFilters, sortBy]);
+
+  const totalPages = Math.ceil(sortedProjects.length / PAGE_SIZE) || 1;
+  const paginatedProjects = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return sortedProjects.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [sortedProjects, currentPage, PAGE_SIZE]);
+
   const handleApplyFilters = (newFilters) => {
     setAppliedFilters(newFilters);
   };
@@ -313,19 +328,19 @@ const Projects = () => {
   };
 
   return (
-    <div className="w-full py-5 flex flex-col bg-[#FFFFFF] dark:bg-[#000000] mt-2 dark:mt-1 h-full transition-colors duration-300">
-      <div className="px-2 xl:px-6">
-        <div className="flex items-center justify-between px-5 py-2">
-          <h1 className="font-bold text-3xl text-[#000000] dark:text-[#F8F8F8]">
+    <div className="w-full py-5 flex flex-col bg-[#FFFFFF] dark:bg-[#000000] mt-2 dark:mt-1 min-h-screen transition-colors duration-300">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between py-2">
+          <h1 className="font-bold text-2xl sm:text-3xl text-[#000000] dark:text-[#F8F8F8]">
             Projects
           </h1>
           {isAdmin && (
             <button
               onClick={() => setShowModel(true)}
-              className="px-4 cursor-pointer py-2.5 bg-[#2457C5] dark:bg-[#73FBFD] rounded-3xl flex items-center justify-center gap-2"
+              className="px-4 cursor-pointer py-2.5 bg-[#2457C5] dark:bg-[#73FBFD] rounded-xl flex items-center justify-center gap-2"
             >
-              <Plus className="text-xl text-[#FFFFFF] dark:text-[#000000]" />
-              <h2 className="text-[#FFFFFF] dark:text-[#000000] text-base font-semibold">
+              <Plus className="size-5 text-[#FFFFFF] dark:text-[#000000]" />
+              <h2 className="text-[#FFFFFF] dark:text-[#000000] text-sm font-semibold">
                 New Project
               </h2>
             </button>
@@ -333,7 +348,7 @@ const Projects = () => {
         </div>
 
         <div
-          className="flex flex-col gap-4 px-4 py-3 w-full 
+          className="flex flex-col gap-4 py-3 w-full 
                 md:flex-row md:items-center md:justify-between"
         >
           {/* Tabs */}
@@ -362,12 +377,12 @@ const Projects = () => {
               <button
                 type="button"
                 onClick={() => setShowSortDropdown((prev) => !prev)}
-                className="px-3 py-2 bg-white dark:bg-[#575757] flex items-center gap-2 border rounded-xl border-[#EAECEF] dark:border-[#575757] hover:border-blue-500 dark:hover:border-[#73FBFD] transition-colors cursor-pointer"
+                className="px-3.5 py-2 bg-white dark:bg-[#121212] flex items-center gap-2 border rounded-xl border-gray-200 dark:border-[#2A2A2A] hover:border-[#2461E6] dark:hover:border-[#73FBFD] transition-colors cursor-pointer text-gray-800 dark:text-gray-200"
               >
-                <h1 className="text-sm text-[#082A44] dark:text-[#B2B2B2] font-semibold">
-                  Sort by: {sortBy}
-                </h1>
-                <ChevronDown className={`size-5 text-[#082A44] dark:text-[#B2B2B2] transition-transform ${showSortDropdown ? "rotate-180" : ""}`} />
+                <span className="text-sm font-semibold">
+                  Sort: {sortBy}
+                </span>
+                <ChevronDown className={`size-4 text-gray-500 dark:text-gray-400 transition-transform ${showSortDropdown ? "rotate-180" : ""}`} />
               </button>
 
               <AnimatePresence>
@@ -377,7 +392,7 @@ const Projects = () => {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -4 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-0 top-11 z-50 w-52 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-1.5 overflow-hidden"
+                    className="absolute right-0 top-11 z-50 w-52 bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#2A2A2A] rounded-xl shadow-xl py-1.5 overflow-hidden"
                   >
                     {[
                       "Recent",
@@ -395,10 +410,11 @@ const Projects = () => {
                           setShowSortDropdown(false);
                           toast.info(`Sorted projects by: ${option}`);
                         }}
-                        className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left cursor-pointer transition-colors ${sortBy === option
-                          ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-[#73FBFD] font-bold"
-                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2A2A2A]"
-                          }`}
+                        className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left cursor-pointer transition-colors ${
+                          sortBy === option
+                            ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-[#73FBFD] font-bold"
+                            : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#222222]"
+                        }`}
                       >
                         <span>{option}</span>
                         {sortBy === option && <Check className="size-4 text-blue-600 dark:text-[#73FBFD]" />}
@@ -409,18 +425,20 @@ const Projects = () => {
               </AnimatePresence>
             </div>
 
+            {/* Filter Button */}
             <button
               onClick={() => setShowFilter((prev) => !prev)}
-              className={`btn-hover px-4 py-2 flex items-center gap-2 border rounded-xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD] bg-blue-100 dark:bg-gray-950" : "border-[#EAECEF] bg-white dark:border-[#575757] dark:bg-[#575757]"}`}
+              className={`px-4 py-2 flex items-center gap-2 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                showFilter || appliedFilters
+                  ? "border-[#2461E6] bg-blue-50 dark:bg-blue-950/40 text-[#2461E6] dark:border-[#73FBFD] dark:text-[#73FBFD]"
+                  : "border-gray-200 bg-white dark:border-[#2A2A2A] dark:bg-[#121212] text-gray-800 dark:text-gray-200 hover:border-blue-500 dark:hover:border-[#73FBFD]"
+              }`}
             >
-              <ListFilter
-                className={`size-5 ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"}`}
-              />
-              <h1
-                className={`text-sm ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"} font-semibold`}
-              >
-                Filter
-              </h1>
+              <ListFilter className="size-4" />
+              <span>{appliedFilters ? "Filtered" : "Filter"}</span>
+              {appliedFilters && (
+                <span className="size-2 rounded-full bg-[#2461E6] dark:bg-[#73FBFD]" />
+              )}
             </button>
           </div>
         </div>
@@ -428,13 +446,14 @@ const Projects = () => {
         <AnimatePresence mode="wait">
           {showFilter && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full mt-5"
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="w-full mt-4"
             >
               <ProjectFilter
+                currentFilters={appliedFilters}
                 onClose={() => setShowFilter(false)}
                 onApply={handleApplyFilters}
               />
@@ -444,35 +463,49 @@ const Projects = () => {
       </div>
 
       {/* Projects Cards Grid */}
-      <div className="w-full px-2 xl:px-6 mt-4 pb-12">
+      <div className="w-full px-4 sm:px-6 lg:px-8 mt-4 pb-12">
         {sortedProjects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-gray-50 dark:bg-[#111214] rounded-2xl border border-gray-200 dark:border-gray-800 mx-5 text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col items-center justify-center py-20 bg-gray-50 dark:bg-[#111214] rounded-2xl border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400">
             <p className="text-lg font-semibold">No projects found</p>
             <p className="text-sm mt-1">Try creating a new project or adjusting your filters</p>
           </div>
         ) : (
-          <motion.div
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 px-5"
-          >
-            <AnimatePresence>
-              {sortedProjects.map((project) => (
-                <ProjectCard
-                  key={project.id || project.title}
-                  id={project.id}
-                  title={project.title}
-                  department={project.department}
-                  priority={project.priority}
-                  progress={project.progress}
-                  members={project.members}
-                  owner={project.owner}
-                  avatars={project.avatars}
-                  dueDate={project.dueDate}
-                  onAction={handleProjectAction}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <div className="flex flex-col w-full gap-6">
+            <motion.div
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              <AnimatePresence>
+                {paginatedProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id || project.title}
+                    id={project.id}
+                    title={project.title}
+                    department={project.department}
+                    priority={project.priority}
+                    progress={project.progress}
+                    members={project.members}
+                    owner={project.owner}
+                    avatars={project.avatars}
+                    dueDate={project.dueDate}
+                    onAction={handleProjectAction}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Pagination Controls */}
+            <div className="pt-2">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={sortedProjects.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+                itemLabel="projects"
+              />
+            </div>
+          </div>
         )}
       </div>
 

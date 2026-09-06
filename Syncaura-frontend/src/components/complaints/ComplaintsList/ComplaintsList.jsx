@@ -112,7 +112,7 @@ export default function ComplaintsList({
   return (
     <>
       {/* Desktop View */}
-      <div className="hidden md:flex flex-col gap-1 h-[calc(100vh-180px)]">
+      <div className="hidden md:flex flex-col gap-1 w-full">
         <div className="grid grid-cols-12 place-items-center px-6 xl:px-12 py-4 border border-[#8a858560] dark:border-[#575757] gap-x-3 sticky top-0 bg-white dark:bg-[#1E1E1E] transition-colors duration-200 z-10 shadow-xs">
           <div className="text-xs xl:text-sm font-semibold uppercase col-span-2 text-left w-full text-gray-700 dark:text-gray-200">
             Filer
@@ -292,7 +292,7 @@ export default function ComplaintsList({
       <div className="h-px block md:hidden w-full bg-[#E0DDDD] dark:bg-[#2E2F2F]" />
 
       {/* Mobile Card View */}
-      <div className="md:hidden grid grid-cols-1 gap-4 px-4 h-[calc(100dvh-120px)] overflow-y-auto pb-32 no-scrollbar mt-3">
+      <div className="md:hidden grid grid-cols-1 gap-4 px-4 pb-4 no-scrollbar mt-3">
         {COMPLAINTS.map((item) => {
           const id = item.id || item._id;
           const { title, category, status = "open", created_at } = item;

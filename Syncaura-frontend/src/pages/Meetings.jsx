@@ -5,6 +5,7 @@ import ScheduleMeetingModal from "../components/Meeting/Main/Model/ScheduleMeeti
 import FilterTabs from "../components/Meeting/Main/Tab/FilterTabs";
 import Sidebar from "../components/Meeting/Sidebar/Sidebar";
 import MeetingFilter from "../components/Meeting/MeetingFilter";
+import Pagination from "../components/common/Pagination";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -176,6 +177,19 @@ export default function Meetings() {
     return result;
   }, [displayMeetings, activeFilter, search, appliedFilters, getMeetingType]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 8;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, search, appliedFilters]);
+
+  const totalMeetingPages = Math.ceil(filteredMeetings.length / PAGE_SIZE) || 1;
+  const paginatedMeetings = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredMeetings.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredMeetings, currentPage, PAGE_SIZE]);
+
   return (
     <>
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
@@ -184,9 +198,7 @@ export default function Meetings() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col ">
           {/* Header */}
-          <div className="w-full bg-white dark:bg-[#1a1a1a] border-b border-[#e5e7eb] dark:border-[#2c2c2c] px-4 py-2 shadow-sm">
-
-
+          <div className="w-full bg-white dark:bg-[#1a1a1a] border-b border-[#e5e7eb] dark:border-[#2c2c2c] px-4 sm:px-6 lg:px-8 py-4 shadow-sm">
             {/* Desktop Header */}
             <div className="hidden lg:flex items-start justify-between">
               <div>
@@ -201,25 +213,23 @@ export default function Meetings() {
                 {userRole === "admin" && (
                   <button
                     onClick={() => setModalOpen(true)}
-                    className="flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-4 py-2 rounded-full shadow-sm transition btn-hover"
+                    className="flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-4 py-2 rounded-xl shadow-sm transition btn-hover font-semibold text-sm"
                   >
-                    <span className="text-[13px] font-medium">
-                      + Create New Meeting
-                    </span>
+                    <span>+ Create New Meeting</span>
                   </button>
                 )}
 
                 <button
                   onClick={handleSyncCalendar}
                   disabled={isSyncing}
-                  className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-3.5 py-1.5 rounded-full border border-[#f1f1f1] dark:border-[#2f2f2f] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.06)] transition text-[#4b5563] dark:text-white btn-hover disabled:opacity-50"
+                  className="flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-3.5 py-2 rounded-xl border border-[#f1f1f1] dark:border-[#2f2f2f] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.06)] transition text-[#4b5563] dark:text-white btn-hover disabled:opacity-50 text-xs font-semibold"
                 >
                   <RefreshCcw
                     size={14}
                     className={`text-[#111827] dark:text-white ${isSyncing ? "animate-spin" : ""}`}
                   />
 
-                  <span className="text-[13px] font-medium">
+                  <span>
                     {isSyncing ? "Syncing..." : "Sync Calendar"}
                   </span>
                 </button>
@@ -228,7 +238,7 @@ export default function Meetings() {
           </div>
 
           {/* Content Area */}
-          <div className="px-5 py-4 max-w-[1050px] mx-auto w-full">
+          <div className="px-4 sm:px-6 lg:px-8 py-6 w-full">
             {/* Filter + Search */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               {/* Tabs */}
@@ -243,40 +253,39 @@ export default function Meetings() {
               <div className="flex flex-col sm:flex-row gap-2 items-center">
                 <button
                   onClick={() => setShowFilter((prev) => !prev)}
-                  className={`flex items-center justify-center gap-1.5 border px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition btn-hover ${showFilter || appliedFilters
-                    ? "bg-blue-50 dark:bg-[#2a2a2a] border-[#2563eb] dark:border-[#73FBFD] text-[#2563eb] dark:text-[#73FBFD]"
-                    : "bg-white dark:bg-[#2a2a2a] border-[#f1f1f1] dark:border-[#2f2f2f] text-[#4b5563] dark:text-[#d1d5db]"
-                    }`}
+                  className={`flex items-center justify-center gap-2 border px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    showFilter || appliedFilters
+                      ? "border-[#2461E6] bg-blue-50 dark:bg-blue-950/40 text-[#2461E6] dark:border-[#73FBFD] dark:text-[#73FBFD]"
+                      : "border-gray-200 bg-white dark:border-[#2A2A2A] dark:bg-[#121212] text-gray-800 dark:text-gray-200 hover:border-blue-500 dark:hover:border-[#73FBFD]"
+                  }`}
                 >
                   <Funnel size={14} />
-                  <span className="text-[13px]">
-                    Filter
-                  </span>
+                  <span>{appliedFilters ? "Filtered" : "Filter"}</span>
                   {appliedFilters && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb] dark:bg-[#73FBFD]" />
+                    <span className="w-2 h-2 rounded-full bg-[#2461E6] dark:bg-[#73FBFD]" />
                   )}
                 </button>
 
                 <div
                   className="
                     flex items-center
-                    bg-white dark:bg-[#2a2a2a]
-                    border border-[#f1f1f1]
-                    dark:border-[#2f2f2f]
-                    rounded-full
-                    px-3 py-1.5
-                    w-[180px]
-                    shadow-[0_2px_8px_rgba(0,0,0,0.04)]
+                    bg-white dark:bg-[#121212]
+                    border border-gray-200
+                    dark:border-[#2A2A2A]
+                    rounded-xl
+                    px-3.5 py-2
+                    w-[190px] sm:w-[220px]
+                    shadow-xs
                   "
                 >
-                  <FaSearch className="text-[13px] text-[#9ca3af]" />
+                  <FaSearch className="text-[13px] text-gray-400 dark:text-gray-500 shrink-0" />
 
                   <input
                     type="text"
                     placeholder="Search meetings..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="bg-transparent outline-none border-none pl-3 w-full text-[13px] text-[#111827] dark:text-white"
+                    className="bg-transparent outline-none border-none pl-2.5 w-full text-xs font-medium text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   />
                 </div>
               </div>
@@ -330,11 +339,9 @@ export default function Meetings() {
                     transition={{
                       duration: 0.3,
                     }}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-start"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                   >
-                    {filteredMeetings.map((meeting) => {
-                      console.log("Meeting being displayed:", meeting);
-
+                    {paginatedMeetings.map((meeting) => {
                       return (
                         <MeetingCard
                           key={meeting.id}
@@ -345,6 +352,20 @@ export default function Meetings() {
                     })}
                   </motion.div>
                 </AnimatePresence>
+              )}
+
+              {/* Pagination Controls */}
+              {filteredMeetings.length > 0 && (
+                <div className="mt-8">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalMeetingPages}
+                    totalItems={filteredMeetings.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setCurrentPage}
+                    itemLabel="meetings"
+                  />
+                </div>
               )}
             </div>
           </div>

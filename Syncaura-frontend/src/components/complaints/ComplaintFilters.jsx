@@ -24,15 +24,6 @@ export default function ComplaintFilters({ onClose, onApply, currentFilters, onR
   const [order, setOrder] = useState(currentFilters?.order || orderOptions[0]);
   const [date, setDate] = useState(currentFilters?.date || "");
 
-  const handleApply = () => {
-    onApply({
-      status,
-      order,
-      date,
-    });
-    onClose?.();
-  };
-
   const handleReset = () => {
     setStatus("All");
     setOrder(orderOptions[0]);
@@ -42,70 +33,96 @@ export default function ComplaintFilters({ onClose, onApply, currentFilters, onR
     } else {
       onApply(null);
     }
-    onClose?.();
+  };
+
+  const handleStatusChange = (newStatus) => {
+    setStatus(newStatus);
+    onApply({
+      status: newStatus,
+      order,
+      date,
+    });
+  };
+
+  const handleOrderChange = (newOrder) => {
+    setOrder(newOrder);
+    onApply({
+      status,
+      order: newOrder,
+      date,
+    });
+  };
+
+  const handleDateChange = (newDate) => {
+    setDate(newDate);
+    onApply({
+      status,
+      order,
+      date: newDate,
+    });
   };
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="relative w-full bg-white dark:bg-[#181818] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.15)] border border-gray-200 dark:border-[#333333] p-5 sm:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch lg:items-end justify-between"
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="relative w-full bg-white dark:bg-[#121212] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#2A2A2A] p-5 sm:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch lg:items-end justify-between"
       >
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#252525] transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1E1E1E] transition-colors cursor-pointer"
           title="Close filters"
         >
           <X className="size-4" />
         </button>
 
         {/* Order Dropdown */}
-        <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full lg:w-1/4">
           <FilterDropdown
             options={orderOptions}
             startVal={order}
             label={t("complaintFilters_complaintIdOrder", "Order by Date")}
-            onChange={setOrder}
+            onChange={handleOrderChange}
           />
         </div>
 
         {/* Date Range */}
-        <div className="flex flex-col gap-2 w-full lg:w-1/4">
-          <label className="text-sm font-semibold w-full text-gray-700 dark:text-gray-300">
+        <div className="flex flex-col gap-1.5 w-full lg:w-1/4">
+          <label className="text-xs font-semibold w-full text-gray-700 dark:text-gray-300">
             {t("complaintFilters_dateRange", "Date")}
           </label>
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-full border border-gray-200 dark:border-[#3A3A3A] px-4 py-2 text-sm text-gray-800 dark:text-gray-200
-              bg-white dark:bg-[#121212]
-              focus:outline-none focus:ring-2 focus:ring-blue-500 date-input"
+            onChange={(e) => handleDateChange(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 dark:border-[#2A2A2A] px-3.5 py-2 text-xs text-gray-800 dark:text-gray-200
+              bg-white dark:bg-[#0B0B0B]
+              focus:outline-none focus:ring-1 focus:ring-[#2461E6] dark:focus:ring-[#73FBFD] date-input"
           />
         </div>
 
         {/* Status Filter */}
-        <div className="flex flex-col gap-2 w-full lg:w-2/5">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <div className="flex flex-col gap-1.5 w-full lg:w-2/5">
+          <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
             {t("complaintFilters_status", "Status")}
           </label>
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {statusOptions.map((item) => {
               const isSelected = status === item.value;
               return (
                 <button
                   type="button"
                   key={item.value}
-                  onClick={() => setStatus(item.value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${
+                  onClick={() => handleStatusChange(item.value)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     isSelected
-                      ? "border-blue-600 bg-blue-50 text-blue-600 dark:border-[#73FBFD] dark:bg-[#73FBFD]/10 dark:text-[#73FBFD] font-semibold"
-                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
+                      ? "border-[#2461E6] bg-blue-50 text-[#2461E6] dark:border-[#73FBFD] dark:bg-[#73FBFD]/10 dark:text-[#73FBFD]"
+                      : "border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#0B0B0B] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700"
                   }`}
                 >
                   {item.label}
@@ -120,22 +137,12 @@ export default function ComplaintFilters({ onClose, onApply, currentFilters, onR
           <button
             type="button"
             onClick={handleReset}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#252525] text-xs font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 dark:border-[#2A2A2A] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E1E1E] text-xs font-semibold transition-colors cursor-pointer"
             title="Reset Filters"
           >
             <RotateCcw className="size-3.5" />
             <span>Reset</span>
           </button>
-
-          <motion.button
-            type="button"
-            onClick={handleApply}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="bg-blue-600 dark:bg-[#73FBFD] dark:text-black text-white font-medium px-5 py-2 rounded-full shadow-sm text-xs cursor-pointer hover:bg-blue-500 dark:hover:bg-[#2cc4c7] transition-colors"
-          >
-            {t("complaintFilters_applyFilters", "Apply")}
-          </motion.button>
         </div>
       </motion.div>
     </div>

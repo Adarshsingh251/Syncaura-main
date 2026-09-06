@@ -13,6 +13,7 @@ import {
 import { motion } from "framer-motion";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
+import Pagination from "../common/Pagination";
 
 const statusBadgeStyle = {
   present:
@@ -46,6 +47,8 @@ export default function AdminAttendanceList({ defaultDate }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
   const [attendanceData, setAttendanceData] = useState({
     summary: { totalEmployees: 0, presentCount: 0, absentCount: 0, leaveCount: 0 },
     records: [],
@@ -70,6 +73,10 @@ export default function AdminAttendanceList({ defaultDate }) {
     fetchAttendance();
   }, [date]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [date, search, statusFilter]);
+
   const filteredRecords = useMemo(() => {
     let list = attendanceData.records || [];
     if (search.trim()) {
@@ -92,6 +99,12 @@ export default function AdminAttendanceList({ defaultDate }) {
     }
     return list;
   }, [attendanceData.records, search, statusFilter]);
+
+  const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE) || 1;
+  const paginatedRecords = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredRecords.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredRecords, currentPage, PAGE_SIZE]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -240,7 +253,7 @@ export default function AdminAttendanceList({ defaultDate }) {
             </div>
 
             <motion.div variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100 dark:divide-[#282828]">
-              {filteredRecords.map((item) => {
+              {paginatedRecords.map((item) => {
                 const normalizedStatus = (item.status || "absent").toLowerCase();
                 const avatarInitial = (item.name || "U").charAt(0).toUpperCase();
 
@@ -313,7 +326,7 @@ export default function AdminAttendanceList({ defaultDate }) {
 
           {/* Mobile Card View */}
           <div className="flex md:hidden flex-col gap-3">
-            {filteredRecords.map((item) => {
+            {paginatedRecords.map((item) => {
               const normalizedStatus = (item.status || "absent").toLowerCase();
               const avatarInitial = (item.name || "U").charAt(0).toUpperCase();
 
@@ -366,6 +379,18 @@ export default function AdminAttendanceList({ defaultDate }) {
                 </div>
               );
             })}
+          </div>
+
+          {/* Pagination */}
+          <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredRecords.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+              itemLabel="staff members"
+            />
           </div>
         </>
       )}

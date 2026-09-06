@@ -28,7 +28,7 @@ const RecentActivityCard = ({ tasks = [], loading = false }) => {
       "
     >
       {/* Title */}
-      <h2 className="text-[#64748B] dark:text-gray-200 font-bold text-xl sm:text-2xl mb-6">
+      <h2 className="text-gray-900 dark:text-white font-bold text-xl sm:text-2xl mb-6">
         Recent Activity
       </h2>
 
@@ -39,7 +39,7 @@ const RecentActivityCard = ({ tasks = [], loading = false }) => {
           className="
             absolute left-4 top-0
             h-full w-[2px]
-            bg-[#E3E5EA] dark:bg-[#2A2A2A]
+            bg-gray-200 dark:bg-[#2A2A2A]
           "
         />
 
@@ -69,11 +69,11 @@ const RecentActivityCard = ({ tasks = [], loading = false }) => {
 
             {/* Content */}
             <div className="flex flex-col">
-              <div className="text-[#64748B] dark:text-gray-200 text-sm">
+              <div className="text-gray-900 dark:text-gray-100 font-semibold text-sm">
                 {item.title}
               </div>
 
-              <div className="text-gray-400 dark:text-gray-500 text-xs mt-1">
+              <div className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                 {item.time}
               </div>
             </div>

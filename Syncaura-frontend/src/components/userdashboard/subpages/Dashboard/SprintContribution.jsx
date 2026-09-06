@@ -18,7 +18,7 @@ const SprintContribution = ({ CONTRIBUTIONS }) => {
       "
     >
       
-      <h2 className="text-[#64748B] dark:text-gray-200 font-bold text-2xl sm:text-2xl mb-6">
+      <h2 className="text-gray-900 dark:text-white font-bold text-xl sm:text-2xl mb-6">
         Sprint Contribution
       </h2>
 

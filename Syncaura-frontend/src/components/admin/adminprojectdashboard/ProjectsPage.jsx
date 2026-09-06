@@ -7,6 +7,7 @@ import { BsXOctagonFill } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import CreateNewProject from "../../projects/Model/CreateNewProject";
+import Pagination from "../../common/Pagination";
 import api from "../../../config/axios";
 
 /* ─────────────────────────────────────────────────────────────
@@ -89,7 +90,7 @@ function StatCard({ label, value, borderColor, highlight, iconBg, iconColor, Ico
       style={{ borderLeft: highlight ? `4px solid ${borderColor}` : undefined }}
     >
       <div className="flex justify-between items-start">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-gray-400 dark:text-zinc-500">{label}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-gray-600 dark:text-gray-400">{label}</span>
         <div className="w-9 h-6 rounded-[6px] py-4 px-1 flex items-center justify-center" style={{ background: iconBg }}>
           <Icon size={18} style={{ color: iconColor }} />
         </div>
@@ -177,10 +178,23 @@ export default function ProjectsPage() {
     };
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 8;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   const filtered = mappedProjects.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.owner.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalTablePages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+  const paginatedTableProjects = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
   );
 
   const thClass =
@@ -260,10 +274,10 @@ export default function ProjectsPage() {
                     style={{ background: c }}
                   />
                   <div>
-                    <div className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 leading-[1.4]">
+                    <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 leading-[1.4]">
                       {lbl}
                     </div>
-                    <div className="text-[11px] font-normal text-gray-700 dark:text-zinc-300 leading-[1.4]">
+                    <div className="text-[11px] font-bold text-gray-900 dark:text-gray-100 leading-[1.4]">
                       {pct}
                     </div>
                   </div>
@@ -276,7 +290,7 @@ export default function ProjectsPage() {
         {/* PROJECTS TABLE */}
         <div className="bg-white dark:bg-[#1c1d1d] border border-gray-200 dark:border-zinc-800 rounded-[10px] overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-[14px] py-3 border-b border-gray-200 dark:border-zinc-800">
-            <span className="text-2xl font-bold text-zinc-500 dark:text-zinc-600 tracking-normal leading-none">
+            <span className="text-xl font-bold text-gray-900 dark:text-white tracking-normal leading-none">
               All Projects
             </span>
             <div className="flex gap-2 items-center">
@@ -288,7 +302,7 @@ export default function ProjectsPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Filter projects..."
-                  className="pl-[26px] pr-[10px] py-[5px] border border-gray-200 dark:border-zinc-800 rounded-[6px] text-[11px] font-normal text-gray-700 dark:text-zinc-300 bg-white dark:bg-[#0c192e] w-[155px] outline-none"
+                  className="pl-[26px] pr-[10px] py-[5px] border border-gray-200 dark:border-zinc-800 rounded-[6px] text-xs font-medium text-gray-900 dark:text-gray-200 bg-white dark:bg-[#0c192e] w-[155px] outline-none"
                 />
               </div>
               <button
@@ -326,7 +340,7 @@ export default function ProjectsPage() {
                 </tr>
               )}
               {!loading &&
-                filtered.map((p) => (
+                paginatedTableProjects.map((p) => (
                   <tr
                     key={p.id}
                     className="hover:bg-gray-50/50 dark:hover:bg-zinc-800/20 bg-white dark:bg-[#1c1d1d] transition-colors"
@@ -395,10 +409,17 @@ export default function ProjectsPage() {
                 ))}
             </tbody>
           </table>
-          <div className="px-[14px] py-[9px] text-[10px] font-normal text-gray-500 dark:text-zinc-500 flex items-center bg-white dark:bg-[#1c1d1d] justify-between border-t border-gray-200 dark:border-zinc-800">
-            <span>
-              Showing {filtered.length} of {totalCount} projects
-            </span>
+
+          {/* Pagination Controls */}
+          <div className="px-[14px] py-2 bg-white dark:bg-[#1c1d1d] border-t border-gray-200 dark:border-zinc-800">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalTablePages}
+              totalItems={filtered.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+              itemLabel="projects"
+            />
           </div>
         </div>
       </div>

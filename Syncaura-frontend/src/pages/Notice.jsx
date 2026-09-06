@@ -6,6 +6,7 @@ import NotificationRow from "../components/notice/NotificationRow";
 import NewNoticeModal from "../components/notice/NewNoticeModel";
 import { AnimatePresence, motion } from "framer-motion";
 import NoticeFilter from "../components/notice/NoticeFilter";
+import Pagination from "../components/common/Pagination";
 import { fetchNotices, createNotice, updateNotice, deleteNotice } from "../redux/features/noticeThunks";
 import { toast } from "react-toastify";
 
@@ -33,7 +34,8 @@ const Notice = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(null);
   const [noticeData, setNoticeData] = useState([]);
-  const [fewNotification, setFewNotification] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 8;
 
   useEffect(() => {
     dispatch(fetchNotices());
@@ -47,6 +49,10 @@ const Notice = () => {
     const timer = setTimeout(() => setDebouncedValue(search.toLowerCase()), 350);
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedValue, appliedFilters]);
 
   const filteredNotice = useMemo(() => {
     let result = [...noticeData];
@@ -76,9 +82,11 @@ const Notice = () => {
     return result;
   }, [noticeData, debouncedValue, appliedFilters]);
 
-  useEffect(() => {
-    setFewNotification(filteredNotice.slice(0, 7));
-  }, [filteredNotice]);
+  const totalPages = Math.ceil(filteredNotice.length / PAGE_SIZE) || 1;
+  const paginatedNotices = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredNotice.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredNotice, currentPage, PAGE_SIZE]);
 
   const handleApplyFilters = (newFilters) => setAppliedFilters(newFilters);
 
@@ -132,28 +140,43 @@ const Notice = () => {
         <div className="flex-1/3 flex items-center justify-center sm:justify-end gap-2">
           <button
             onClick={() => setShowFilter((prev) => !prev)}
-            className={`btn-hover flex-1/4 flex items-center justify-center w-full px-5 py-1 gap-2 border rounded-4xl ${showFilter ? "border-[#2461E6] dark:border-[#73FBFD]" : "border-[#989696] dark:border-[#FFFFFF]"}`}
+            className={`px-4 py-2 flex items-center justify-center gap-2 border rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              showFilter || appliedFilters
+                ? "border-[#2461E6] bg-blue-50 dark:bg-blue-950/40 text-[#2461E6] dark:border-[#73FBFD] dark:text-[#73FBFD]"
+                : "border-gray-200 bg-white dark:border-[#2A2A2A] dark:bg-[#121212] text-gray-800 dark:text-gray-200 hover:border-blue-500 dark:hover:border-[#73FBFD]"
+            }`}
           >
-            <Funnel className={`size-5 ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#082A44] dark:text-[#B2B2B2]"}`} />
-            <span className={`text-lg ${showFilter ? "text-[#2461E6] dark:text-[#73FBFD]" : "text-[#575757] dark:text-[#FFFFFF]"}`}>Filter</span>
+            <Funnel className="size-4" />
+            <span>{appliedFilters ? "Filtered" : "Filter"}</span>
+            {appliedFilters && (
+              <span className="size-2 rounded-full bg-[#2461E6] dark:bg-[#73FBFD]" />
+            )}
           </button>
           <AnimatePresence mode="wait">
             {showFilter && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full absolute left-0 top-30 md:top-20 z-100"
               >
-                <NoticeFilter onClose={() => setShowFilter(false)} onApply={handleApplyFilters} />
+                <NoticeFilter
+                  currentFilters={appliedFilters}
+                  onClose={() => setShowFilter(false)}
+                  onApply={handleApplyFilters}
+                />
               </motion.div>
             )}
           </AnimatePresence>
-          <div className="flex-3/4 flex col-span-5 items-center w-full gap-x-2 bg-[#EDEDED] dark:bg-[#2E2F2F] px-4 rounded-3xl py-2">
-            <Search className="size-5 text-gray-500" />
+          <div className="flex-3/4 flex col-span-5 items-center w-full gap-x-2 bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#2A2A2A] px-3.5 rounded-xl py-2 shadow-xs">
+            <Search className="size-4 text-gray-400 dark:text-gray-500 shrink-0" />
             <input
               onChange={(e) => setSearch(e.target.value)}
-              type="text" value={search} placeholder="Search by title, category, publisher…"
-              className="flex-1 outline-none text-[#A19C9C] dark:text-[#acabab] text-sm placeholder:text-sm placeholder:text-[#A19C9C] dark:placeholder:text-[#acabab]"
+              type="text"
+              value={search}
+              placeholder="Search notices…"
+              className="flex-1 outline-none text-gray-800 dark:text-gray-200 text-sm font-medium placeholder:text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent"
             />
           </div>
         </div>
@@ -164,16 +187,16 @@ const Notice = () => {
         <div className="flex items-center justify-start w-full px-2 md:px-10">
           <h1 className="text-2xl text-black dark:text-white font-medium px-2 md:px-5">Latest Updates</h1>
         </div>
-        <div className="flex items-center justify-center w-full px-2 md:px-10 mt-3">
+        <div className="flex flex-col items-center justify-center w-full px-2 md:px-10 mt-3">
           <motion.div
             className="flex flex-col gap-2 justify-center w-full"
-            variants={containerVariants} initial="hidden" animate="show" key={fewNotification.length}
+            variants={containerVariants} initial="hidden" animate="show" key={currentPage}
           >
             {isLoading && <p className="text-center text-gray-400 py-4">Loading notices...</p>}
-            {!isLoading && fewNotification.length === 0 && (
+            {!isLoading && filteredNotice.length === 0 && (
               <p className="text-center text-gray-400 py-4">No notices found.</p>
             )}
-            {fewNotification.map((item, idx) => (
+            {paginatedNotices.map((item, idx) => (
               <motion.div key={item.id ?? item._id} variants={itemVariants}>
                 <NotificationRow
                   key={item.id ?? item._id}
@@ -192,17 +215,19 @@ const Notice = () => {
                 />
               </motion.div>
             ))}
-            {fewNotification.length !== filteredNotice.length && (
-              <div className="w-full flex items-center justify-center mt-4">
-                <button
-                  onClick={() => setFewNotification((prev) => [...prev, ...filteredNotice.slice(prev.length, prev.length + 7)])}
-                  className="flex items-center justify-center text-[#C05328] text-xl hover:underline btn-hover"
-                >
-                  View All Notices
-                </button>
-              </div>
-            )}
           </motion.div>
+
+          {/* Pagination */}
+          <div className="w-full mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredNotice.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+              itemLabel="notices"
+            />
+          </div>
         </div>
       </div>
 

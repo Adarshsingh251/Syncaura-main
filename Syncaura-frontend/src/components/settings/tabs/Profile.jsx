@@ -567,7 +567,7 @@ const Profile = () => {
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-[#2461E6] dark:text-[#73FBFD] text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            Syncaura Profile
+            Flowbit Profile
           </div>
         </div>
 

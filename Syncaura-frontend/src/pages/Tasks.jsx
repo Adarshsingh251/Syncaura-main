@@ -29,6 +29,7 @@ import CreateTaskModal from "../components/tasks/CreateTaskModal";
 import TaskDetailModal from "../components/tasks/TaskDetailModal";
 import RaiseTaskIssueModal from "../components/tasks/RaiseTaskIssueModal";
 import { getAssigneeBadge, getAssigneeDisplay, getTaskCreatorInfo } from "../components/tasks/taskUtils";
+import Pagination from "../components/common/Pagination";
 import { toast } from "react-toastify";
 import api from "../config/axios";
 
@@ -311,6 +312,19 @@ const Tasks = () => {
     return result;
   }, [tasks, debouncedSearch, priorityFilter, projectFilter, sortField, sortDir, isAdminOrCoAdmin, currentUser]);
 
+  const [listPage, setListPage] = useState(1);
+  const LIST_PAGE_SIZE = 10;
+
+  useEffect(() => {
+    setListPage(1);
+  }, [debouncedSearch, priorityFilter, projectFilter, sortField, sortDir]);
+
+  const totalListPages = Math.ceil(filtered.length / LIST_PAGE_SIZE) || 1;
+  const paginatedListTasks = useMemo(() => {
+    const startIndex = (listPage - 1) * LIST_PAGE_SIZE;
+    return filtered.slice(startIndex, startIndex + LIST_PAGE_SIZE);
+  }, [filtered, listPage, LIST_PAGE_SIZE]);
+
   const tasksByStatus = useMemo(
     () => ({
       TODO: filtered.filter((t) => t.status === "TODO"),
@@ -430,28 +444,28 @@ const Tasks = () => {
         {/* ── Toolbar ─────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
           {/* Search */}
-          <div className="flex items-center gap-2 flex-1 bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl px-3.5 py-2.5">
-            <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 flex-1 bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#2A2A2A] rounded-xl px-3.5 py-2.5 shadow-xs">
+            <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
             <input
               type="text"
               id="task-search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tasks…"
-              className="flex-1 text-sm bg-transparent outline-none text-[#0A0A0A] dark:text-white placeholder:text-gray-400"
+              className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 font-medium"
             />
           </div>
 
           {/* Priority Filter */}
-          <div className="flex items-center gap-1.5 bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#2A2A2A] rounded-xl p-1 shadow-xs">
             {["all", "high", "medium", "low"].map((p) => (
               <button
                 key={p}
                 onClick={() => setPriorityFilter(p)}
-                className={`btn-hover px-3 py-1.5 text-xs font-semibold rounded-lg capitalize ${
+                className={`btn-hover px-3 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all cursor-pointer ${
                   priorityFilter === p
-                    ? "bg-[#2457C5] dark:bg-[#73FBFD] text-white dark:text-black"
-                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2d2f33]"
+                    ? "bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black shadow-xs"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E1E1E]"
                 }`}
               >
                 {p === "all" ? "All" : p}
@@ -460,15 +474,15 @@ const Tasks = () => {
           </div>
 
           {/* Project Filter */}
-          <div className="flex items-center bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl px-2.5 py-1">
+          <div className="flex items-center bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#2A2A2A] rounded-xl px-3 py-1 shadow-xs">
             <select
               value={projectFilter}
               onChange={(e) => setProjectFilter(e.target.value)}
-              className="text-xs font-semibold bg-transparent text-[#0A0A0A] dark:text-white outline-none cursor-pointer py-1 max-w-[150px] truncate"
+              className="text-xs font-semibold bg-transparent text-gray-800 dark:text-gray-200 outline-none cursor-pointer py-1.5 max-w-[150px] truncate"
             >
-              <option value="all" className="bg-white dark:bg-[#1e1f22]">📁 All Projects</option>
+              <option value="all" className="bg-white dark:bg-[#121212] text-gray-900 dark:text-gray-100">📁 All Projects</option>
               {projectsList.map((p) => (
-                <option key={p.id} value={p.id} className="bg-white dark:bg-[#1e1f22]">
+                <option key={p.id} value={p.id} className="bg-white dark:bg-[#121212] text-gray-900 dark:text-gray-100">
                   📁 {p.name || p.title}
                 </option>
               ))}
@@ -476,14 +490,14 @@ const Tasks = () => {
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center bg-white dark:bg-[#1e1f22] border border-[#E8EAED] dark:border-[#2d2f33] rounded-xl p-1">
+          <div className="flex items-center bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#2A2A2A] rounded-xl p-1 shadow-xs">
             <button
               id="kanban-view-btn"
               onClick={() => setView("kanban")}
-              className={`btn-hover flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg ${
+              className={`btn-hover flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 view === "kanban"
-                  ? "bg-[#2457C5] dark:bg-[#73FBFD] text-white dark:text-black"
-                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2d2f33]"
+                  ? "bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black shadow-xs"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E1E1E]"
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -492,10 +506,10 @@ const Tasks = () => {
             <button
               id="list-view-btn"
               onClick={() => setView("list")}
-              className={`btn-hover flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg ${
+              className={`btn-hover flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 view === "list"
-                  ? "bg-[#2457C5] dark:bg-[#73FBFD] text-white dark:text-black"
-                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2d2f33]"
+                  ? "bg-[#2461E6] dark:bg-[#73FBFD] text-white dark:text-black shadow-xs"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E1E1E]"
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -560,56 +574,70 @@ const Tasks = () => {
                     </p>
                   </div>
                 ) : (
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-100 dark:border-[#2d2f33]">
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wide cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 select-none"
-                          onClick={() => handleSort("title")}
-                        >
-                          Title <SortIcon field="title" />
-                        </th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">
-                          Project
-                        </th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">
-                          Priority
-                        </th>
-                        <th
-                          className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 select-none"
-                          onClick={() => handleSort("status")}
-                        >
-                          Status <SortIcon field="status" />
-                        </th>
-                        <th
-                          className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden lg:table-cell cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 select-none"
-                          onClick={() => handleSort("deadline")}
-                        >
-                          Deadline <SortIcon field="deadline" />
-                        </th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden lg:table-cell">
-                          Assigned & Origin
-                        </th>
-                        <th className="py-3 px-3 w-28 text-right" />
-                      </tr>
-                    </thead>
-                    <AnimatePresence>
-                      <tbody>
-                        {filtered.map((task) => (
-                          <ListRow
-                            key={task.id}
-                            task={task}
-                            onOpen={setSelectedTask}
-                            onDelete={handleDelete}
-                            canDelete={canDeleteTask(task)}
-                            usersList={usersList}
-                            currentUser={currentUser}
-                            onRaiseIssue={setIssueTask}
-                          />
-                        ))}
-                      </tbody>
-                    </AnimatePresence>
-                  </table>
+                  <>
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-100 dark:border-[#2d2f33]">
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wide cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 select-none"
+                            onClick={() => handleSort("title")}
+                          >
+                            Title <SortIcon field="title" />
+                          </th>
+                          <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">
+                            Project
+                          </th>
+                          <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">
+                            Priority
+                          </th>
+                          <th
+                            className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 select-none"
+                            onClick={() => handleSort("status")}
+                          >
+                            Status <SortIcon field="status" />
+                          </th>
+                          <th
+                            className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden lg:table-cell cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 select-none"
+                            onClick={() => handleSort("deadline")}
+                          >
+                            Deadline <SortIcon field="deadline" />
+                          </th>
+                          <th className="text-left py-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden lg:table-cell">
+                            Assigned & Origin
+                          </th>
+                          <th className="py-3 px-3 w-28 text-right" />
+                        </tr>
+                      </thead>
+                      <AnimatePresence>
+                        <tbody>
+                          {paginatedListTasks.map((task) => (
+                            <ListRow
+                              key={task.id}
+                              task={task}
+                              onOpen={setSelectedTask}
+                              onDelete={handleDelete}
+                              canDelete={canDeleteTask(task)}
+                              usersList={usersList}
+                              currentUser={currentUser}
+                              onRaiseIssue={setIssueTask}
+                            />
+                          ))}
+                        </tbody>
+                      </AnimatePresence>
+                    </table>
+
+                    {/* Table Pagination */}
+                    <div className="px-4 py-2 border-t border-gray-100 dark:border-[#2d2f33]">
+                      <Pagination
+                        currentPage={listPage}
+                        totalPages={totalListPages}
+                        totalItems={filtered.length}
+                        pageSize={LIST_PAGE_SIZE}
+                        onPageChange={setListPage}
+                        itemLabel="tasks"
+                      />
+                    </div>
+                  </>
                 )}
               </motion.div>
             )}
