@@ -162,6 +162,13 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
       })
 
       // Refresh Token
@@ -177,12 +184,17 @@ const authSlice = createSlice({
           state.user.profilePic = state.localProfilePic;
         }
       })
-      .addCase(refreshAccessToken.rejected, (state) => {
+      .addCase(refreshAccessToken.rejected, (state, action) => {
         state.authChecking = false;
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
+        state.token = null;
+        state.error = action.payload;
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
       })
 
       // Fetch User Profile
@@ -213,9 +225,17 @@ const authSlice = createSlice({
           state.user.profilePic = state.localProfilePic;
         }
       })
-      .addCase(fetchUserProfile.rejected, (state) => {
+      .addCase(fetchUserProfile.rejected, (state, action) => {
         state.profileLoading = false;
         state.authChecking = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
+        state.error = action.payload;
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
       })
 
       // Update User Profile
