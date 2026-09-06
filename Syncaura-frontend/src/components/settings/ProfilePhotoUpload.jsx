@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateProfilePictureSuccess } from '../../redux/authSlice'; 
+import { updateFrontendProfilePhoto } from '../../redux/slices/authSlice'; 
 
 export default function ProfilePhotoUpload() {
   const dispatch = useDispatch();
@@ -26,14 +26,14 @@ export default function ProfilePhotoUpload() {
       
       setPreviewUrl(base64String);
       
-      dispatch(updateProfilePictureSuccess(base64String));
+      dispatch(updateFrontendProfilePhoto(base64String));
     };
     reader.readAsDataURL(file);
   };
 
   const handleRemovePhoto = () => {
     setPreviewUrl(defaultAvatar);
-    dispatch(updateProfilePictureSuccess(null));
+    dispatch(updateFrontendProfilePhoto(null));
   };
 
   return (
